@@ -1,0 +1,6 @@
+{
+    "name": "framework-arduino-hc32f46x",
+    "description": "Arduino Wiring-based Framework HC32f46x",
+    "url": "https://github.com/shadow578/framework-arduino-hc32f46x",
+    "version": "0.1.0"
+}
