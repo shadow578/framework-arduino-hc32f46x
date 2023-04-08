@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libmaple_types.h"
+#include "drivers/gpio/gpio.h"
 
 //
 // pin modes
