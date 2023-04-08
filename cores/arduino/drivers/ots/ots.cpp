@@ -1,6 +1,7 @@
 #include "ots.h"
 #include "../../hdsc/common/hc32_ddl.h"
 
+#if (DDL_OTS_ENABLE == DDL_ON)
 void H32OTS::init()
 {
     // enable and configure OTS
@@ -41,3 +42,4 @@ bool H32OTS::read(float &temperature)
 
     return true;
 }
+#endif
