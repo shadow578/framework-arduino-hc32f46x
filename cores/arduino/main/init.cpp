@@ -2,7 +2,7 @@
 #include "../drivers/systick/systick.h"
 #include "../drivers/adc/adc.h"
 #include "../interrupts.h"
-#include "../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 
 uint32_t CPU_FREQ = 0;
 

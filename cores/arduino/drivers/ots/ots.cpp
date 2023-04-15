@@ -1,5 +1,5 @@
 #include "ots.h"
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 
 #if (DDL_OTS_ENABLE == DDL_ON)
 void H32OTS::init()

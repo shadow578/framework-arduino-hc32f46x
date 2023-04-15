@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
+#include <addon_gpio.h>
 #include "../adc/adc.h"
-#include "../../hdsc/addon/addon_gpio.h"
 #include "gpio_pindefs.h"
 
 #ifdef __cplusplus

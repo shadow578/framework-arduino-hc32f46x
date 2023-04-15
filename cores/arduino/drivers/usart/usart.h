@@ -1,7 +1,7 @@
 #pragma once
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 #include "libmaple_types.h"
-#include "../../RingBuffer.h"
+#include "RingBuffer.h"
 
 #ifdef __cplusplus
 extern "C"
