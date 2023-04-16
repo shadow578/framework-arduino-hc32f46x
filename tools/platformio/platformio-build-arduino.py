@@ -26,7 +26,6 @@ assert isdir(CORE_DIR)
 env.Append(
     # c/c++ defines
     CPPDEFINES=[
-        "HC32F46x",
         ("ARDUINO", 100),
         "ARDUINO_ARCH_HC32",
     ],
