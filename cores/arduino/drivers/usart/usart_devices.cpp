@@ -8,7 +8,7 @@ stc_usart_uart_init_t usartConf = {
     .enDirection = UsartDataLsbFirst,
     .enStopBit = UsartOneStopBit,
     .enParity = UsartParityNone,
-    .enSampleMode = UsartSamleBit8,
+    .enSampleMode = UsartSampleBit8,
     .enDetectMode = UsartStartBitFallEdge,
     .enHwFlow = UsartRtsEnable};
 

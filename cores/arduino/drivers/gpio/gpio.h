@@ -40,7 +40,7 @@ extern "C"
 	{
 		uint8_t gpio_bit;
 		__IO en_port_t gpio_port;
-		__IO uint16_t gpio_pin;
+		__IO en_pin_t gpio_pin;
 		adc_dev *adc_device;
 		__IO uint8_t adc_channel;
 		__IO en_port_func_t function;
