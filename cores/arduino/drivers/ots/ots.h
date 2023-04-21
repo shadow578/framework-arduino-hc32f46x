@@ -7,7 +7,7 @@
 #endif
 
 #ifndef OTS_READ_TIMEOUT
-#define OTS_READ_TIMEOUT 10
+#define OTS_READ_TIMEOUT 10000u // NOT a milliseconds value; taken from examples
 #endif
 
 //

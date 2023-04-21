@@ -19,7 +19,7 @@ void H32OTS::init()
     PWC_Fcg3PeriphClockCmd(PWC_FCG3_PERIPH_OTS, Enable);
     OTS_Init(&otsConf);
 
-// setup the OTS clock
+    // setup the OTS clock
 #if OTS_USE_XTAL
     // enable XTAL
     CLK_XtalCmd(Enable);
@@ -38,7 +38,7 @@ bool H32OTS::read(float &temperature)
     en_result_t err = OTS_Polling(&temperature, OTS_READ_TIMEOUT);
     if (err != Ok)
     {
-        printf("OTS_StartGetTemp failed: err=%d\n", err);
+        printf("OTS_Polling failed: err=%d\n", err);
         return false;
     }
 
