@@ -1,7 +1,7 @@
 #ifndef _ADC_H
 #define _ADC_H
 
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 
 #ifdef __cplusplus
 extern "C"

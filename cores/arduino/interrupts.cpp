@@ -1,6 +1,6 @@
 #include "interrupts.h"
 #include "drivers/gpio/gpio.h"
-#include "hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 #include "io.h"
 
 //

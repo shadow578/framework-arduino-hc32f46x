@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
+#include <addon_gpio.h>
 #include "../adc/adc.h"
-#include "../../hdsc/addon/addon_gpio.h"
 #include "gpio_pindefs.h"
 
 #ifdef __cplusplus
@@ -40,7 +40,7 @@ extern "C"
 	{
 		uint8_t gpio_bit;
 		__IO en_port_t gpio_port;
-		__IO uint16_t gpio_pin;
+		__IO en_pin_t gpio_pin;
 		adc_dev *adc_device;
 		__IO uint8_t adc_channel;
 		__IO en_port_func_t function;

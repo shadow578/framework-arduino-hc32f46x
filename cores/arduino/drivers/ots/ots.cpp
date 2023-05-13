@@ -1,5 +1,6 @@
 #include "ots.h"
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
+#include <stdio.h>
 
 #if (DDL_OTS_ENABLE == DDL_ON)
 void H32OTS::init()
@@ -12,12 +13,13 @@ void H32OTS::init()
 #else
         .enClkSel = OtsClkSel_Hrc,
 #endif
-        .u8ClkFreq = uint8_t(SystemCoreClock / 1000000ul),
+        .f32SlopeK = OTS_K,
+        .f32OffsetM = OTS_M,
     };
     PWC_Fcg3PeriphClockCmd(PWC_FCG3_PERIPH_OTS, Enable);
     OTS_Init(&otsConf);
 
-// setup the OTS clock
+    // setup the OTS clock
 #if OTS_USE_XTAL
     // enable XTAL
     CLK_XtalCmd(Enable);
@@ -33,10 +35,10 @@ void H32OTS::init()
 
 bool H32OTS::read(float &temperature)
 {
-    en_result_t err = OTS_StartGetTemp(&temperature, OTS_READ_TIMEOUT);
+    en_result_t err = OTS_Polling(&temperature, OTS_READ_TIMEOUT);
     if (err != Ok)
     {
-        printf("OTS_StartGetTemp failed: err=%d\n", err);
+        printf("OTS_Polling failed: err=%d\n", err);
         return false;
     }
 

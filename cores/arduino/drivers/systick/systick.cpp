@@ -1,5 +1,5 @@
 #include "systick.h"
-#include "../../hdsc/common/hc32_ddl.h"
+#include <hc32_ddl.h>
 
 volatile uint32_t uptime = 0;
 

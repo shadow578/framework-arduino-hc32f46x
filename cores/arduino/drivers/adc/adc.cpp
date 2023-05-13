@@ -266,7 +266,7 @@ void adc_dmaInitConfig(adc_dev *dev)
 	// AOS must be enabled to use DMA
 	// AOS enabled at first
 	// If you have enabled AOS before, then the following statement is not needed
-	PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_PTDIS, Enable);
+	PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_AOS, Enable);
 	DMA_SetTriggerSrc(dev->DMARegs, dev->DMAChannel, dev->DMAenSrc);
 }
 
@@ -319,7 +319,7 @@ void adc_setDefaultConfig(adc_dev *dev)
 	// init and config adc and channels
 	adc_initConfig(dev);
 	adc_channelConfig(dev, Pin_Mode_Ana);
-	adc_triggerConfig(dev, PWC_FCG0_PERIPH_PTDIS);
+	adc_triggerConfig(dev, PWC_FCG0_PERIPH_AOS);
 
 	// init and config DMA
 	adc_dmaInitConfig(dev);
