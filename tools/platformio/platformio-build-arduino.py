@@ -9,7 +9,6 @@ import sys
 from os.path import isfile, isdir, join
 from SCons.Script import DefaultEnvironment, SConscript
 
-print("platformio-build-arduino.py running")
 
 # get the environment
 env = DefaultEnvironment()
@@ -17,10 +16,12 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 build_core = board.get("build.core", "")
 
+
 # ensure framework is installed
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-hc32f46x")
 CORE_DIR = join(FRAMEWORK_DIR, "cores", "arduino")
 assert isdir(CORE_DIR)
+
 
 # setup compile environment
 env.Append(
@@ -43,7 +44,7 @@ core_requirements = [
     "clk",
     "dmac",
     "efm",
-    "extint",
+    "exint",
     "gpio",
     "interrupts",
     "pwc",
@@ -54,12 +55,12 @@ core_requirements = [
     "wdt",
 ]
 for req in core_requirements:
-    board.update("build.ddl.%s" % req, "true")
+    board.update(f"build.ddl.{req}", "true")
 
 # build the ddl core
 ddl_build_script = join(env.PioPlatform().get_package_dir("framework-hc32f46x-ddl"), "tools", "platformio", "platformio-build-ddl.py")
 if not isfile(ddl_build_script):
-    sys.stderr.write("Error: Missing PlatformIO build script %s!\n" % ddl_build_script)
+    sys.stderr.write(f"Error: Missing PlatformIO build script %s! {ddl_build_script}")
     env.Exit(1)
 
 SConscript(ddl_build_script)
