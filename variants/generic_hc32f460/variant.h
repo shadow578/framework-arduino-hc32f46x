@@ -1,7 +1,32 @@
-//
-// Pin Definitions for HC32F46x
-// using macros instead of a enum to allow usage in preprocessor directives
-//
+/*
+ Copyright (c) 2015 Arduino LLC.  All right reserved.
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+#ifndef BOARD_VARIANT_H_
+#define BOARD_VARIANT_H_
+
+#include "WVariant.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+#define LED_BUILTIN	4
+
 
 // PAx
 #define PA0 0
@@ -98,5 +123,8 @@
 #define PH1 81
 #define PH2 82
 
-//TODO: move this file to variants...
-//#warning "gpio_pindefs.h included"
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* BOARD_VARIANT_H_ */

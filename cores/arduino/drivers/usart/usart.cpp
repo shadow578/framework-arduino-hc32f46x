@@ -127,7 +127,7 @@ void usart_init(usart_dev *dev)
 	USART_UART_Init(dev->regs, dev->pstcInitCfg);
 }
 
-void usart_set_baud_rate(usart_dev *dev, uint32 baud)
+void usart_set_baud_rate(usart_dev *dev, uint32_t baud)
 {
 	USART_SetBaudrate(dev->regs, baud);
 }
@@ -243,10 +243,10 @@ void usart_disable(usart_dev *dev)
 	usart_reset_tx(dev);
 }
 
-uint32 usart_tx(usart_dev *dev, const uint8 *buf, uint32 len)
+uint32_t usart_tx(usart_dev *dev, const uint8_t *buf, uint32_t len)
 {
-	uint32 sentBytes = 0;
-	uint32 errors = 0;
+	uint32_t sentBytes = 0;
+	uint32_t errors = 0;
 	while (!dev->wb->isEmpty())
 	{
 		if (++errors > 500)
@@ -281,10 +281,10 @@ uint32 usart_tx(usart_dev *dev, const uint8 *buf, uint32 len)
 	return sentBytes;
 }
 
-uint32 usart_rx(usart_dev *dev, uint8 *buf, uint32 len)
+uint32_t usart_rx(usart_dev *dev, uint8_t *buf, uint32_t len)
 {
-	uint32 receivedBytes = 0;
-	uint32 errors = 0;
+	uint32_t receivedBytes = 0;
+	uint32_t errors = 0;
 	while (usart_data_available(dev) && receivedBytes < len)
 	{
 		*buf++ = usart_getc(dev);
@@ -299,7 +299,7 @@ uint32 usart_rx(usart_dev *dev, uint8 *buf, uint32 len)
 	return receivedBytes;
 }
 
-void usart_putudec(usart_dev *dev, uint32 val)
+void usart_putudec(usart_dev *dev, uint32_t val)
 {
 	char digits[12];
 	int i = 0;

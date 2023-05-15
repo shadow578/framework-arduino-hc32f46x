@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2015 Arduino LLC.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,21 +16,20 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <stdlib.h>
+#ifndef TONE_H_
+#define TONE_H_
 
-extern "C" void __cxa_pure_virtual(void) __attribute__ ((__noreturn__));
-extern "C" void __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-void __cxa_pure_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+#include "Arduino.h"
 
-void __cxa_deleted_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+  void tone(uint32_t _pin, uint32_t frequency, uint32_t duration = 0);
+  void noTone(uint32_t _pin);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+#endif /* TONE_H_ */

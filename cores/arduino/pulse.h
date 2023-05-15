@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2015 Arduino LLC.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,21 +16,23 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <stdlib.h>
+#pragma once
 
-extern "C" void __cxa_pure_virtual(void) __attribute__ ((__noreturn__));
-extern "C" void __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void __cxa_pure_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+/*
+ * \brief Measures the length (in microseconds) of a pulse on the pin; state is HIGH
+ * or LOW, the type of pulse to measure.  Works on pulses from 2-3 microseconds
+ * to 3 minutes in length, but must be called at least a few dozen microseconds
+ * before the start of the pulse.
+ */
+uint32_t pulseIn(uint32_t pin, uint32_t state, uint32_t timeout);
 
-void __cxa_deleted_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+#ifdef __cplusplus
+// Provides a version of pulseIn with a default argument (C++ only)
+uint32_t pulseIn(uint32_t pin, uint32_t state, uint32_t timeout = 1000000L);
+
+} // extern "C"
+#endif

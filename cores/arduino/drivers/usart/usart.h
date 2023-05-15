@@ -1,6 +1,5 @@
 #pragma once
 #include <hc32_ddl.h>
-#include "libmaple_types.h"
 #include "RingBuffer.h"
 
 #ifdef __cplusplus
@@ -25,7 +24,7 @@ extern "C"
         M4_USART_TypeDef *regs;
         RingBuffer *rb;
         RingBuffer *wb;
-        uint32 clk_id;
+        uint32_t clk_id;
         stc_usart_uart_init_t *pstcInitCfg;
         IRQn_Type RX_IRQ;
         IRQn_Type TX_IRQ;
@@ -45,12 +44,12 @@ extern "C"
 
     // public api
     void usart_init(usart_dev *dev);
-    void usart_set_baud_rate(usart_dev *dev, uint32 baud);
+    void usart_set_baud_rate(usart_dev *dev, uint32_t baud);
     void usart_enable(usart_dev *dev);
     void usart_disable(usart_dev *dev);
-    uint32 usart_tx(usart_dev *dev, const uint8 *buf, uint32 len);
-    uint32 usart_rx(usart_dev *dev, uint8 *buf, uint32 len);
-    void usart_putudec(usart_dev *dev, uint32 val);
+    uint32_t usart_tx(usart_dev *dev, const uint8_t *buf, uint32_t len);
+    uint32_t usart_rx(usart_dev *dev, uint8_t *buf, uint32_t len);
+    void usart_putudec(usart_dev *dev, uint32_t val);
 
     /**
      * @brief Disable all serial ports.
@@ -71,7 +70,7 @@ extern "C"
      * @param dev Serial port to send on.
      * @param byte Byte to transmit.
      */
-    static inline void usart_putc(usart_dev *dev, uint8 byte)
+    static inline void usart_putc(usart_dev *dev, uint8_t byte)
     {
         usart_tx(dev, &byte, 1);
     }
@@ -86,7 +85,7 @@ extern "C"
      */
     static inline void usart_putstr(usart_dev *dev, const char *str)
     {
-        uint32 i = 0;
+        uint32_t i = 0;
         while (str[i] != '\0')
         {
             usart_putc(dev, str[i++]);
@@ -103,7 +102,7 @@ extern "C"
      * @return byte read
      * @see usart_data_available()
      */
-    static inline uint8 usart_getc(usart_dev *dev)
+    static inline uint8_t usart_getc(usart_dev *dev)
     {
         return dev->rb->_pop();
     }
@@ -124,7 +123,7 @@ extern "C"
      * @param dev Serial port to check
      * @return Number of bytes in dev's RX buffer.
      */
-    static inline uint32 usart_data_available(usart_dev *dev)
+    static inline uint32_t usart_data_available(usart_dev *dev)
     {
         return dev->rb->count();
     }
@@ -153,7 +152,7 @@ extern "C"
      * @param ch the data byte to be transmitted
      * @param usart the usart channel. ([1,2,3,4]; 1 = DWIN, 2 = PRINT)
      */
-    __weak extern void usart_tx_irq_hook(uint8_t ch, uint8_t usart);
+    __attribute__((weak)) extern void usart_tx_irq_hook(uint8_t ch, uint8_t usart);
 
     /**
      * USART receive hook
@@ -161,7 +160,7 @@ extern "C"
      * @param ch the data byte that was received
      * @param usart the usart channel. ([1,2,3,4]; 1 = DWIN, 2 = PRINT)
      */
-    __weak extern void usart_rx_irq_hook(uint8_t ch, uint8_t usart);
+    __attribute__((weak)) extern void usart_rx_irq_hook(uint8_t ch, uint8_t usart);
 
     /**
      * map usart device registers to usart channel number
@@ -197,7 +196,7 @@ extern "C"
 
     static inline void usart_rx_irq(usart_dev *dev)
     {
-        uint8_t ch = (uint8)USART_RecData(dev->regs);
+        uint8_t ch = (uint8_t)USART_RecData(dev->regs);
         usart_rx_irq_hook(ch, usart_dev_to_channel(dev->regs));
         dev->rb->push(ch, true);
     }

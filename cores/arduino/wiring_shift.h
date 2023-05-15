@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2014 Arduino.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,21 +16,29 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <stdlib.h>
+#ifndef _WIRING_SHIFT_
+#define _WIRING_SHIFT_
 
-extern "C" void __cxa_pure_virtual(void) __attribute__ ((__noreturn__));
-extern "C" void __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
+#include <stdint.h>
 
-void __cxa_pure_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+/*
+ * \brief
+ */
+extern uint32_t shiftIn( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder ) ;
+
+
+/*
+ * \brief
+ */
+extern void shiftOut( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal ) ;
+
+
+#ifdef __cplusplus
 }
+#endif
 
-void __cxa_deleted_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+#endif /* _WIRING_SHIFT_ */

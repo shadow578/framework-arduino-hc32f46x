@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2015 Arduino LCC.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,21 +16,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <stdlib.h>
-
-extern "C" void __cxa_pure_virtual(void) __attribute__ ((__noreturn__));
-extern "C" void __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
-
-void __cxa_pure_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
-
-void __cxa_deleted_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+/*
+  Empty file.
+  This file is here to allow compatibility with sketches (made for AVR)
+  that includes <AVR/interrupt.h>
+*/

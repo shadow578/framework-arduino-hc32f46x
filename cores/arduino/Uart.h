@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2015 Arduino LLC.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,21 +16,34 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <stdlib.h>
+#pragma once
 
-extern "C" void __cxa_pure_virtual(void) __attribute__ ((__noreturn__));
-extern "C" void __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
+#include "HardwareSerial.h"
+#include "RingBuffer.h"
 
-void __cxa_pure_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+#include <stddef.h>
 
-void __cxa_deleted_virtual(void) {
-  // We might want to write some diagnostics to uart in this case
-  //std::terminate();
-  while (1)
-    ;
-}
+class Uart : public HardwareSerial
+{
+  public:
+    // Use the constructor to pass hardware configurations
+    Uart();
+    void begin(unsigned long baudRate);
+    void begin(unsigned long baudrate, uint16_t config);
+    void end();
+    int available();
+    int availableForWrite();
+    int peek();
+    int read();
+    void flush();
+    size_t write(const uint8_t data);
+    using Print::write; // pull in write(str) and write(buf, size) from Print
+
+    void IrqHandler();
+
+    operator bool() { return true; }
+
+  private:
+    RingBuffer rxBuffer;
+    RingBuffer txBuffer;
+};

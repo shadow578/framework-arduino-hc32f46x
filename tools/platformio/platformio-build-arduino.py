@@ -35,6 +35,7 @@ env.Append(
     CPPPATH=[
         CORE_DIR,
         join(CORE_DIR, "drivers"),
+        join(FRAMEWORK_DIR, "variants", "generic_hc32f460") #TODO: detect get variant from board manifest
     ]
 )
 

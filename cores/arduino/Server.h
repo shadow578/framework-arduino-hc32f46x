@@ -1,5 +1,6 @@
 /*
-  Copyright (c) 2015 Arduino LLC.  All right reserved.
+  Server.h - Base class that provides Server
+  Copyright (c) 2011 Adrian McEwen.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -8,23 +9,22 @@
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  See the GNU Lesser General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#pragma once
+#ifndef server_h
+#define server_h
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include "Print.h"
 
-extern char* ltoa( long value, char *string, int radix ) ;
-extern char* ultoa( unsigned long value, char *string, int radix ) ;
+class Server : public Print {
+public:
+  virtual void begin() =0;
+};
 
-#ifdef __cplusplus
-} // extern "C"
 #endif
