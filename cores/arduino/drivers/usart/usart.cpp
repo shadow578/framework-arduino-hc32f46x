@@ -132,6 +132,21 @@ void usart_set_baud_rate(usart_dev *dev, uint32_t baud)
 	USART_SetBaudrate(dev->regs, baud);
 }
 
+void usart_set_stop_bits(usart_dev *dev, en_usart_stop_bit_t stop_bits)
+{
+	USART_SetStopBitsLength(dev->regs, stop_bits);
+}
+
+void usart_set_parity(usart_dev *dev, en_usart_parity_t parity)
+{
+	USART_SetParity(dev->regs, parity);
+}
+
+void usart_set_data_width(usart_dev *dev, en_usart_data_len_t data_width)
+{
+	USART_SetDataLength(dev->regs, data_width);
+}
+
 void usart_enable(usart_dev *dev)
 {
 	// set rx IRQ

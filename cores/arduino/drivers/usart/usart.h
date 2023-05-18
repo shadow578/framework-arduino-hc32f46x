@@ -46,6 +46,9 @@ extern "C"
     // public api
     void usart_init(usart_dev *dev);
     void usart_set_baud_rate(usart_dev *dev, uint32_t baud);
+    void usart_set_stop_bits(usart_dev *dev, en_usart_stop_bit_t stop_bits);
+    void usart_set_parity(usart_dev *dev, en_usart_parity_t parity);
+    void usart_set_data_width(usart_dev *dev, en_usart_data_len_t data_width);
     void usart_enable(usart_dev *dev);
     void usart_disable(usart_dev *dev);
     uint32_t usart_tx(usart_dev *dev, const uint8_t *buf, uint32_t len);

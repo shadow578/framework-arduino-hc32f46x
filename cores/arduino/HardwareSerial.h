@@ -29,13 +29,13 @@
 #define HARDSER_PARITY_MASK (0xFul)
 
 #define HARDSER_STOP_BIT_1 (0x10ul)
-#define HARDSER_STOP_BIT_1_5 (0x20ul)
+//#define HARDSER_STOP_BIT_1_5 (0x20ul)
 #define HARDSER_STOP_BIT_2 (0x30ul)
 #define HARDSER_STOP_BIT_MASK (0xF0ul)
 
-#define HARDSER_DATA_5 (0x100ul)
-#define HARDSER_DATA_6 (0x200ul)
-#define HARDSER_DATA_7 (0x300ul)
+//#define HARDSER_DATA_5 (0x100ul)
+//#define HARDSER_DATA_6 (0x200ul)
+//#define HARDSER_DATA_7 (0x300ul)
 #define HARDSER_DATA_8 (0x400ul)
 #define HARDSER_DATA_MASK (0xF00ul)
 
@@ -69,22 +69,12 @@
 typedef uint8_t tx_buffer_index_t;
 typedef uint8_t rx_buffer_index_t;
 
-struct usart_dev;
-
-#define DEFINE_HWSERIAL(name, n)               \
-  HardwareSerial name(USART##n,                \
-                      BOARD_USART##n##_TX_PIN, \
-                      BOARD_USART##n##_RX_PIN)
-
 class HardwareSerial : public Stream
 {
 public:
   HardwareSerial(struct usart_dev *usart_device,
-                 uint8_t tx_pin,
-                 uint8_t rx_pin);
-  void init(usart_dev *usart_device,
-            uint8_t tx_pin,
-            uint8_t rx_pin);
+                 uint32_t tx_pin,
+                 uint32_t rx_pin);
   void begin(uint32_t baud);
   void begin(uint16_t baud, uint16_t config);
   void end();
@@ -98,8 +88,8 @@ public:
 
 private:
   struct usart_dev *usart_device;
-  uint8_t tx_pin;
-  uint8_t rx_pin;
+  uint32_t tx_pin;
+  uint32_t rx_pin;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
