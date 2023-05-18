@@ -17,7 +17,7 @@ void HardwareSerial::begin(uint32_t baud)
     begin(baud, SERIAL_8N1);
 }
 
-void HardwareSerial::begin(uint16_t baud, uint16_t config)
+void HardwareSerial::begin(uint32_t baud, uint16_t config)
 {
     // set IO pin functions
     PORT_SetFuncGPIO(this->tx_pin, Disable);
@@ -78,6 +78,11 @@ void HardwareSerial::end()
 int HardwareSerial::available(void)
 {
     return usart_data_available(this->usart_device);
+}
+
+int HardwareSerial::availableForWrite(void)
+{
+    return this->usart_device->wb->capacity() - this->usart_device->wb->count();
 }
 
 int HardwareSerial::peek(void)

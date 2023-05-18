@@ -19,8 +19,8 @@
 #ifndef HardwareSerial_h
 #define HardwareSerial_h
 
-#include <inttypes.h>
-
+#include <stdint.h>
+#include "Print.h"
 #include "Stream.h"
 
 #define HARDSER_PARITY_EVEN (0x1ul)
@@ -29,13 +29,13 @@
 #define HARDSER_PARITY_MASK (0xFul)
 
 #define HARDSER_STOP_BIT_1 (0x10ul)
-//#define HARDSER_STOP_BIT_1_5 (0x20ul)
+// #define HARDSER_STOP_BIT_1_5 (0x20ul)
 #define HARDSER_STOP_BIT_2 (0x30ul)
 #define HARDSER_STOP_BIT_MASK (0xF0ul)
 
-//#define HARDSER_DATA_5 (0x100ul)
-//#define HARDSER_DATA_6 (0x200ul)
-//#define HARDSER_DATA_7 (0x300ul)
+// #define HARDSER_DATA_5 (0x100ul)
+// #define HARDSER_DATA_6 (0x200ul)
+// #define HARDSER_DATA_7 (0x300ul)
 #define HARDSER_DATA_8 (0x400ul)
 #define HARDSER_DATA_MASK (0xF00ul)
 
@@ -66,8 +66,6 @@
 
 #define SERIAL_TX_BUFFER_SIZE 64
 #define SERIAL_RX_BUFFER_SIZE 64
-typedef uint8_t tx_buffer_index_t;
-typedef uint8_t rx_buffer_index_t;
 
 class HardwareSerial : public Stream
 {
@@ -76,15 +74,19 @@ public:
                  uint32_t tx_pin,
                  uint32_t rx_pin);
   void begin(uint32_t baud);
-  void begin(uint16_t baud, uint16_t config);
+  void begin(uint32_t baud, uint16_t config);
   void end();
   virtual int available(void);
+  int availableForWrite(void);
   virtual int peek(void);
   virtual int read(void);
   virtual void flush(void);
   virtual size_t write(uint8_t);
   using Print::write; // pull in write(str) and write(buf, size) from Print
   operator bool() { return true; };
+
+  // escape hatch to underlying usart_dev
+  struct usart_dev *c_dev(void) { return this->usart_device; }
 
 private:
   struct usart_dev *usart_device;
