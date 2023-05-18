@@ -49,10 +49,10 @@ extern "C"{
 
 void yield( void ) ;
 
-/* system functions */
+  /* system functions */
 int main( void );
 
-/* sketch */
+  /* sketch */
 void setup( void ) ;
 void loop( void ) ;
 
@@ -64,16 +64,16 @@ void loop( void ) ;
 
 // The following headers are for C++ only compilation
 #ifdef __cplusplus
-  #include "WCharacter.h"
-  #include "WString.h"
-  #include "Tone.h"
-  #include "WMath.h"
-  #include "HardwareSerial.h"
-  #include "pulse.h"
+#include "WCharacter.h"
+#include "WString.h"
+#include "Tone.h"
+#include "WMath.h"
+#include "HardwareSerial.h"
+#include "pulse.h"
 #endif
 #include "delay.h"
 #ifdef __cplusplus
-  #include "Uart.h"
+#include "Uart.h"
 #endif
 
 // Include board variant
@@ -111,11 +111,10 @@ void loop( void ) ;
 
 #define bit(b) (1UL << (b))
 
-// provide cpu frequency info
-extern uint32_t CPU_FREQ;
-
+// default F_CPU to cpu frequency getter if not defined yet
 #ifndef F_CPU
-#define F_CPU CPU_FREQ
+#include "drivers/sysclock/sysclock.h"
+#define F_CPU (get_cpu_clock())
 #endif
 
 #endif // Arduino_h
