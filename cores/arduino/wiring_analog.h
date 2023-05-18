@@ -16,6 +16,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+//TODO: implement analogWrite(), analogWriteResolution() and analogReadResolution()
+
 #pragma once
 
 #include <stdint.h>
@@ -36,6 +38,7 @@ typedef enum _eAnalogReference
  * This function is kept only for compatibility with existing AVR based API.
  *
  * \param ulMmode Should be set to AR_DEFAULT.
+ * \note when called, this function will do nothing and return immediately.
  */
 extern void analogReference( eAnalogReference ulMode ) ;
 
@@ -44,6 +47,8 @@ extern void analogReference( eAnalogReference ulMode ) ;
  *
  * \param ulPin
  * \param ulValue
+ * 
+ * \note analogWrite() hasn't been implemented yet.
  */
 extern void analogWrite( uint32_t ulPin, uint32_t ulValue ) ;
 
@@ -53,6 +58,8 @@ extern void analogWrite( uint32_t ulPin, uint32_t ulValue ) ;
  * \param ulPin
  *
  * \return Read value from selected pin, if no error.
+ * \note the pin must be configured as INPUT_ANALOG beforehand.
+ * \note not all pins on the chip can be used for analog input. see the datasheet for details.
  */
 extern uint32_t analogRead( uint32_t ulPin ) ;
 
@@ -60,6 +67,7 @@ extern uint32_t analogRead( uint32_t ulPin ) ;
  * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).
  *
  * \param res
+ * \note setting the adc resolution is not supported yet (would require ADC deinit and init with new resolution)
  */
 extern void analogReadResolution(int res);
 
@@ -67,6 +75,8 @@ extern void analogReadResolution(int res);
  * \brief Set the resolution of analogWrite parameters. Default is 8 bits (range from 0 to 255).
  *
  * \param res
+ * 
+ * \note analogWrite() hasn't been implemented yet.
  */
 extern void analogWriteResolution(int res);
 
