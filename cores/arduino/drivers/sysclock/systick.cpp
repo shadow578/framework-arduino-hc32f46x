@@ -17,12 +17,16 @@ void systick_init()
 
 uint32_t millis()
 {
+#ifdef REQUIRE_MICROS
+    return uptime / 1000;
+#else
     return uptime;
+#endif
 }
 
+#ifdef REQUIRE_MICROS
 uint32_t micros()
 {
-    //TODO: stub implementation
-    DDL_ASSERT(0);
-    return uptime * 1000;
+    return uptime;
 }
+#endif

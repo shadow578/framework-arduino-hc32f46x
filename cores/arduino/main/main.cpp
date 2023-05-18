@@ -5,13 +5,18 @@
 
 int main(void)
 {
-	board_init();
+	// initialize SoC, then CORE_DEBUG
+	core_init();
 	CORE_DEBUG_INIT();
+
+	// call setup()
 	core_hook_pre_setup();
 	CORE_DEBUG_PRINTF("core entering setup\n");
 	setup();
-	CORE_DEBUG_PRINTF("core entering main loop\n");
 	core_hook_post_setup();
+	
+	// call loop() forever
+	CORE_DEBUG_PRINTF("core entering main loop\n");
 	while (1)
 	{
 		core_hook_loop();
