@@ -84,8 +84,6 @@ class Print
     size_t println(void);
 
     virtual void flush() { /* Empty implementation for backward compatibility */ }
-
-    virtual ~Print();
 };
 
 #endif
