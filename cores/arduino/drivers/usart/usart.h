@@ -1,6 +1,7 @@
 #pragma once
 #include <hc32_ddl.h>
 #include "RingBuffer.h"
+#include "../../core_hooks.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -147,22 +148,6 @@ extern "C"
     }
 
     /**
-     * USART transmit hook
-     *
-     * @param ch the data byte to be transmitted
-     * @param usart the usart channel. ([1,2,3,4]; 1 = DWIN, 2 = PRINT)
-     */
-    __attribute__((weak)) extern void usart_tx_irq_hook(uint8_t ch, uint8_t usart);
-
-    /**
-     * USART receive hook
-     *
-     * @param ch the data byte that was received
-     * @param usart the usart channel. ([1,2,3,4]; 1 = DWIN, 2 = PRINT)
-     */
-    __attribute__((weak)) extern void usart_rx_irq_hook(uint8_t ch, uint8_t usart);
-
-    /**
      * map usart device registers to usart channel number
      */
     static inline uint8_t usart_dev_to_channel(M4_USART_TypeDef *dev_regs)
@@ -184,7 +169,7 @@ extern "C"
         uint8_t ch;
         if (dev->wb->pop(ch))
         {
-            usart_tx_irq_hook(ch, usart_dev_to_channel(dev->regs));
+            core_hook_usart_tx_irq(ch, usart_dev_to_channel(dev->regs));
             USART_SendData(dev->regs, ch);
         }
         else
@@ -197,7 +182,7 @@ extern "C"
     static inline void usart_rx_irq(usart_dev *dev)
     {
         uint8_t ch = (uint8_t)USART_RecData(dev->regs);
-        usart_rx_irq_hook(ch, usart_dev_to_channel(dev->regs));
+        core_hook_usart_rx_irq(ch, usart_dev_to_channel(dev->regs));
         dev->rb->push(ch, true);
     }
 
