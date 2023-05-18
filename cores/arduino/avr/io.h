@@ -22,11 +22,8 @@
   THE SOFTWARE
 */
 
-#ifndef _IO_H_
-#define _IO_H_
-
-#define RAMSTART (HMCRAMC0_ADDR)
-#define RAMSIZE  (HMCRAMC0_SIZE)
-#define RAMEND   (RAMSTART + RAMSIZE - 1)
-
-#endif
+/*
+  Empty file.
+  This file is here to allow compatibility with sketches (made for AVR)
+  that includes <AVR/io.h>
+*/

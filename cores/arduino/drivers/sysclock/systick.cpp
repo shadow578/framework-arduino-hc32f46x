@@ -15,17 +15,17 @@ void systick_init()
     SysTick_Config(clkFreq.sysclkFreq / TICKS_PER_SECOND);
 }
 
-uint32_t millis()
+uint32_t systick_millis()
 {
-#ifdef REQUIRE_MICROS
+#ifdef ENABLE_MICROS
     return uptime / 1000;
 #else
     return uptime;
 #endif
 }
 
-#ifdef REQUIRE_MICROS
-uint32_t micros()
+#ifdef ENABLE_MICROS
+uint32_t systick_micros()
 {
     return uptime;
 }
