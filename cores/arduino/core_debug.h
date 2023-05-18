@@ -4,6 +4,8 @@
 #ifdef __CORE_DEBUG
 #warning "'__CORE_DEBUG' is defined, Arduino Core Debug is Enabled"
 
+#include <stdio.h>
+
 // allow user to re-define the debug macros with custom ones
 // user macros are only active if __CORE_DEBUG is defined
 #ifndef CORE_DEBUG_INIT

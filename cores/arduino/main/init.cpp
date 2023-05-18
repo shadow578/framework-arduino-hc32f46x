@@ -2,11 +2,11 @@
 #include "../drivers/sysclock/sysclock.h"
 #include "../drivers/sysclock/systick.h"
 #include "../drivers/adc/adc.h"
-//#include "../interrupts.h"
+#include "../WInterrupts.h"
 #include <hc32_ddl.h>
 
 /**
- * set flash latency and cache 
+ * set flash latency and cache
  */
 inline void flash_init()
 {
@@ -29,6 +29,6 @@ void core_init()
     flash_init();
     sysclock_init();
     systick_init();
-    //TODO: commented for now: interrupts_init();
+    interrupts_init();
     adc_init();
 }

@@ -22,7 +22,8 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 //      LOW 0
@@ -34,28 +35,40 @@ extern "C" {
 #define DEFAULT 1
 #define EXTERNAL 0
 
-typedef void (*voidFuncPtr)(void);
+  typedef void (*voidFuncPtr)(void);
 
-/*
- * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
- *        Replaces any previous function that was attached to the interrupt.
- *
- * \return Interrupt Mask
- */
-int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
+  /**
+   * \brief internal function to initialize the interrupt subsystem
+   */
+  void interrupts_init();
 
-/*
- * \brief Turns off the given interrupt.
- */
-void detachInterrupt(uint32_t pin);
+  /*
+   * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
+   *        Detaches any previously attached interrupt on the same pin.
+   *
+   * \param pin The pin number to attach the interrupt to
+   * \param callback The function to call when the interrupt occurs
+   * \param mode Defines when the interrupt should be triggered.
+   * \return assigned interrupt number, or -1 if there are no available interrupts
+   *
+   * \note you must call checkIRQFlag() in your ISR to clear the interrupt flag.
+   *      Otherwise, your ISR may be called continuously or never again.
+   */
+  int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
 
-/*
- * \brief Checks if the interrupt flag is set for the given pin.
- *        If the flag is set, it clears the flag and returns true.
- *        If the flag is not set, it returns false.
- */
-bool checkAndClearExtIRQFlag(uint32_t pin);
+  /*
+   * \brief Turns off the given interrupt.
+   */
+  void detachInterrupt(uint32_t pin);
 
+  /*
+   * \brief Checks if the interrupt flag is set for the given pin
+   *
+   * \param pin The pin to check
+   * \param clear If true, clear the flag if it is set
+   * \return True if the flag is set, false otherwise
+   */
+  bool checkIRQFlag(uint32_t pin, bool clear = true);
 
 #ifdef __cplusplus
 }
