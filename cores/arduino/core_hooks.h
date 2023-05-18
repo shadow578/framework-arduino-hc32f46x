@@ -1,12 +1,14 @@
 #ifndef __CORE_HOOKS_H
 #define __CORE_HOOKS_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define DEF_HOOK(name, ...) __attribute__((weak)) extern void core_hook_##name(##__VA_ARGS__);
+#define DEF_HOOK(name, ...) __attribute__((weak)) extern void core_hook_##name( __VA_ARGS__ );
 
     /**
      * called before setup(), but after SoC and core drivers are initialized
