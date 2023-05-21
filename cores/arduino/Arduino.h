@@ -46,8 +46,7 @@ extern "C"{
 #endif // __cplusplus
 
 #include "wiring_constants.h"
-
-void yield( void ) ;
+#include "yield.h"
 
   /* system functions */
 int main( void );
