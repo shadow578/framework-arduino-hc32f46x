@@ -40,7 +40,7 @@ extern "C"
     return systick_millis();
   }
 
-#if defined(ENABLE_MICROS) || defined(STUB_MICROS)
+#ifdef ENABLE_MICROS
   /**
    * \brief Returns the number of microseconds since the Arduino board began running the current program.
    *
