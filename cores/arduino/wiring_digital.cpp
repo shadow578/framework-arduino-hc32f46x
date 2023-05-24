@@ -39,7 +39,7 @@ uint32_t getPinMode(uint32_t dwPin)
 {
     if (dwPin >= BOARD_NR_GPIO_PINS)
     {
-        return INPUT;
+        return INPUT_FLOATING;
     }
 
     // read pin configuration
@@ -65,13 +65,13 @@ void digitalWrite(uint32_t dwPin, uint32_t dwVal)
         return;
     }
 
-    if (dwVal == LOW)
+    if (dwVal == HIGH)
     {
-        PORT_ResetBitsGPIO(dwPin);
+        PORT_SetBitsGPIO(dwPin);
     }
     else
     {
-        PORT_SetBitsGPIO(dwPin);
+        PORT_ResetBitsGPIO(dwPin);
     }
 }
 
