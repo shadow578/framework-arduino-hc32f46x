@@ -130,7 +130,8 @@ void _detachInterrupt(uint32_t pin, uint8_t irqNum)
     // clear pending and disable IRQ
     IRQn_Type irqVec = mapToIQRVector(irqNum);
     NVIC_ClearPendingIRQ(irqVec);
-    NVIC_EnableIRQ(irqVec);
+    NVIC_DisableIRQ(irqVec);
+    enIrqResign(irqVec);
 }
 // #endregion
 
