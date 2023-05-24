@@ -28,6 +28,7 @@ void core_init()
     // setup the SoC and initialize drivers
     flash_init();
     sysclock_init();
+    update_system_clock_frequencies();
     systick_init();
     interrupts_init();
     adc_init();

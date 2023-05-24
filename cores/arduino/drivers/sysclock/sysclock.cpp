@@ -1,7 +1,10 @@
 #include "sysclock.h"
 #include <hc32_ddl.h>
 
-__attribute__((weak)) void sysclock_init(void)
+system_clock_frequencies_t SYSTEM_CLOCK_FREQUENCIES = {0};
+
+//__attribute__((weak))
+void sysclock_init(void)
 {
     // setup divisors for the different bus clocks
     stc_clk_sysclk_cfg_t sysClkConf = {
@@ -44,22 +47,16 @@ __attribute__((weak)) void sysclock_init(void)
     CLK_SetSysClkSource(CLKSysSrcMPLL);
 }
 
-//
-// clock source getters
-//
-#define DEF_CLOCK_SOURCE_GETTER(name, src) \
-    uint32_t get_##name##_clock()          \
-    {                                      \
-        stc_clk_freq_t clkInfo;            \
-        CLK_GetClockFreq(&clkInfo);        \
-        return clkInfo.src##Freq;          \
-    }
-
-DEF_CLOCK_SOURCE_GETTER(sysclk, sysclk)
-DEF_CLOCK_SOURCE_GETTER(hclk, hclk)
-DEF_CLOCK_SOURCE_GETTER(pclk0, pclk0)
-DEF_CLOCK_SOURCE_GETTER(pclk1, pclk1)
-DEF_CLOCK_SOURCE_GETTER(pclk2, pclk2)
-DEF_CLOCK_SOURCE_GETTER(pclk3, pclk3)
-DEF_CLOCK_SOURCE_GETTER(pclk4, pclk4)
-DEF_CLOCK_SOURCE_GETTER(exclk, exck)
+void update_system_clock_frequencies()
+{
+    stc_clk_freq_t clkFreq;
+    CLK_GetClockFreq(&clkFreq);
+    SYSTEM_CLOCK_FREQUENCIES.system = clkFreq.sysclkFreq;
+    SYSTEM_CLOCK_FREQUENCIES.hclk = clkFreq.hclkFreq;
+    SYSTEM_CLOCK_FREQUENCIES.pclk0 = clkFreq.pclk0Freq;
+    SYSTEM_CLOCK_FREQUENCIES.pclk1 = clkFreq.pclk1Freq;
+    SYSTEM_CLOCK_FREQUENCIES.pclk2 = clkFreq.pclk2Freq;
+    SYSTEM_CLOCK_FREQUENCIES.pclk3 = clkFreq.pclk3Freq;
+    SYSTEM_CLOCK_FREQUENCIES.pclk4 = clkFreq.pclk4Freq;
+    SYSTEM_CLOCK_FREQUENCIES.exclk = clkFreq.exckFreq;
+}

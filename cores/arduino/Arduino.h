@@ -110,10 +110,10 @@ void loop( void ) ;
 
 #define bit(b) (1UL << (b))
 
-// default F_CPU to cpu frequency getter if not defined yet
-#ifndef F_CPU
+// dynamic F_CPU
 #include "drivers/sysclock/sysclock.h"
-#define F_CPU (get_cpu_clock())
+#ifndef F_CPU
+  #define F_CPU (SYSTEM_CLOCK_FREQUENCIES.hclk)
 #endif
 
 #endif // Arduino_h
