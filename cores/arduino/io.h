@@ -16,8 +16,13 @@
 //
 // digitalWrite
 //
-#define HIGH 1
-#define LOW 0
+#ifndef LOW
+  #define LOW 0
+#endif
+#ifndef HIGH
+  #define HIGH 1
+#endif
+
 
 //
 // public api
