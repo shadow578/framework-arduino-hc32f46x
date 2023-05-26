@@ -1,6 +1,7 @@
 #include <hc32_ddl.h>
 #include "Usart.h"
 #include "core_hooks.h"
+#include "core_debug.h"
 #include "yield.h"
 #include "../gpio/gpio.h"
 
@@ -38,6 +39,18 @@ inline void usart_irq_resign(usart_interrupt_config_t irq)
     NVIC_ClearPendingIRQ(irq.interrupt_number);
     enIrqResign(irq.interrupt_number);
 }
+
+//
+// debug print helpers
+//
+#define USART_REG_TO_X(reg) \
+    reg == M4_USART1   ? 1  \
+    : reg == M4_USART2 ? 2  \
+    : reg == M4_USART3 ? 3  \
+    : reg == M4_USART4 ? 4  \
+                       : 0
+#define USART_DEBUG_PRINTF(fmt, ...) \
+    CORE_DEBUG_PRINTF("[USART%d] " fmt, USART_REG_TO_X(this->config->peripheral.register_base), ##__VA_ARGS__)
 
 //
 // Usart class implementation
@@ -116,7 +129,7 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
 {
     // clear rx and tx buffers
     this->rxBuffer->clear();
-    this->txBuffer->clear();
+    //this->txBuffer->clear();
 
     // set IO pin functions
     PORT_SetFuncGPIO(this->config->pins.rx_pin, Disable);
@@ -139,10 +152,16 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     // (tx is enabled on-demand when data is available to send)
     USART_FuncCmd(this->config->peripheral.register_base, UsartRx, Enable);
     USART_FuncCmd(this->config->peripheral.register_base, UsartRxInt, Enable);
+
+    // write debug message AFTER init (this UART may be used for the debug message)
+    USART_DEBUG_PRINTF("begin completed\n");
 }
 
 void Usart::end()
 {
+    // write debug message BEFORE deinit (this UART may be used for the debug message)
+    USART_DEBUG_PRINTF("end()\n");
+
     // wait for tx buffer to empty
     flush();
 
