@@ -14,6 +14,32 @@ Usart Serial3(&USART3_config);
 #endif
 
 //
+// IRQ register / unregister helper
+//
+inline void usart_irq_register(usart_interrupt_config_t irq)
+{
+    // create irq registration struct
+    stc_irq_regi_conf_t irqConf = {
+        .enIntSrc = irq.interrupt_source,
+        .enIRQn = irq.interrupt_number,
+        .pfnCallback = irq.interrupt_handler,
+    };
+
+    // register and enable irq
+    enIrqRegistration(&irqConf);
+    NVIC_SetPriority(irqConf.enIRQn, irq.interrupt_priority);
+    NVIC_ClearPendingIRQ(irqConf.enIRQn);
+    NVIC_EnableIRQ(irqConf.enIRQn);
+}
+
+inline void usart_irq_resign(usart_interrupt_config_t irq)
+{
+    NVIC_DisableIRQ(irq.interrupt_number);
+    NVIC_ClearPendingIRQ(irq.interrupt_number);
+    enIrqResign(irq.interrupt_number);
+}
+
+//
 // Usart class implementation
 //
 Usart::Usart(struct usart_config_t *config)
@@ -103,31 +129,11 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     USART_UART_Init(this->config->peripheral.register_base, config);
     USART_SetBaudrate(this->config->peripheral.register_base, baud);
 
-    // setup usart interrupts:
-#define EN_IRQ(irq)                                               \
-    {                                                             \
-        stc_irq_regi_conf_t irqConf = {                           \
-            .enIntSrc = irq.interrupt_source,                     \
-            .enIRQn = irq.interrupt_number,                       \
-            .pfnCallback = irq.interrupt_handler,                 \
-        };                                                        \
-        enIrqRegistration(&irqConf);                              \
-        NVIC_SetPriority(irqConf.enIRQn, irq.interrupt_priority); \
-        NVIC_ClearPendingIRQ(irqConf.enIRQn);                     \
-        NVIC_EnableIRQ(irqConf.enIRQn);                           \
-    }
-
-    // RX data available
-    EN_IRQ(this->config->interrupts.rx_data_available);
-
-    // RX error
-    EN_IRQ(this->config->interrupts.rx_error);
-
-    // TX buffer empty
-    EN_IRQ(this->config->interrupts.tx_buffer_empty);
-
-    // TX Complete
-    EN_IRQ(this->config->interrupts.tx_complete);
+    // setup usart interrupts
+    usart_irq_register(this->config->interrupts.rx_data_available);
+    usart_irq_register(this->config->interrupts.rx_error);
+    usart_irq_register(this->config->interrupts.tx_buffer_empty);
+    usart_irq_register(this->config->interrupts.tx_complete);
 
     // enable usart RX + interrupts
     // (tx is enabled on-demand when data is available to send)
@@ -139,6 +145,16 @@ void Usart::end()
 {
     // wait for tx buffer to empty
     flush();
+
+    // disable uart peripheral
+    USART_FuncCmd(this->config->peripheral.register_base, UsartTx, Disable);
+    USART_FuncCmd(this->config->peripheral.register_base, UsartRx, Disable);
+
+    // resign usart interrupts
+    usart_irq_resign(this->config->interrupts.rx_data_available);
+    usart_irq_resign(this->config->interrupts.rx_error);
+    usart_irq_resign(this->config->interrupts.tx_buffer_empty);
+    usart_irq_resign(this->config->interrupts.tx_complete);
 
     // deinit uart
     USART_DeInit(this->config->peripheral.register_base);
