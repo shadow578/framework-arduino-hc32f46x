@@ -53,3 +53,14 @@ private:
   RingBuffer *rxBuffer;
   RingBuffer *txBuffer;
 };
+
+//
+// global instances
+//
+#ifndef DISABLE_SERIAL_GLOBALS
+extern Usart Serial1;
+extern Usart Serial2;
+extern Usart Serial3;
+
+#define Serial Serial1
+#endif

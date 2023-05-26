@@ -4,6 +4,18 @@
 #include "yield.h"
 #include "../gpio/gpio.h"
 
+//
+// global instances
+//
+#ifndef DISABLE_SERIAL_GLOBALS
+Usart Serial1(&USART1_config);
+Usart Serial2(&USART2_config);
+Usart Serial3(&USART3_config);
+#endif
+
+//
+// Usart class implementation
+//
 Usart::Usart(struct usart_config_t *config)
 {
     this->config = config;
