@@ -20,7 +20,6 @@
 #define HardwareSerial_h
 
 #include <stdint.h>
-#include "Print.h"
 #include "Stream.h"
 
 #define HARDSER_PARITY_EVEN (0x1ul)
@@ -64,36 +63,19 @@
 #define SERIAL_7O2 (HARDSER_STOP_BIT_2 | HARDSER_PARITY_ODD | HARDSER_DATA_7)
 #define SERIAL_8O2 (HARDSER_STOP_BIT_2 | HARDSER_PARITY_ODD | HARDSER_DATA_8)
 
-#define SERIAL_TX_BUFFER_SIZE 64
-#define SERIAL_RX_BUFFER_SIZE 64
-
 class HardwareSerial : public Stream
 {
 public:
-  HardwareSerial(struct usart_dev *usart_device,
-                 uint32_t tx_pin,
-                 uint32_t rx_pin);
-  void begin(uint32_t baud);
-  void begin(uint32_t baud, uint16_t config);
-  void end();
-  virtual int available(void);
-  int availableForWrite(void);
-  virtual int peek(void);
-  virtual int read(void);
-  virtual void flush(void);
-  virtual size_t write(uint8_t);
+  virtual void begin(uint32_t baud) = 0;
+  virtual void begin(uint32_t baud, uint16_t config) = 0;
+  virtual void end() = 0;
+  virtual int available(void) = 0;
+  virtual int peek(void) = 0;
+  virtual int read(void) = 0;
+  virtual void flush(void) = 0;
+  virtual size_t write(uint8_t) = 0;
   using Print::write; // pull in write(str) and write(buf, size) from Print
-  operator bool() { return true; };
-
-  // escape hatch to underlying usart_dev
-  struct usart_dev *c_dev(void) { return this->usart_device; }
-
-private:
-  struct usart_dev *usart_device;
-  uint32_t tx_pin;
-  uint32_t rx_pin;
+  virtual operator bool() = 0;
 };
-
-extern void serialEventRun(void) __attribute__((weak));
 
 #endif

@@ -4,6 +4,7 @@
 class RingBuffer
 {
 public:
+    RingBuffer(uint32_t len);
     RingBuffer(uint8_t *buffer, uint32_t len);
 
     uint32_t count();

@@ -3,6 +3,14 @@
 //
 // public
 //
+RingBuffer::RingBuffer(uint32_t len)
+{
+    this->buffer = new uint8_t[len];
+    this->bufferLen = len;
+    this->head = 0;
+    this->tail = 0;
+}
+
 RingBuffer::RingBuffer(uint8_t *buffer, uint32_t len)
 {
     this->buffer = buffer;
@@ -23,7 +31,7 @@ uint32_t RingBuffer::count()
     }
 }
 
-uint32_t RingBuffer::capacity() 
+uint32_t RingBuffer::capacity()
 {
     return this->bufferLen;
 }
@@ -83,13 +91,13 @@ void RingBuffer::clear()
 //
 // protected
 //
-#define INCREMENT_AND_LOOP_AROUND(ii)   \
-    {                                   \
-        ii++;                           \
+#define INCREMENT_AND_LOOP_AROUND(ii)    \
+    {                                    \
+        ii++;                            \
         if (ii >= (this->bufferLen - 1)) \
-        {                               \
-            ii = 0;                     \
-        }                               \
+        {                                \
+            ii = 0;                      \
+        }                                \
     }
 
 void RingBuffer::_push(uint8_t element)
