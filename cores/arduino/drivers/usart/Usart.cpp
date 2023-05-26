@@ -208,3 +208,10 @@ size_t Usart::write(uint8_t ch)
     // wrote one byte
     return 1;
 }
+
+const usart_receive_error_t Usart::getReceiveError()
+{
+    auto rxError = this->config->state.rx_error;
+    this->config->state.rx_error = usart_receive_error_t::None;
+    return rxError;
+}

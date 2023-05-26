@@ -45,9 +45,15 @@ public:
    */
   const usart_config_t *c_dev(void) { return this->config; }
 
+  /**
+   * @brief get the last receive error
+   * @note calling this function clears the error
+   */
+  const usart_receive_error_t getReceiveError(void);
+
 private:
   // usart configuration struct
-  const usart_config_t *config;
+  usart_config_t *config;
 
   // rx / tx buffers (unboxed from config)
   RingBuffer *rxBuffer;
