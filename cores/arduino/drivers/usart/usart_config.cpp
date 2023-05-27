@@ -22,8 +22,8 @@ usart_config_t USART1_config = {
         .clock_id = PWC_FCG1_PERIPH_USART1,
     },
     .pins = {
-        .tx_pin = PC0,
-        .rx_pin = PC1,
+        .tx_pin = BOARD_USART1_TX_PIN,
+        .rx_pin = BOARD_USART1_RX_PIN,
     },
     .interrupts = {
         .rx_data_available = {
@@ -64,8 +64,8 @@ usart_config_t USART2_config = {
         .clock_id = PWC_FCG1_PERIPH_USART2,
     },
     .pins = {
-        .tx_pin = PA9,
-        .rx_pin = PA15,
+        .tx_pin = BOARD_USART2_TX_PIN,
+        .rx_pin = BOARD_USART2_RX_PIN,
     },
     .interrupts = {
         .rx_data_available = {
@@ -106,8 +106,8 @@ usart_config_t USART3_config = {
         .clock_id = PWC_FCG1_PERIPH_USART3,
     },
     .pins = {
-        .tx_pin = PE5,
-        .rx_pin = PE4,
+        .tx_pin = BOARD_USART3_TX_PIN,
+        .rx_pin = BOARD_USART3_RX_PIN,
     },
     .interrupts = {
         .rx_data_available = {

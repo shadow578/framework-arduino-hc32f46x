@@ -124,6 +124,18 @@
 #define PH2 82
 
 //
+// USART gpio pins
+//
+#define BOARD_USART1_TX_PIN PC0
+#define BOARD_USART1_RX_PIN PC1
+
+#define BOARD_USART2_TX_PIN PA9
+#define BOARD_USART2_RX_PIN PA15
+
+#define BOARD_USART3_TX_PIN PE5
+#define BOARD_USART3_RX_PIN PE4
+
+//
 // SPI gpio pins
 //
 #define BOARD_NR_SPI 3
