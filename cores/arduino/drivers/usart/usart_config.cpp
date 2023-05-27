@@ -52,8 +52,8 @@ usart_config_t USART1_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer(SERIAL_TX_BUFFER_SIZE),
+        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
+        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
 };
@@ -94,8 +94,8 @@ usart_config_t USART2_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer(SERIAL_TX_BUFFER_SIZE),
+        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
+        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
 };
@@ -136,8 +136,8 @@ usart_config_t USART3_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer(SERIAL_TX_BUFFER_SIZE),
+        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
+        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
 };

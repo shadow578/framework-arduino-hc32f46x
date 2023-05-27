@@ -129,7 +129,7 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
 {
     // clear rx and tx buffers
     this->rxBuffer->clear();
-    //this->txBuffer->clear();
+    // this->txBuffer->clear();
 
     // set IO pin functions
     PORT_SetFuncGPIO(this->config->pins.rx_pin, Disable);
@@ -219,21 +219,15 @@ void Usart::flush(void)
 
 size_t Usart::write(uint8_t ch)
 {
-    uint32_t errors = 0;
-
-    // wait until tx buffer is empty
-    while (!this->txBuffer->isEmpty())
+    // wait until tx buffer is no longer full
+    while (this->txBuffer->isFull())
     {
-        if (++errors > 500)
-            return 1;
         yield();
     }
 
-    // add to tx buffer until it succeeds
+    // add to tx buffer
     while (!this->txBuffer->push(ch))
     {
-        if (++errors > 500)
-            return 1;
         yield();
     }
 

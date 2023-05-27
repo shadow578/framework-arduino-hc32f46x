@@ -108,12 +108,12 @@ struct usart_runtime_state_t
     /**
      * @brief USART receive buffer
      */
-    RingBuffer *rx_buffer;
+    RingBuffer<uint8_t> *rx_buffer;
 
     /**
      * @brief USART transmit buffer
      */
-    RingBuffer *tx_buffer;
+    RingBuffer<uint8_t> *tx_buffer;
 
     /**
      * @brief last error in RX error interrupt handler

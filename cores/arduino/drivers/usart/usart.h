@@ -56,8 +56,8 @@ private:
   usart_config_t *config;
 
   // rx / tx buffers (unboxed from config)
-  RingBuffer *rxBuffer;
-  RingBuffer *txBuffer;
+  RingBuffer<uint8_t> *rxBuffer;
+  RingBuffer<uint8_t> *txBuffer;
 };
 
 //
