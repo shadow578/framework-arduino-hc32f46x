@@ -19,6 +19,8 @@
 #ifndef TWO_WIRE_H_
 #define TWO_WIRE_H_
 
+#error "Wire library is not yet supported on the HC32F460"
+
 #include "Stream.h"
 #include "variant.h"
 #include "RingBuffer.h"

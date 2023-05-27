@@ -19,6 +19,8 @@
 #ifndef SPI_H_
 #define SPI_H_
 
+#error "SPI library is not yet supported on the HC32F460"
+
 #include "Arduino.h"
 
 // SPI_HAS_TRANSACTION means SPI has
@@ -33,7 +35,8 @@
 #define SPI_MODE2 0x03
 #define SPI_MODE3 0x01
 
-class SPISettings {
+class SPISettings
+{
 public:
 	SPISettings(uint32_t clock, BitOrder bitOrder, uint8_t dataMode)
 	{
@@ -47,8 +50,8 @@ public:
 	}
 
 private:
-
-	void init_AlwaysInline(uint32_t clock, BitOrder bitOrder, uint8_t dataMode) __attribute__((__always_inline__)) {
+	void init_AlwaysInline(uint32_t clock, BitOrder bitOrder, uint8_t dataMode) __attribute__((__always_inline__))
+	{
 		this->clockFreq = clock;
 		this->bitOrder = bitOrder;
 		this->dataMode = dataMode;
@@ -61,7 +64,8 @@ private:
 	friend class SPIClass;
 };
 
-class SPIClass {
+class SPIClass
+{
 public:
 	// Parameters passed to the constructor are typically used for assigning the pins etc.
 	SPIClass();
@@ -90,7 +94,8 @@ public:
 void SPIClass::transfer(void *buf, size_t count)
 {
 	uint8_t *buffer = reinterpret_cast<uint8_t *>(buf);
-	for (size_t i = 0; i < count; i++) {
+	for (size_t i = 0; i < count; i++)
+	{
 		*buffer = transfer(*buffer);
 		buffer++;
 	}

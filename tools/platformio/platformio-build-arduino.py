@@ -45,6 +45,11 @@ env.Append(
         CORE_DIR,
         join(CORE_DIR, "drivers"),
         VARIANT_DIR,
+    ],
+
+    # add libraries path
+    LIBSOURCE_DIRS=[
+        join(FRAMEWORK_DIR, "libraries"),
     ]
 )
 
@@ -72,7 +77,6 @@ if not isfile(ddl_build_script):
     env.Exit(1)
 
 SConscript(ddl_build_script)
-
 
 #
 # Target: Build Core Library
