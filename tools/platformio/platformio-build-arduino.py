@@ -21,7 +21,14 @@ build_core = board.get("build.core", "")
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-hc32f46x")
 CORE_DIR = join(FRAMEWORK_DIR, "cores", "arduino")
 assert isdir(CORE_DIR)
-VARIANT_DIR = join(FRAMEWORK_DIR, "variants", "generic_hc32f460") #TODO: detect get variant from board manifest
+
+# get and check variant directory
+board_variant = board.get("build.variant", "")
+if not board_variant:
+    sys.stderr.write("Error: build.variant is not set")
+    env.Exit(1)
+
+VARIANT_DIR = join(FRAMEWORK_DIR, "variants", board_variant)
 assert isdir(VARIANT_DIR)
 
 
