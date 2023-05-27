@@ -21,6 +21,8 @@ build_core = board.get("build.core", "")
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-hc32f46x")
 CORE_DIR = join(FRAMEWORK_DIR, "cores", "arduino")
 assert isdir(CORE_DIR)
+VARIANT_DIR = join(FRAMEWORK_DIR, "variants", "generic_hc32f460") #TODO: detect get variant from board manifest
+assert isdir(VARIANT_DIR)
 
 
 # setup compile environment
@@ -35,7 +37,7 @@ env.Append(
     CPPPATH=[
         CORE_DIR,
         join(CORE_DIR, "drivers"),
-        join(FRAMEWORK_DIR, "variants", "generic_hc32f460") #TODO: detect get variant from board manifest
+        VARIANT_DIR,
     ]
 )
 
@@ -70,4 +72,5 @@ SConscript(ddl_build_script)
 #
 # Target: Build Core Library
 #
-env.BuildSources(join("$BUILD_DIR", "FrameworkArduino"), CORE_DIR)
+env.BuildSources(join("$BUILD_DIR", "FrameworkArduino", "CORE"), CORE_DIR)
+env.BuildSources(join("$BUILD_DIR", "FrameworkArduino", "VARIANT"), VARIANT_DIR)

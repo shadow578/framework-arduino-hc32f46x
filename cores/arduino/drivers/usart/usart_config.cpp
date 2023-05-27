@@ -1,6 +1,6 @@
 #include "usart_config.h"
 #include "usart_handlers.h"
-#include "../gpio/gpio_pindefs.h"
+#include "../../WVariant.h"
 #include "../../core_hooks.h"
 
 #ifndef SERIAL_BUFFER_SIZE

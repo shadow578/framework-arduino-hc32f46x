@@ -2,7 +2,7 @@
 #include <hc32_ddl.h>
 #include <addon_gpio.h>
 #include "../adc/adc.h"
-#include "gpio_pindefs.h"
+#include "../../WVariant.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -10,77 +10,8 @@ extern "C"
 #endif
 
 //
-// number of pins
+// GPIO wrappers for PORT_* functions
 //
-#define BOARD_NR_GPIO_PINS 83
-#define BOARD_NR_ADC_PINS 16
-
-//
-// SPI gpio pins
-//
-#define BOARD_NR_SPI 3
-#define BOARD_SPI1_NSS_PIN PA4
-#define BOARD_SPI1_SCK_PIN PA5
-#define BOARD_SPI1_MISO_PIN PA6
-#define BOARD_SPI1_MOSI_PIN PA7
-
-#define BOARD_SPI2_NSS_PIN PB12
-#define BOARD_SPI2_SCK_PIN PB13
-#define BOARD_SPI2_MISO_PIN PB14
-#define BOARD_SPI2_MOSI_PIN PB15
-
-#define BOARD_SPI3_NSS_PIN PA15
-#define BOARD_SPI3_SCK_PIN PB3
-#define BOARD_SPI3_MISO_PIN PB4
-#define BOARD_SPI3_MOSI_PIN PB5
-
-    //
-    // GPIO pin map configuration
-    //
-    typedef struct pin_info_t
-    {
-        /**
-         * @brief bit position of the pin in the port
-         */
-        uint8_t gpio_bit;
-
-        /**
-         * @brief IO port this pin belongs to
-         */
-        __IO en_port_t gpio_port;
-
-        /**
-         * @brief bit mask of the pin in the port
-         */
-        __IO en_pin_t gpio_pin;
-
-        /**
-         * @brief pointer to the ADC device of this pin, if any
-         * @note NULL if not a ADC pin
-         */
-        adc_dev *adc_device;
-
-        /**
-         * @brief adc channel number of this pin, if any
-         * @note ADC_PIN_INVALID if not a ADC pin
-         */
-        __IO uint8_t adc_channel;
-
-        /**
-         * @brief function of this GPIO pin, set by GPIO_SetFunc
-         */
-        __IO en_port_func_t function;
-    } pin_info_t;
-
-    /**
-     * @brief GPIO pin map
-     */
-    extern const pin_info_t PIN_MAP[BOARD_NR_GPIO_PINS];
-
-//
-// @brief GPIO wrappers for PORT_* functions
-//
-#define IS_GPIO_PIN(gpio_pin) (gpio_pin >= 0 && gpio_pin < BOARD_NR_GPIO_PINS)
 #define ASSERT_GPIO_PIN(gpio_pin) \
     if (!IS_GPIO_PIN(gpio_pin))   \
     {                             \
