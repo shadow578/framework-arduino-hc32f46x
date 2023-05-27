@@ -52,10 +52,8 @@ core_requirements = [
     "interrupts",
     "pwc",
     "rmu",
-    "sdioc",
     "sram",
     "usart",
-    "wdt",
 ]
 for req in core_requirements:
     board.update(f"build.ddl.{req}", "true")
