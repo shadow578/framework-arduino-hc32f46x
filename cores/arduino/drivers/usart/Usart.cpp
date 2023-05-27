@@ -132,8 +132,8 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     // this->txBuffer->clear();
 
     // set IO pin functions
-    PORT_SetFuncGPIO(this->config->pins.rx_pin, Disable);
-    PORT_SetFuncGPIO(this->config->pins.tx_pin, Disable);
+    GPIO_SetFunc(this->config->pins.rx_pin, Disable);
+    GPIO_SetFunc(this->config->pins.tx_pin, Disable);
 
     // enable peripheral clock
     PWC_Fcg1PeriphClockCmd(this->config->peripheral.clock_id, Enable);

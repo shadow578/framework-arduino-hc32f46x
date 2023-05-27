@@ -96,22 +96,3 @@ extern const pin_info_t PIN_MAP[BOARD_NR_GPIO_PINS] = {
 	{1, PortH, Pin01, NULL, ADC_PIN_INVALID, Func_Gpio}, // PH1   OSC_OUT
 	{2, PortH, Pin02, NULL, ADC_PIN_INVALID, Func_Gpio}, // PH2   OK
 };
-
-extern const uint8_t ADC_PINS[BOARD_NR_ADC_PINS] = {
-	PA0,
-	PA1,
-	PA2,
-	PA3,
-	PA4,
-	PA5,
-	PA6,
-	PA7,
-	PB0,
-	PB1,
-	PC0,
-	PC1,
-	PC2,
-	PC3,
-	PC4,
-	PC5,
-};

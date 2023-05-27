@@ -155,7 +155,7 @@ void adc_setPinMode(uint8_t adcPin, en_pin_mode_t mode)
 		.enPinMode = mode,
 		.enPullUp = Disable,
 	};
-	PORT_InitGPIO(pin, &portConf);
+	GPIO_Init(pin, &portConf);
 }
 
 void adc_setChannelPinMode(const M4_ADC_TypeDef *ADCx, uint32_t channel, en_pin_mode_t mode)
