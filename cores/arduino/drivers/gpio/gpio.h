@@ -88,12 +88,22 @@ extern "C"
 
     /**
      * @brief GPIO wrapper for PORT_SetFunc
+     * @param enFuncSelect GPIO pin primary function select
+     * @param enSubFunc GPIO pin sub-function enable/disable (subfunction is GPIO output for most pins)
+     */
+    inline en_result_t GPIO_SetFunction(uint16_t gpio_pin, en_port_func_t enFuncSelect, en_functional_state_t enSubFunc = Disable)
+    {
+        ASSERT_GPIO_PIN(gpio_pin);
+        return PORT_SetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
+    }
+
+    /**
+     * @brief GPIO wrapper for PORT_SetFunc
      * @note function select is chosen in PIN_MAP
      */
     inline en_result_t GPIO_SetFunc(uint16_t gpio_pin, en_functional_state_t state)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
-        return PORT_SetFunc(PIN_ARG(gpio_pin), PIN_MAP[gpio_pin].function, state);
+        return GPIO_SetFunction(gpio_pin, PIN_MAP[gpio_pin].function, state);
     }
 
 #ifdef __cplusplus
