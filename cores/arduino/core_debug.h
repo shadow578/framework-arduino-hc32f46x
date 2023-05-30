@@ -2,7 +2,6 @@
 #define _CORE_DEBUG_H
 
 #ifdef __CORE_DEBUG
-#warning "'__CORE_DEBUG' is defined, Arduino Core Debug is Enabled"
 
 #include <stdio.h>
 
