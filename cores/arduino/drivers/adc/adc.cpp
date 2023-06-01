@@ -1,5 +1,6 @@
 #include "adc.h"
 #include "../gpio/gpio.h"
+#include "../irqn/irqn.h"
 
 //
 // ADC1 device
@@ -306,9 +307,14 @@ void Dma1Btc3_IrqHandler(void)
 
 void adc_dmaIRQConfig(void)
 {
+	// get auto-assigned IRQn
+	IRQn_Type irqn;
+	irqn_aa_get(irqn, "adc dma irq");
+
+	// register IRQ
 	stc_irq_regi_conf_t stcAdcIrqCfg = {
 		.enIntSrc = INT_DMA1_BTC3,
-		.enIRQn = Int029_IRQn,
+		.enIRQn = irqn,
 		.pfnCallback = &Dma1Btc3_IrqHandler,
 	};
 	adc_dmaRegisterIRQ(&stcAdcIrqCfg, DDL_IRQ_PRIORITY_DEFAULT);

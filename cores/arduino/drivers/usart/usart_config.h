@@ -36,6 +36,7 @@ struct usart_interrupt_config_t
 {
     /**
      * @brief IRQn assigned to this interrupt handler
+     * @note auto-assigned in Usart implementation
      */
     IRQn_Type interrupt_number;
 

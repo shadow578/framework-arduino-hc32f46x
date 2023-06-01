@@ -3,7 +3,6 @@
 #include "../drivers/sysclock/systick.h"
 #include "../drivers/adc/adc.h"
 #include "../drivers/panic/fault_handlers.h"
-#include "../WInterrupts.h"
 #include <hc32_ddl.h>
 
 /**
@@ -32,6 +31,5 @@ void core_init()
     sysclock_init();
     update_system_clock_frequencies();
     systick_init();
-    interrupts_init();
     adc_init();
 }

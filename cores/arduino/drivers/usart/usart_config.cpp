@@ -25,25 +25,21 @@ usart_config_t USART1_config = {
     },
     .interrupts = {
         .rx_data_available = {
-            .interrupt_number = Int002_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART1_RI,
             .interrupt_handler = USARTx_rx_data_available_irq<1>,
         },
         .rx_error = {
-            .interrupt_number = Int020_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART1_EI,
             .interrupt_handler = USARTx_rx_error_irq<1>,
         },
         .tx_buffer_empty = {
-            .interrupt_number = Int003_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART1_TI,
             .interrupt_handler = USARTx_tx_buffer_empty_irq<1>,
         },
         .tx_complete = {
-            .interrupt_number = Int021_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART1_TCI,
             .interrupt_handler = USARTx_tx_complete_irq<1>,
@@ -65,25 +61,21 @@ usart_config_t USART2_config = {
     },
     .interrupts = {
         .rx_data_available = {
-            .interrupt_number = Int004_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART2_RI,
             .interrupt_handler = USARTx_rx_data_available_irq<2>,
         },
         .rx_error = {
-            .interrupt_number = Int022_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART2_EI,
             .interrupt_handler = USARTx_rx_error_irq<2>,
         },
         .tx_buffer_empty = {
-            .interrupt_number = Int005_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART2_TI,
             .interrupt_handler = USARTx_tx_buffer_empty_irq<2>,
         },
         .tx_complete = {
-            .interrupt_number = Int023_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART2_TCI,
             .interrupt_handler = USARTx_tx_complete_irq<2>,
@@ -105,25 +97,21 @@ usart_config_t USART3_config = {
     },
     .interrupts = {
         .rx_data_available = {
-            .interrupt_number = Int008_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART3_RI,
             .interrupt_handler = USARTx_rx_data_available_irq<3>,
         },
         .rx_error = {
-            .interrupt_number = Int024_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART3_EI,
             .interrupt_handler = USARTx_rx_error_irq<3>,
         },
         .tx_buffer_empty = {
-            .interrupt_number = Int009_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART3_TI,
             .interrupt_handler = USARTx_tx_buffer_empty_irq<3>,
         },
         .tx_complete = {
-            .interrupt_number = Int025_IRQn,
             .interrupt_priority = DDL_IRQ_PRIORITY_03,
             .interrupt_source = INT_USART3_TCI,
             .interrupt_handler = USARTx_tx_complete_irq<3>,

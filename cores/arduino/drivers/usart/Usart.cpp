@@ -4,6 +4,7 @@
 #include "core_debug.h"
 #include "yield.h"
 #include "../gpio/gpio.h"
+#include "../irqn/irqn.h"
 
 //
 // global instances
@@ -17,8 +18,13 @@ Usart Serial3(&USART3_config, VARIANT_USART3_TX_PIN, VARIANT_USART3_RX_PIN);
 //
 // IRQ register / unregister helper
 //
-inline void usart_irq_register(usart_interrupt_config_t irq)
+inline void usart_irq_register(usart_interrupt_config_t &irq, const char *name)
 {
+    // get auto-assigned irqn and set in irq struct
+    IRQn_Type irqn;
+    irqn_aa_get(irqn, name);
+    irq.interrupt_number = irqn;
+
     // create irq registration struct
     stc_irq_regi_conf_t irqConf = {
         .enIntSrc = irq.interrupt_source,
@@ -33,11 +39,15 @@ inline void usart_irq_register(usart_interrupt_config_t irq)
     NVIC_EnableIRQ(irqConf.enIRQn);
 }
 
-inline void usart_irq_resign(usart_interrupt_config_t irq)
+inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
 {
+    // disable interrupt and clear pending
     NVIC_DisableIRQ(irq.interrupt_number);
     NVIC_ClearPendingIRQ(irq.interrupt_number);
     enIrqResign(irq.interrupt_number);
+
+    // resign auto-assigned irqn
+    irqn_aa_resign(irq.interrupt_number, name);
 }
 
 //
@@ -145,10 +155,10 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     USART_SetBaudrate(this->config->peripheral.register_base, baud);
 
     // setup usart interrupts
-    usart_irq_register(this->config->interrupts.rx_data_available);
-    usart_irq_register(this->config->interrupts.rx_error);
-    usart_irq_register(this->config->interrupts.tx_buffer_empty);
-    usart_irq_register(this->config->interrupts.tx_complete);
+    usart_irq_register(this->config->interrupts.rx_data_available, "usart rx data available");
+    usart_irq_register(this->config->interrupts.rx_error, "usart rx error");
+    usart_irq_register(this->config->interrupts.tx_buffer_empty, "usart tx buffer empty");
+    usart_irq_register(this->config->interrupts.tx_complete, "usart tx complete");
 
     // enable usart RX + interrupts
     // (tx is enabled on-demand when data is available to send)
@@ -157,6 +167,7 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
 
     // write debug message AFTER init (this UART may be used for the debug message)
     USART_DEBUG_PRINTF("begin completed\n");
+    this->initialized = true;
 }
 
 void Usart::end()
@@ -172,10 +183,10 @@ void Usart::end()
     USART_FuncCmd(this->config->peripheral.register_base, UsartRx, Disable);
 
     // resign usart interrupts
-    usart_irq_resign(this->config->interrupts.rx_data_available);
-    usart_irq_resign(this->config->interrupts.rx_error);
-    usart_irq_resign(this->config->interrupts.tx_buffer_empty);
-    usart_irq_resign(this->config->interrupts.tx_complete);
+    usart_irq_resign(this->config->interrupts.rx_data_available, "usart rx data available");
+    usart_irq_resign(this->config->interrupts.rx_error, "usart rx error");
+    usart_irq_resign(this->config->interrupts.tx_buffer_empty, "usart tx buffer empty");
+    usart_irq_resign(this->config->interrupts.tx_complete, "usart tx complete");
 
     // deinit uart
     USART_DeInit(this->config->peripheral.register_base);
@@ -183,6 +194,8 @@ void Usart::end()
     // clear rx and tx buffers
     this->rxBuffer->clear();
     this->txBuffer->clear();
+
+    this->initialized = false;
 }
 
 int Usart::available(void)
@@ -215,12 +228,25 @@ int Usart::read(void)
 
 void Usart::flush(void)
 {
+    // ignore if not initialized
+    if (!this->initialized)
+    {
+        return;
+    }
+
+    // wait for tx buffer to empty
     while (!this->txBuffer->isEmpty())
         ;
 }
 
 size_t Usart::write(uint8_t ch)
 {
+    // if uninitialized, ignore write
+    if (!this->initialized)
+    {
+        return 1;
+    }
+
     // wait until tx buffer is no longer full
     while (this->txBuffer->isFull())
     {

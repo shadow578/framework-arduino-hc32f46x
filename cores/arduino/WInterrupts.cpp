@@ -2,12 +2,8 @@
 #include "wiring_constants.h"
 #include "core_debug.h"
 #include "drivers/gpio/gpio.h"
+#include "drivers/irqn/irqn.h"
 #include <hc32_ddl.h>
-
-// configuration for IRQn auto-assignment
-#define AVAILABLE_IRQn_COUNT 10                       // make 10 IRQn available for use with external interrupts
-#define FIRST_IRQn 10                                 // the first available is IRQ10
-#define LAST_IRQn (FIRST_IRQn + AVAILABLE_IRQn_COUNT) // the last available will be IRQ20
 
 // #region Utilities
 inline en_exti_lvl_t mapToTriggerMode(uint32_t mode)
@@ -70,15 +66,7 @@ inline en_int_src_t mapToInterruptSource(uint32_t pin)
     return (en_int_src_t)ch;
 }
 
-inline IRQn_Type mapToIQRVector(uint8_t n)
-{
-    // map 0-10 to IRQ 10-20
-    uint8_t vec = FIRST_IRQn + n;
-    CORE_ASSERT(vec >= FIRST_IRQn && vec <= LAST_IRQn, "external interrupt IRQn out of range")
-    return (IRQn_Type)vec;
-}
-
-void _attachInterrupt(uint32_t pin, voidFuncPtr handler, uint8_t irqNum, uint32_t mode)
+void _attachInterrupt(uint32_t pin, voidFuncPtr handler, IRQn_Type irqn, uint32_t mode)
 {
     // check inputs
     if (pin >= BOARD_NR_GPIO_PINS || !handler)
@@ -103,7 +91,7 @@ void _attachInterrupt(uint32_t pin, voidFuncPtr handler, uint8_t irqNum, uint32_
     // register IRQ
     stc_irq_regi_conf_t irqReg = {
         .enIntSrc = mapToInterruptSource(pin),
-        .enIRQn = mapToIQRVector(irqNum),
+        .enIRQn = irqn,
         .pfnCallback = handler};
     enIrqRegistration(&irqReg);
 
@@ -113,7 +101,7 @@ void _attachInterrupt(uint32_t pin, voidFuncPtr handler, uint8_t irqNum, uint32_
     NVIC_EnableIRQ(irqReg.enIRQn);
 }
 
-void _detachInterrupt(uint32_t pin, uint8_t irqNum)
+void _detachInterrupt(uint32_t pin, IRQn_Type irqn)
 {
     // check inputs
     if (pin >= BOARD_NR_GPIO_PINS)
@@ -128,77 +116,113 @@ void _detachInterrupt(uint32_t pin, uint8_t irqNum)
     GPIO_Init(pin, &portConf);
 
     // clear pending and disable IRQ
-    IRQn_Type irqVec = mapToIQRVector(irqNum);
-    NVIC_ClearPendingIRQ(irqVec);
-    NVIC_DisableIRQ(irqVec);
-    enIrqResign(irqVec);
+    NVIC_ClearPendingIRQ(irqn);
+    NVIC_DisableIRQ(irqn);
+    enIrqResign(irqn);
 }
 // #endregion
 
-// #region IRQn auto-assignment
-#define IRQn_MAPPING_NONE 0xff
-
-/**
- * maps IRQn to pin number using that IRQn
- * [IRQn] = <pin_nr>|IRQn_MAPPING_NONE
- */
-static uint32_t pinToIRQnMapping[AVAILABLE_IRQn_COUNT];
-
-/**
- * get the next IRQn that is available for use
- */
-inline bool getNextFreeIRQn(uint8_t &irqn)
+// #region pin to IRQn mapping
+typedef struct pin_to_irqn_mapping_t
 {
-    // find the first free IRQn
-    for (int i = 0; i < AVAILABLE_IRQn_COUNT; i++)
+    uint32_t pin;
+    IRQn_Type irqn;
+    struct pin_to_irqn_mapping_t *next;
+} pin_to_irqn_mapping_t;
+
+/**
+ * @brief Linked list of pin to IRQn mappings
+ */
+pin_to_irqn_mapping_t *pin_to_irqn_mapping = NULL;
+
+/**
+ * @brief insert a pin -> irqn mapping
+ */
+inline void insert_pin_to_irqn_mapping(uint32_t pin, IRQn_Type irqn)
+{
+    // create new node
+    pin_to_irqn_mapping_t node = {
+        .pin = pin,
+        .irqn = irqn,
+        .next = NULL,
+    };
+
+    // insert node...
+    if (pin_to_irqn_mapping == NULL)
     {
-        if (pinToIRQnMapping[i] == IRQn_MAPPING_NONE)
+        // ... as head
+        pin_to_irqn_mapping = &node;
+    }
+    else
+    {
+        // ... as child of last node:
+        // find last node
+        pin_to_irqn_mapping_t *parent = pin_to_irqn_mapping;
+        while (parent->next != NULL)
         {
-            irqn = i;
-            return true;
+            parent = parent->next;
         }
+
+        // set as child
+        parent->next = &node;
+    }
+}
+
+/**
+ * @brief get a pin -> irqn mapping by pin number
+ */
+inline bool get_pin_to_irqn_mapping(uint32_t pin, pin_to_irqn_mapping_t &mapping)
+{
+    // find node
+    pin_to_irqn_mapping_t *node = pin_to_irqn_mapping;
+    while (node != NULL && node->pin != pin)
+    {
+        node = node->next;
     }
 
-    // if we got here, no more IRQns are available...
+    // return mapping
+    if (node != NULL && node->pin == pin)
+    {
+        mapping = *node;
+        return true;
+    }
+
+    // not found
     return false;
 }
 
 /**
- * get the IRQn that is assigned to a pin's interrupt.
+ * @brief remove a pin -> irqn mapping by pin number
  */
-inline bool getIRQnForPin(uint32_t pin, uint8_t &irqn)
+inline void remove_pin_to_irqn_mapping(uint32_t pin)
 {
-    // linear search the pin in the mapping
-    for (int i = 0; i < AVAILABLE_IRQn_COUNT; i++)
+    // find node
+    pin_to_irqn_mapping_t *node = pin_to_irqn_mapping;
+    pin_to_irqn_mapping_t *parent = NULL;
+    while (node != NULL && node->pin != pin)
     {
-        if (pinToIRQnMapping[i] == pin)
-        {
-            irqn = i;
-            return true;
-        }
+        parent = node;
+        node = node->next;
     }
 
-    // if we got here, no IRQn is assigned to the pin...
-    return false;
+    // remove node
+    if (node != NULL && node->pin == pin)
+    {
+        // remove node from linked list
+        if (parent != NULL)
+        {
+            parent->next = node->next;
+        }
+        else
+        {
+            pin_to_irqn_mapping = node->next;
+        }
+
+        // free node
+        delete[] node;
+    }
 }
 
-/**
- * assign a IRQn to a pin
- */
-inline void assignIRQn(uint32_t pin, uint8_t irqn)
-{
-    CORE_ASSERT(pinToIRQnMapping[irqn] == IRQn_MAPPING_NONE, "attempted to assign already assigned IRQn");
-    pinToIRQnMapping[irqn] = pin;
-}
-
-/**
- * clear the assignment of a IRQn to a pin
- */
-inline void clearIRQnAssignment(uint32_t pin, uint8_t irqn)
-{
-    CORE_ASSERT(pinToIRQnMapping[irqn] == pin, "attempted to clear IRQn assignment for unassigned IRQn");
-    pinToIRQnMapping[irqn] = IRQn_MAPPING_NONE;
-}
 // #endregion
 
 int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
@@ -207,21 +231,21 @@ int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
     detachInterrupt(pin);
 
     // auto-assign a irqn
-    uint8_t irqn;
-    if (!getNextFreeIRQn(irqn))
+    IRQn_Type irqn;
+    if (irqn_aa_get(irqn, "external interrupt") != Ok)
     {
         // no more IRQns available...
-        //CORE_ASSERT_FAIL("no more IRQns available for external interrupts")
+        // CORE_ASSERT_FAIL("no more IRQns available for external interrupts")
         CORE_DEBUG_PRINTF("attachInterrupt: no IRQn available for pin=%lu\n", pin);
         return -1;
     }
 
-    // set the assignment
-    assignIRQn(pin, irqn);
+    // insert pin -> irqn mapping
+    insert_pin_to_irqn_mapping(pin, irqn);
 
     // set the interrupt
     _attachInterrupt(pin, callback, irqn, mode);
-    CORE_DEBUG_PRINTF("attachInterrupt: pin=%lu, irqn=%u, mode=%lu\n", pin, irqn, mode);
+    CORE_DEBUG_PRINTF("attachInterrupt: pin=%lu, irqn=%d, mode=%lu\n", pin, int(irqn), mode);
 
     // return assigned irqn
     return irqn;
@@ -229,21 +253,23 @@ int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
 
 void detachInterrupt(uint32_t pin)
 {
-    // get IRQn for the pin
-    uint8_t irqn;
-    if (!getIRQnForPin(pin, irqn))
+    // get irqn for pin from mapping
+    pin_to_irqn_mapping_t mapping;
+    if (!get_pin_to_irqn_mapping(pin, mapping))
     {
-        // no IRQn assigned to the pin...
-        //CORE_ASSERT_FAIL("attempted to free IRQn that was not assigned yet")
+        // no mapping for this pin...
+        // CORE_ASSERT_FAIL("attempted to detach interrupt with no pin mapping")
         return;
     }
 
     // remove the interrupt
+    IRQn_Type irqn = mapping.irqn;
     _detachInterrupt(pin, irqn);
     CORE_DEBUG_PRINTF("detachInterrupt: pin=%ld, irqn=%u\n", pin, irqn);
 
-    // clear irqn assignment
-    clearIRQnAssignment(pin, irqn);
+    // clear irqn assignment and remove mapping
+    remove_pin_to_irqn_mapping(pin);
+    irqn_aa_resign(irqn, "external interrupt");
 }
 
 bool checkIRQFlag(uint32_t pin, bool clear)
@@ -259,13 +285,4 @@ bool checkIRQFlag(uint32_t pin, bool clear)
     }
 
     return false;
-}
-
-void interrupts_init()
-{
-    // set all IRQn assignments to NONE
-    for (int i = 0; i < AVAILABLE_IRQn_COUNT; i++)
-    {
-        pinToIRQnMapping[i] = IRQn_MAPPING_NONE;
-    }
 }

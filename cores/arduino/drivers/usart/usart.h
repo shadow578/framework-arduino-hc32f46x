@@ -68,6 +68,9 @@ private:
   // rx / tx buffers (unboxed from config)
   RingBuffer<uint8_t> *rxBuffer;
   RingBuffer<uint8_t> *txBuffer;
+
+  // is initialized? (begin() called)
+  bool initialized = false;
 };
 
 //

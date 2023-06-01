@@ -37,11 +37,6 @@ extern "C"
 
   typedef void (*voidFuncPtr)(void);
 
-  /**
-   * \brief internal function to initialize the interrupt subsystem
-   */
-  void interrupts_init();
-
   /*
    * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
    *        Detaches any previously attached interrupt on the same pin.
