@@ -31,7 +31,8 @@ void pinMode(uint32_t dwPin, uint32_t dwMode)
         return;
     }
 
-    // set pind config
+    // set pin function and config
+    GPIO_SetFunc(dwPin, Func_Gpio, Enable);
     GPIO_Init(dwPin, &pinConf);
 }
 

@@ -37,7 +37,7 @@ inline en_exti_ch_t mapToExternalInterruptChannel(uint32_t pin)
     }
 
     // map to exti channel
-    uint8_t ch = PIN_MAP[pin].gpio_bit;
+    uint8_t ch = PIN_MAP[pin].bit_pos;
     if (ch < 0 || ch > 15)
     {
         // invalid channel, only 00 - 15 are valid
@@ -58,7 +58,7 @@ inline en_int_src_t mapToInterruptSource(uint32_t pin)
     }
 
     // map to interrupt source
-    uint8_t ch = PIN_MAP[pin].gpio_bit;
+    uint8_t ch = PIN_MAP[pin].bit_pos;
     if (ch < 0 || ch > 15)
     {
         // invalid source, only 00 - 15 are valid

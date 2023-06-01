@@ -40,17 +40,17 @@ extern "C"
 		/**
 		 * @brief bit position of the pin in the port
 		 */
-		uint8_t gpio_bit;
+		uint8_t bit_pos;
 
 		/**
 		 * @brief IO port this pin belongs to
 		 */
-		__IO en_port_t gpio_port;
+		__IO en_port_t port;
 
 		/**
 		 * @brief bit mask of the pin in the port
 		 */
-		__IO en_pin_t gpio_pin;
+		__IO en_pin_t bit_mask;
 
 		/**
 		 * @brief pointer to the ADC device of this pin, if any
@@ -63,11 +63,6 @@ extern "C"
 		 * @note ADC_PIN_INVALID if not a ADC pin
 		 */
 		__IO uint8_t adc_channel;
-
-		/**
-		 * @brief function of this GPIO pin, set by GPIO_SetFunc
-		 */
-		__IO en_port_func_t function;
 	} pin_info_t;
 
 	/**

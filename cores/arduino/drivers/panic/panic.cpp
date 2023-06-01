@@ -59,7 +59,7 @@ void panic_usart_init(M4_USART_TypeDef *usart, const uint16_t tx_pin, const uint
     USART_DeInit(usart);
 
     // set tx pin function to USART TX output
-    GPIO_SetFunction(tx_pin, USART_DEV_TO_TX_FUNC(usart), Disable);
+    GPIO_SetFunc(tx_pin, USART_DEV_TO_TX_FUNC(usart), Disable);
 
     // enable USART clock
     PWC_Fcg1PeriphClockCmd(USART_DEV_TO_PERIPH_CLOCK(usart), Enable);

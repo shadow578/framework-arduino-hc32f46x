@@ -1,6 +1,7 @@
 #pragma once
 #include <hc32_ddl.h>
 #include <addon_gpio.h>
+#include "core_debug.h"
 #include "../adc/adc.h"
 #include "../../WVariant.h"
 
@@ -13,11 +14,8 @@ extern "C"
 // GPIO wrappers for PORT_* functions
 //
 #define ASSERT_GPIO_PIN(gpio_pin) \
-    if (!IS_GPIO_PIN(gpio_pin))   \
-    {                             \
-        return Error;             \
-    }
-#define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].gpio_port, PIN_MAP[gpio_pin].gpio_pin
+    CORE_ASSERT(IS_GPIO_PIN(gpio_pin), "GPIO_* called with invalid gpio pin")
+#define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].port, PIN_MAP[gpio_pin].bit_mask
 
     /**
      * @brief GPIO wrapper for PORT_Init
@@ -42,11 +40,7 @@ extern "C"
      */
     inline en_flag_status_t GPIO_GetBit(uint16_t gpio_pin)
     {
-        if (!IS_GPIO_PIN(gpio_pin))
-        {
-            return Reset;
-        }
-
+        ASSERT_GPIO_PIN(gpio_pin);
         return PORT_GetBit(PIN_ARG(gpio_pin));
     }
 
@@ -91,19 +85,10 @@ extern "C"
      * @param enFuncSelect GPIO pin primary function select
      * @param enSubFunc GPIO pin sub-function enable/disable (subfunction is GPIO output for most pins)
      */
-    inline en_result_t GPIO_SetFunction(uint16_t gpio_pin, en_port_func_t enFuncSelect, en_functional_state_t enSubFunc = Disable)
+    inline en_result_t GPIO_SetFunc(uint16_t gpio_pin, en_port_func_t enFuncSelect, en_functional_state_t enSubFunc = Disable)
     {
         ASSERT_GPIO_PIN(gpio_pin);
         return PORT_SetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
-    }
-
-    /**
-     * @brief GPIO wrapper for PORT_SetFunc
-     * @note function select is chosen in PIN_MAP
-     */
-    inline en_result_t GPIO_SetFunc(uint16_t gpio_pin, en_functional_state_t state)
-    {
-        return GPIO_SetFunction(gpio_pin, PIN_MAP[gpio_pin].function, state);
     }
 
 #ifdef __cplusplus
