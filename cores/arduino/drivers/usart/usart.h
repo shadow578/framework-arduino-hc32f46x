@@ -26,7 +26,13 @@
 class Usart : public HardwareSerial
 {
 public:
-  Usart(struct usart_config_t *config);
+  /**
+   * @brief construct a new Usart object
+   * @param config pointer to the usart configuration struct
+   * @param tx_pin gpio pin number for tx function
+   * @param rx_pin gpio pin number for rx function
+   */
+  Usart(struct usart_config_t *config, uint16_t tx_pin, uint16_t rx_pin);
   void begin(uint32_t baud);
   void begin(uint32_t baud, uint16_t config);
   void begin(uint32_t baud, const stc_usart_uart_init_t *config);
@@ -54,6 +60,10 @@ public:
 private:
   // usart configuration struct
   usart_config_t *config;
+
+  // tx / rx pin numbers
+  uint16_t tx_pin;
+  uint16_t rx_pin;
 
   // rx / tx buffers (unboxed from config)
   RingBuffer<uint8_t> *rxBuffer;

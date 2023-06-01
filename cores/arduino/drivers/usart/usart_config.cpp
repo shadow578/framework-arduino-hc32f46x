@@ -20,10 +20,8 @@ usart_config_t USART1_config = {
     .peripheral = {
         .register_base = M4_USART1,
         .clock_id = PWC_FCG1_PERIPH_USART1,
-    },
-    .pins = {
-        .tx_pin = BOARD_USART1_TX_PIN,
-        .rx_pin = BOARD_USART1_RX_PIN,
+        .tx_pin_function = Func_Usart1_Tx,
+        .rx_pin_function = Func_Usart1_Rx,
     },
     .interrupts = {
         .rx_data_available = {
@@ -62,10 +60,8 @@ usart_config_t USART2_config = {
     .peripheral = {
         .register_base = M4_USART2,
         .clock_id = PWC_FCG1_PERIPH_USART2,
-    },
-    .pins = {
-        .tx_pin = BOARD_USART2_TX_PIN,
-        .rx_pin = BOARD_USART2_RX_PIN,
+        .tx_pin_function = Func_Usart2_Tx,
+        .rx_pin_function = Func_Usart2_Rx,
     },
     .interrupts = {
         .rx_data_available = {
@@ -104,10 +100,8 @@ usart_config_t USART3_config = {
     .peripheral = {
         .register_base = M4_USART3,
         .clock_id = PWC_FCG1_PERIPH_USART3,
-    },
-    .pins = {
-        .tx_pin = BOARD_USART3_TX_PIN,
-        .rx_pin = BOARD_USART3_RX_PIN,
+        .tx_pin_function = Func_Usart3_Tx,
+        .rx_pin_function = Func_Usart3_Rx,
     },
     .interrupts = {
         .rx_data_available = {

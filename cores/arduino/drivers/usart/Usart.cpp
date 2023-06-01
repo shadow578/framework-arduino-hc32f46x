@@ -9,9 +9,9 @@
 // global instances
 //
 #ifndef DISABLE_SERIAL_GLOBALS
-Usart Serial1(&USART1_config);
-Usart Serial2(&USART2_config);
-Usart Serial3(&USART3_config);
+Usart Serial1(&USART1_config, VARIANT_USART1_TX_PIN, VARIANT_USART1_RX_PIN);
+Usart Serial2(&USART2_config, VARIANT_USART2_TX_PIN, VARIANT_USART2_RX_PIN);
+Usart Serial3(&USART3_config, VARIANT_USART3_TX_PIN, VARIANT_USART3_RX_PIN);
 #endif
 
 //
@@ -55,9 +55,11 @@ inline void usart_irq_resign(usart_interrupt_config_t irq)
 //
 // Usart class implementation
 //
-Usart::Usart(struct usart_config_t *config)
+Usart::Usart(struct usart_config_t *config, uint16_t tx_pin, uint16_t rx_pin)
 {
     this->config = config;
+    this->tx_pin = tx_pin;
+    this->rx_pin = rx_pin;
 
     // unpack rx and tx buffers from usart config
     this->rxBuffer = config->state.rx_buffer;
@@ -132,8 +134,8 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     // this->txBuffer->clear();
 
     // set IO pin functions
-    GPIO_SetFunc(this->config->pins.rx_pin, Disable);
-    GPIO_SetFunc(this->config->pins.tx_pin, Disable);
+    GPIO_SetFunc(this->tx_pin, this->config->peripheral.tx_pin_function);
+    GPIO_SetFunc(this->rx_pin, this->config->peripheral.rx_pin_function);
 
     // enable peripheral clock
     PWC_Fcg1PeriphClockCmd(this->config->peripheral.clock_id, Enable);

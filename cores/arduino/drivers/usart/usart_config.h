@@ -17,24 +17,16 @@ struct usart_peripheral_config_t
      * @note in FCG1
      */
     uint32_t clock_id;
-};
-
-/**
- * @brief USART output pins configuration
- */
-struct usart_pins_config_t
-{
-    /**
-     * @brief USART TX pin
-     * @note for use with PORT_<*>GPIO functions
-     */
-    uint32_t tx_pin;
 
     /**
-     * @brief USART RX pin
-     * @note for use with PORT_<*>GPIO functions
+     * @brief pin function for usart tx pin
      */
-    uint32_t rx_pin;
+    en_port_func_t tx_pin_function;
+
+    /**
+     * @brief pin function for usart rx pin
+     */
+    en_port_func_t rx_pin_function;
 };
 
 /**
@@ -130,11 +122,6 @@ struct usart_config_t
      * @brief USART peripheral configuration
      */
     usart_peripheral_config_t peripheral;
-
-    /**
-     * @brief USART output pins configuration
-     */
-    usart_pins_config_t pins;
 
     /**
      * @brief USART interrupts and handlers configuration
