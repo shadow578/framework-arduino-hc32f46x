@@ -1,8 +1,14 @@
 #include "panic.h"
 
-#ifdef ENABLE_PANIC_AND_FAULT_HANDLERS
+// only compile in core debug mode
+#ifdef __CORE_DEBUG
 #include "../gpio/gpio.h"
+#include <stdarg.h>
+#include <stdio.h>
 #include <hc32_ddl.h>
+
+// only compile usart output code if a panic print is enabled
+#ifdef PANIC_PRINT_ENABLED
 
 // panic usart baud rate
 #ifndef PANIC_USART_BAUDRATE
@@ -86,31 +92,59 @@ void panic_usart_print(M4_USART_TypeDef *usart, const char *str)
     }
 }
 
-void panic_usart_init_and_print(M4_USART_TypeDef *usart, const uint16_t tx_pin, const char *str)
-{
-    // initialize USARTx for panic output
-    panic_usart_init(M4_USART1, tx_pin, PANIC_USART_BAUDRATE, &panic_usart_config);
+//
+// panic helper functions
+//
+#define PANIC_PRINTF_BUFFER_SIZE 256
+char panic_printf_buffer[PANIC_PRINTF_BUFFER_SIZE];
 
-    // print panic message
-    panic_usart_print(M4_USART1, str);
-}
-
-void panic(const char *message)
+void panic_begin(void)
 {
-    // init usart & print message if TX pins are defined
+// initialize USART
 #ifdef PANIC_USART1_TX_PIN
-    panic_usart_init_and_print(M4_USART1, PANIC_USART1_TX_PIN, message);
+    panic_usart_init(M4_USART1, PANIC_USART1_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
 #endif
 #ifdef PANIC_USART2_TX_PIN
-    panic_usart_init_and_print(M4_USART2, PANIC_USART2_TX_PIN, message);
+    panic_usart_init(M4_USART2, PANIC_USART2_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
 #endif
 #ifdef PANIC_USART3_TX_PIN
-    panic_usart_init_and_print(M4_USART3, PANIC_USART3_TX_PIN, message);
+    panic_usart_init(M4_USART3, PANIC_USART3_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
 #endif
 #ifdef PANIC_USART4_TX_PIN
-    panic_usart_init_and_print(M4_USART4, PANIC_USART4_TX_PIN, message);
+    panic_usart_init(M4_USART4, PANIC_USART4_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
+#endif
+}
+
+size_t panic_printf(const char *fmt, ...)
+{
+    // format the string into buffer
+    va_list args;
+    va_start(args, fmt);
+    size_t len = vsnprintf(panic_printf_buffer, PANIC_PRINTF_BUFFER_SIZE, fmt, args);
+    va_end(args);
+
+    // print to USART
+#ifdef PANIC_USART1_TX_PIN
+    panic_usart_print(M4_USART1, panic_printf_buffer);
+#endif
+#ifdef PANIC_USART2_TX_PIN
+    panic_usart_print(M4_USART2, panic_printf_buffer);
+#endif
+#ifdef PANIC_USART3_TX_PIN
+    panic_usart_print(M4_USART3, panic_printf_buffer);
+#endif
+#ifdef PANIC_USART4_TX_PIN
+    panic_usart_print(M4_USART4, panic_printf_buffer);
 #endif
 
+    // return length of formatted string
+    return len;
+}
+
+#endif // PANIC_PRINT_ENABLED
+
+void panic_end(void)
+{
 #ifdef HANG_ON_PANIC
     // enter infinite loop
     while (1)
@@ -121,26 +155,4 @@ void panic(const char *message)
 #endif
 }
 
-//
-// sprintf helpers for panic handlers
-//
-void panic_start_sprintf(size_t buffer_size, panic_sprintf_info_t *info)
-{
-    info->buffer = new char[buffer_size];
-    info->buffer_size = buffer_size;
-    info->offset = 0;
-}
-
-void panic_sprintf(panic_sprintf_info_t *info, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    info->offset += vsnprintf(
-        info->buffer + info->offset,
-        info->buffer_size > info->offset ? info->buffer_size - info->offset : 0,
-        fmt,
-        args);
-    va_end(args);
-}
-
-#endif // ENABLE_PANIC_AND_FAULT_HANDLERS
+#endif // __CORE_DEBUG

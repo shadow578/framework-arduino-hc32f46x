@@ -15,12 +15,13 @@
 #define CORE_DEBUG_PRINTF(fmt, ...) printf(fmt, ##__VA_ARGS__)
 #endif
 
-#else
+#else // !__CORE_DEBUG
+
 // no debug, dummy macros and user-macros are undefined
 #undef CORE_DEBUG_INIT
 #undef CORE_DEBUG_PRINTF
 #define CORE_DEBUG_PRINTF(fmt, ...)
 #define CORE_DEBUG_INIT()
-#endif
+#endif // __CORE_DEBUG
 
 #endif // _CORE_DEBUG_H
