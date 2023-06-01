@@ -62,6 +62,18 @@ panic_printf("this is another panic message\n");
 panic_end(); // end panic output and reset mcu
 ```
 
+## Assertions
+
+the arduino core asserts are implemented using the panic mechanism.
+if an assertion fails, the panic mechanism is called with a message containing the file and line number of the assertion.
+
+```cpp
+#include <core_debug.h>
+
+CORE_ASSERT(1 == 2, "1 is not 2"); // assert expression, fail if false
+CORE_ASSERT_FAIL("this is a fail message"); // assert always fails
+```
+
 ## CPU Fault Handler
 
 the core includes a `HardFault` handler that prints information about the fault using the panic mechanism.

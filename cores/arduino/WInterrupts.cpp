@@ -24,7 +24,7 @@ inline en_exti_lvl_t mapToTriggerMode(uint32_t mode)
         return ExIntLowLevel;
     }
 
-    DDL_ASSERT(0);
+    CORE_ASSERT_FAIL("Invalid external interrupt mode")
     return ExIntFallingEdge;
 }
 
@@ -41,7 +41,7 @@ inline en_exti_ch_t mapToExternalInterruptChannel(uint32_t pin)
     if (ch < 0 || ch > 15)
     {
         // invalid channel, only 00 - 15 are valid
-        DDL_ASSERT(0);
+        CORE_ASSERT_FAIL("Invalid external interrupt channel")
         return ExtiCh00;
     }
 
@@ -62,7 +62,7 @@ inline en_int_src_t mapToInterruptSource(uint32_t pin)
     if (ch < 0 || ch > 15)
     {
         // invalid source, only 00 - 15 are valid
-        DDL_ASSERT(0);
+        CORE_ASSERT_FAIL("invalid external interrupt source")
         return INT_PORT_EIRQ0;
     }
 
@@ -74,7 +74,7 @@ inline IRQn_Type mapToIQRVector(uint8_t n)
 {
     // map 0-10 to IRQ 10-20
     uint8_t vec = FIRST_IRQn + n;
-    DDL_ASSERT(vec >= FIRST_IRQn && vec <= LAST_IRQn);
+    CORE_ASSERT(vec >= FIRST_IRQn && vec <= LAST_IRQn, "external interrupt IRQn out of range")
     return (IRQn_Type)vec;
 }
 
@@ -187,7 +187,7 @@ inline bool getIRQnForPin(uint32_t pin, uint8_t &irqn)
  */
 inline void assignIRQn(uint32_t pin, uint8_t irqn)
 {
-    DDL_ASSERT(pinToIRQnMapping[irqn] == IRQn_MAPPING_NONE);
+    CORE_ASSERT(pinToIRQnMapping[irqn] == IRQn_MAPPING_NONE, "attempted to assign already assigned IRQn");
     pinToIRQnMapping[irqn] = pin;
 }
 
@@ -196,7 +196,7 @@ inline void assignIRQn(uint32_t pin, uint8_t irqn)
  */
 inline void clearIRQnAssignment(uint32_t pin, uint8_t irqn)
 {
-    DDL_ASSERT(pinToIRQnMapping[irqn] == pin);
+    CORE_ASSERT(pinToIRQnMapping[irqn] == pin, "attempted to clear IRQn assignment for unassigned IRQn");
     pinToIRQnMapping[irqn] = IRQn_MAPPING_NONE;
 }
 // #endregion
@@ -211,7 +211,8 @@ int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
     if (!getNextFreeIRQn(irqn))
     {
         // no more IRQns available...
-        // DDL_ASSERT(0);
+        //CORE_ASSERT_FAIL("no more IRQns available for external interrupts")
+        CORE_DEBUG_PRINTF("attachInterrupt: no IRQn available for pin=%lu\n", pin);
         return -1;
     }
 
@@ -233,7 +234,7 @@ void detachInterrupt(uint32_t pin)
     if (!getIRQnForPin(pin, irqn))
     {
         // no IRQn assigned to the pin...
-        // DDL_ASSERT(0);
+        //CORE_ASSERT_FAIL("attempted to free IRQn that was not assigned yet")
         return;
     }
 
