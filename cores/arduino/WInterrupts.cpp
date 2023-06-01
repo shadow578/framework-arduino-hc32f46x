@@ -141,17 +141,16 @@ pin_to_irqn_mapping_t *pin_to_irqn_mapping = NULL;
 inline void insert_pin_to_irqn_mapping(uint32_t pin, IRQn_Type irqn)
 {
     // create new node
-    pin_to_irqn_mapping_t node = {
-        .pin = pin,
-        .irqn = irqn,
-        .next = NULL,
-    };
+    pin_to_irqn_mapping_t *node = new pin_to_irqn_mapping_t;
+    node->pin = pin;
+    node->irqn = irqn;
+    node->next = NULL;
 
     // insert node...
     if (pin_to_irqn_mapping == NULL)
     {
         // ... as head
-        pin_to_irqn_mapping = &node;
+        pin_to_irqn_mapping = node;
     }
     else
     {
@@ -164,7 +163,7 @@ inline void insert_pin_to_irqn_mapping(uint32_t pin, IRQn_Type irqn)
         }
 
         // set as child
-        parent->next = &node;
+        parent->next = node;
     }
 }
 
