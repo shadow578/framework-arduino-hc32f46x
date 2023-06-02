@@ -16,6 +16,17 @@ typedef struct adc_peripheral_config_t
      * @note in FCG3
      */
     uint32_t clock_id;
+
+    /**
+     * @brief adc sequence selection
+     * @note eg. ADC_SEQ_A
+     */
+    uint8_t sequence;
+
+    /**
+     * @brief ADC channel count
+     */
+    uint16_t channel_count;
 } adc_peripheral_config_t;
 
 /**
@@ -24,14 +35,21 @@ typedef struct adc_peripheral_config_t
 typedef struct adc_init_params_t
 {
     /**
-     * @brief adc channel configuration
-     */
-    stc_adc_ch_cfg_t channel_config;
-
-    /**
      * @brief ADC conversion resolution
      */
     en_adc_resolution_t resolution;
+
+    /**
+     * @brief ADC sample data alignment
+     */
+    en_adc_data_align_t data_alignment;
+
+    /**
+     * @brief ADC scan mode
+     * @note must include sequence set in peripheral config
+     */
+    en_adc_scan_mode_t scan_mode;
+
 } adc_init_params_t;
 
 /**
@@ -68,15 +86,16 @@ typedef struct adc_dma_config_t
 typedef struct adc_runtime_state_t
 {
     /**
-     * @brief adc conversion results array
-     * @note index == adc channel number
+     * @brief was the adc already initialized?
      */
-    uint16_t *conversion_results;
+    bool initialized;
 
     /**
-     * @brief adc conversion results array size
+     * @brief adc conversion results array
+     * @note index == adc channel number
+     * @note lenght == adc channel count (see ADCx_device.adc.channel_count)
      */
-    uint16_t conversion_results_size;
+    uint16_t *conversion_results;
 } adc_runtime_state_t;
 
 /**

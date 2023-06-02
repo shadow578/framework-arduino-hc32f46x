@@ -21,6 +21,6 @@ uint32_t analogRead(uint32_t ulPin)
         return 0;
     }
 
-    // read from adc
+    // read from adc channel synchronously
     return adc_read_sync(adc_device, adc_channel);
 }
