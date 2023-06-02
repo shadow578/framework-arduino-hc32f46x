@@ -45,24 +45,24 @@ extern "C"
 		/**
 		 * @brief IO port this pin belongs to
 		 */
-		__IO en_port_t port;
+		en_port_t port;
 
 		/**
 		 * @brief bit mask of the pin in the port
 		 */
-		__IO en_pin_t bit_mask;
+		en_pin_t bit_mask;
 
 		/**
 		 * @brief pointer to the ADC device of this pin, if any
 		 * @note NULL if not a ADC pin
 		 */
-		adc_dev *adc_device;
+		adc_device_t *adc_device;
 
 		/**
 		 * @brief adc channel number of this pin, if any
 		 * @note ADC_PIN_INVALID if not a ADC pin
 		 */
-		__IO uint8_t adc_channel;
+		uint8_t adc_channel;
 	} pin_info_t;
 
 	/**

@@ -14,13 +14,13 @@ uint32_t analogRead(uint32_t ulPin)
     }
 
     // get adc info from pin map
-    adc_dev *adc_dev = PIN_MAP[ulPin].adc_device;
+    adc_device_t *adc_device = PIN_MAP[ulPin].adc_device;
     uint8_t adc_channel = PIN_MAP[ulPin].adc_channel;
-    if (adc_dev == NULL || adc_channel == ADC_PIN_INVALID)
+    if (adc_device == NULL || adc_channel == ADC_PIN_INVALID)
     {
         return 0;
     }
 
     // read from adc
-    return adc_read(adc_dev, adc_channel);
+    return adc_read_sync(adc_device, adc_channel);
 }

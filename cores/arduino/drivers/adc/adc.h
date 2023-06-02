@@ -1,44 +1,65 @@
-#ifndef _ADC_H
-#define _ADC_H
-
+#pragma once
 #include <hc32_ddl.h>
+#include "adc_config.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-#define ADC_CHANNEL_COUNT 2u
-#define ADC1_SA_CHANNEL (ADC1_CH14 | ADC1_CH15)
-#define ADC1_SA_CHANNEL_COUNT (ADC_CHANNEL_COUNT)
+    /**
+     * @brief ADC peripheral init
+     * @param device ADC device configuration
+     */
+    void adc_device_init(const adc_device_t *device);
 
-// ADC irq flag bit mask
-#define ADC1_SA_DMA_IRQ_BIT (1ul << 0u)
+    /**
+     * @brief start asynchronous conversion
+     * @param device ADC device configuration
+     */
+    void adc_start_conversion(const adc_device_t *device);
 
-	//
-	// ADC device definition
-	//
-	typedef struct adc_dev
-	{
-		__IO uint32_t HAL_AdcDmaIrqFlag;
-		__IO uint16_t HAL_adc_results[ADC1_CH_COUNT];
+    /**
+     * @brief check if conversion is complete
+     * @param device ADC device configuration
+     * @return true if conversion is complete
+     */
+    bool adc_is_conversion_completed(const adc_device_t *device);
 
-		M4_ADC_TypeDef *regs; 
-		__IO uint32_t PeriphClock;
-		__IO uint32_t Channel;
+    /**
+     * @brief wait for conversion to complete
+     * @param device ADC device configuration
+     */
+    void adc_await_conversion_completed(const adc_device_t *device);
 
-		M4_DMA_TypeDef *DMARegs;
-		__IO uint32_t DMAPeriphClock;
-		__IO uint8_t DMAChannel;
-		__IO en_event_src_t DMAenSrc;
-	} adc_dev;
+    /**
+     * @brief read asynchronous conversion result
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to read
+     * @return conversion result
+     */
+    uint16_t adc_conversion_read_result(const adc_device_t *device, const uint8_t adc_channel);
 
-	extern adc_dev adc1;
-	extern struct adc_dev *ADC1;
+    /**
+     * @brief start adc conversion and wait for result synchronously
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to read
+     * @return conversion result
+     */
+    inline uint16_t adc_read_sync(const adc_device_t *device, const uint8_t adc_channel)
+    {
+        adc_start_conversion(device);
+        adc_await_conversion_completed(device);
+        return adc_conversion_read_result(device, adc_channel);
+    }
 
-	void adc_init();
-	uint16_t adc_read(adc_dev *dev, uint8_t channel);
+    /**
+     * @brief initialize all ADC peripherals
+     */
+    inline void adc_init_all()
+    {
+        adc_device_init(&ADC1_device);
+    }
+
 #ifdef __cplusplus
 }
-#endif
-
 #endif

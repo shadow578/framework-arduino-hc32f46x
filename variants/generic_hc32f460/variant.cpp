@@ -21,58 +21,58 @@
 
 extern const pin_info_t PIN_MAP[BOARD_NR_GPIO_PINS] = {
 	// PAx
-	{0, PortA, Pin00, &adc1, ADC1_IN0},		   // PA0
-	{1, PortA, Pin01, &adc1, ADC1_IN1},		   // PA1
-	{2, PortA, Pin02, &adc1, ADC1_IN2},		   // PA2
-	{3, PortA, Pin03, &adc1, ADC1_IN3},		   // PA3
-	{4, PortA, Pin04, &adc1, ADC12_IN4},	   // PA4
-	{5, PortA, Pin05, &adc1, ADC12_IN5},	   // PA5
-	{6, PortA, Pin06, &adc1, ADC12_IN6},	   // PA6
-	{7, PortA, Pin07, &adc1, ADC12_IN7},	   // PA7
-	{8, PortA, Pin08, NULL, ADC_PIN_INVALID},  // PA8
-	{9, PortA, Pin09, NULL, ADC_PIN_INVALID},  // PA9
-	{10, PortA, Pin10, NULL, ADC_PIN_INVALID}, // PA10
-	{11, PortA, Pin11, NULL, ADC_PIN_INVALID}, // PA11
-	{12, PortA, Pin12, NULL, ADC_PIN_INVALID}, // PA12
-	{13, PortA, Pin13, NULL, ADC_PIN_INVALID}, // PA13
-	{14, PortA, Pin14, NULL, ADC_PIN_INVALID}, // PA14
-	{15, PortA, Pin15, NULL, ADC_PIN_INVALID}, // PA15
+	{0, PortA, Pin00, &ADC1_device, ADC1_IN0},	// PA0
+	{1, PortA, Pin01, &ADC1_device, ADC1_IN1},	// PA1
+	{2, PortA, Pin02, &ADC1_device, ADC1_IN2},	// PA2
+	{3, PortA, Pin03, &ADC1_device, ADC1_IN3},	// PA3
+	{4, PortA, Pin04, &ADC1_device, ADC12_IN4}, // PA4
+	{5, PortA, Pin05, &ADC1_device, ADC12_IN5}, // PA5
+	{6, PortA, Pin06, &ADC1_device, ADC12_IN6}, // PA6
+	{7, PortA, Pin07, &ADC1_device, ADC12_IN7}, // PA7
+	{8, PortA, Pin08, NULL, ADC_PIN_INVALID},	// PA8
+	{9, PortA, Pin09, NULL, ADC_PIN_INVALID},	// PA9
+	{10, PortA, Pin10, NULL, ADC_PIN_INVALID},	// PA10
+	{11, PortA, Pin11, NULL, ADC_PIN_INVALID},	// PA11
+	{12, PortA, Pin12, NULL, ADC_PIN_INVALID},	// PA12
+	{13, PortA, Pin13, NULL, ADC_PIN_INVALID},	// PA13
+	{14, PortA, Pin14, NULL, ADC_PIN_INVALID},	// PA14
+	{15, PortA, Pin15, NULL, ADC_PIN_INVALID},	// PA15
 
 	// PBx
-	{0, PortB, Pin00, &adc1, ADC12_IN8},	   // PB0
-	{1, PortB, Pin01, &adc1, ADC12_IN9},	   // PB1
-	{2, PortB, Pin02, NULL, ADC_PIN_INVALID},  // PB2
-	{3, PortB, Pin03, NULL, ADC_PIN_INVALID},  // PB3
-	{4, PortB, Pin04, NULL, ADC_PIN_INVALID},  // PB4
-	{5, PortB, Pin05, NULL, ADC_PIN_INVALID},  // PB5
-	{6, PortB, Pin06, NULL, ADC_PIN_INVALID},  // PB6
-	{7, PortB, Pin07, NULL, ADC_PIN_INVALID},  // PB7
-	{8, PortB, Pin08, NULL, ADC_PIN_INVALID},  // PB8
-	{9, PortB, Pin09, NULL, ADC_PIN_INVALID},  // PB9
-	{10, PortB, Pin10, NULL, ADC_PIN_INVALID}, // PB10
-	{11, PortB, Pin11, NULL, ADC_PIN_INVALID}, // PB11
-	{12, PortB, Pin12, NULL, ADC_PIN_INVALID}, // PB12
-	{13, PortB, Pin13, NULL, ADC_PIN_INVALID}, // PB13
-	{14, PortB, Pin14, NULL, ADC_PIN_INVALID}, // PB14
-	{15, PortB, Pin15, NULL, ADC_PIN_INVALID}, // PB15
+	{0, PortB, Pin00, &ADC1_device, ADC12_IN8}, // PB0
+	{1, PortB, Pin01, &ADC1_device, ADC12_IN9}, // PB1
+	{2, PortB, Pin02, NULL, ADC_PIN_INVALID},	// PB2
+	{3, PortB, Pin03, NULL, ADC_PIN_INVALID},	// PB3
+	{4, PortB, Pin04, NULL, ADC_PIN_INVALID},	// PB4
+	{5, PortB, Pin05, NULL, ADC_PIN_INVALID},	// PB5
+	{6, PortB, Pin06, NULL, ADC_PIN_INVALID},	// PB6
+	{7, PortB, Pin07, NULL, ADC_PIN_INVALID},	// PB7
+	{8, PortB, Pin08, NULL, ADC_PIN_INVALID},	// PB8
+	{9, PortB, Pin09, NULL, ADC_PIN_INVALID},	// PB9
+	{10, PortB, Pin10, NULL, ADC_PIN_INVALID},	// PB10
+	{11, PortB, Pin11, NULL, ADC_PIN_INVALID},	// PB11
+	{12, PortB, Pin12, NULL, ADC_PIN_INVALID},	// PB12
+	{13, PortB, Pin13, NULL, ADC_PIN_INVALID},	// PB13
+	{14, PortB, Pin14, NULL, ADC_PIN_INVALID},	// PB14
+	{15, PortB, Pin15, NULL, ADC_PIN_INVALID},	// PB15
 
 	// PCx
-	{0, PortC, Pin00, &adc1, ADC12_IN10},	   // PC0
-	{1, PortC, Pin01, &adc1, ADC12_IN11},	   // PC1
-	{2, PortC, Pin02, &adc1, ADC1_IN12},	   // PC2
-	{3, PortC, Pin03, &adc1, ADC1_IN13},	   // PC3
-	{4, PortC, Pin04, &adc1, ADC1_IN14},	   // PC4
-	{5, PortC, Pin05, &adc1, ADC1_IN15},	   // PC5
-	{6, PortC, Pin06, NULL, ADC_PIN_INVALID},  // PC6
-	{7, PortC, Pin07, NULL, ADC_PIN_INVALID},  // PC7
-	{8, PortC, Pin08, NULL, ADC_PIN_INVALID},  // PC8
-	{9, PortC, Pin09, NULL, ADC_PIN_INVALID},  // PC9
-	{10, PortC, Pin10, NULL, ADC_PIN_INVALID}, // PC10
-	{11, PortC, Pin11, NULL, ADC_PIN_INVALID}, // PC11
-	{12, PortC, Pin12, NULL, ADC_PIN_INVALID}, // PC12
-	{13, PortC, Pin13, NULL, ADC_PIN_INVALID}, // PC13
-	{14, PortC, Pin14, NULL, ADC_PIN_INVALID}, // PC14
-	{15, PortC, Pin15, NULL, ADC_PIN_INVALID}, // PC15
+	{0, PortC, Pin00, &ADC1_device, ADC12_IN10}, // PC0
+	{1, PortC, Pin01, &ADC1_device, ADC12_IN11}, // PC1
+	{2, PortC, Pin02, &ADC1_device, ADC1_IN12},	 // PC2
+	{3, PortC, Pin03, &ADC1_device, ADC1_IN13},	 // PC3
+	{4, PortC, Pin04, &ADC1_device, ADC1_IN14},	 // PC4
+	{5, PortC, Pin05, &ADC1_device, ADC1_IN15},	 // PC5
+	{6, PortC, Pin06, NULL, ADC_PIN_INVALID},	 // PC6
+	{7, PortC, Pin07, NULL, ADC_PIN_INVALID},	 // PC7
+	{8, PortC, Pin08, NULL, ADC_PIN_INVALID},	 // PC8
+	{9, PortC, Pin09, NULL, ADC_PIN_INVALID},	 // PC9
+	{10, PortC, Pin10, NULL, ADC_PIN_INVALID},	 // PC10
+	{11, PortC, Pin11, NULL, ADC_PIN_INVALID},	 // PC11
+	{12, PortC, Pin12, NULL, ADC_PIN_INVALID},	 // PC12
+	{13, PortC, Pin13, NULL, ADC_PIN_INVALID},	 // PC13
+	{14, PortC, Pin14, NULL, ADC_PIN_INVALID},	 // PC14
+	{15, PortC, Pin15, NULL, ADC_PIN_INVALID},	 // PC15
 
 	// PDx
 	{0, PortD, Pin00, NULL, ADC_PIN_INVALID},  // PD0

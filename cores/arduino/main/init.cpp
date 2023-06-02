@@ -31,5 +31,5 @@ void core_init()
     sysclock_init();
     update_system_clock_frequencies();
     systick_init();
-    adc_init();
+    adc_init_all();
 }
