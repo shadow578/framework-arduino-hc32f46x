@@ -79,9 +79,6 @@ inline void timer0_irq_register(timer0_interrupt_config_t &irq, const char *name
     irqn_aa_get(irqn, name);
     irq.interrupt_number = irqn;
 
-    // ensure user callback is set to NULL
-    irq.user_callback = NULL;
-
     // create irq registration struct
     stc_irq_regi_conf_t irqConf = {
         .enIntSrc = irq.interrupt_source,
@@ -148,11 +145,20 @@ void Timer0::start(const Timer0Channel channel, const uint32_t frequency, const 
 
 void Timer0::start(const Timer0Channel channel, const stc_tim0_base_init_t *channel_config)
 {
+    // if already started, stop first
+    if (get_channel_state(channel)->started)
+    {
+        stop(channel);
+    }
+
     // enable Timer0 peripheral clock
     PWC_Fcg2PeriphClockCmd(this->config->peripheral.clock_id, Enable);
 
     // initialize timer channel
     TIMER0_BaseInit(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel), channel_config);
+
+    // ensure old user callback is cleared first
+    get_channel_state(channel)->user_callback = NULL;
 
     // register interrupt
     if (channel == CH_A)
@@ -168,7 +174,7 @@ void Timer0::start(const Timer0Channel channel, const stc_tim0_base_init_t *chan
     TIMER0_IntCmd(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel), Enable);
 
     // set channel initialized flag
-    setChannelInitialized(channel, true);
+    get_channel_state(channel)->started = true;
 
     TIMER0_DEBUG_PRINTF("started channel %s with compare value %d\n",
                         TIMER0_CHANNEL_TO_STR(channel),
@@ -177,11 +183,16 @@ void Timer0::start(const Timer0Channel channel, const stc_tim0_base_init_t *chan
 
 void Timer0::stop(const Timer0Channel channel)
 {
+    if (!get_channel_state(channel)->started)
+    {
+        return;
+    }
+
     // pause timer
     pause(channel);
 
     // reset channel initialized flag early
-    setChannelInitialized(channel, false);
+    get_channel_state(channel)->started = false;
 
     // disable timer interrupt
     TIMER0_IntCmd(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel), Disable);
@@ -199,13 +210,19 @@ void Timer0::stop(const Timer0Channel channel)
     // de-init timer channel
     TIMER0_DeInit(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel));
 
+    // stop Timer0 peripheral clock if both channels are stopped
+    if (!get_channel_state(CH_A)->started && !get_channel_state(CH_B)->started)
+    {
+        PWC_Fcg2PeriphClockCmd(this->config->peripheral.clock_id, Disable);
+    }
+
     TIMER0_DEBUG_PRINTF("stopped channel %s\n", TIMER0_CHANNEL_TO_STR(channel));
 }
 
 void Timer0::pause(const Timer0Channel channel)
 {
     // if not initialized, return false
-    if (!isChannelInitialized(channel))
+    if (!get_channel_state(channel)->started)
     {
         return;
     }
@@ -217,7 +234,7 @@ void Timer0::pause(const Timer0Channel channel)
 void Timer0::resume(const Timer0Channel channel)
 {
     // if not initialized, return false
-    if (!isChannelInitialized(channel))
+    if (!get_channel_state(channel)->started)
     {
         return;
     }
@@ -229,7 +246,7 @@ void Timer0::resume(const Timer0Channel channel)
 bool Timer0::isPaused(const Timer0Channel channel)
 {
     // if not initialized, return false
-    if (!isChannelInitialized(channel))
+    if (!get_channel_state(channel)->started)
     {
         return false;
     }
@@ -247,27 +264,19 @@ bool Timer0::isPaused(const Timer0Channel channel)
 
 void Timer0::setCompareValue(const Timer0Channel channel, const uint16_t compare)
 {
-    CORE_ASSERT(isChannelInitialized(channel), "Timer0::setCompare(): channel not initialized");
+    CORE_ASSERT(get_channel_state(channel)->started, "Timer0::setCompare(): channel not initialized");
     TIMER0_WriteCmpReg(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel), compare);
 }
 
 uint16_t Timer0::getCount(const Timer0Channel channel)
 {
-    CORE_ASSERT(isChannelInitialized(channel), "Timer0::getCount(): channel not initialized");
+    CORE_ASSERT(get_channel_state(channel)->started, "Timer0::getCount(): channel not initialized");
     return TIMER0_GetCntReg(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel));
 }
 
 void Timer0::setCallback(const Timer0Channel channel, voidFuncPtr callback)
 {
-    if (channel == CH_A)
-    {
-        this->config->channel_a_interrupt.user_callback = callback;
-    }
-    else
-    {
-        this->config->channel_b_interrupt.user_callback = callback;
-    }
-
+    get_channel_state(channel)->user_callback = callback;
     TIMER0_DEBUG_PRINTF("set user callback for channel %s\n", TIMER0_CHANNEL_TO_STR(channel));
 }
 

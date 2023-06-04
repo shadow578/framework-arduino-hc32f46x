@@ -43,6 +43,7 @@ public:
      * @note compare value = (pclk1 / prescaler) / frequency
      * @note this function will not automatically start the timer interrupt. call resume() to start the interrupt
      * @note only supports Timer0 Unit 2 (M4_TMR02)
+     * @note if the channel is already start()-ed, this function will stop the channel first
      */
     void start(const Timer0Channel channel, const uint32_t frequency, const uint16_t prescaler = 1);
 
@@ -51,6 +52,7 @@ public:
      * @param channel timer0 channel to start
      * @param channel_config pointer to timer0 channel configuration
      * @note this function will not automatically start the timer interrupt. call resume() to start the interrupt
+     * @note if the channel is already start()-ed, this function will stop the channel first
      */
     void start(const Timer0Channel channel, const stc_tim0_base_init_t *channel_config);
 
@@ -58,6 +60,8 @@ public:
      * @brief stop timer0 channel
      * @param channel timer0 channel to stop
      * @note this function will automatically stop the timer interrupt
+     * @note if the channel is not start()-ed, this function will do nothing
+     * @note if all channels are stopped, the timer0 peripheral will be disabled automatically
      */
     void stop(const Timer0Channel channel);
 
@@ -125,34 +129,17 @@ public:
 private:
     timer0_config_t *config;
 
-    bool channel_a_initialized = false;
-    bool channel_b_initialized = false;
-
-    bool isChannelInitialized(const Timer0Channel channel)
+    timer0_channel_state_t *get_channel_state(const Timer0Channel channel)
     {
         switch (channel)
         {
         case Timer0Channel::A:
-            return channel_a_initialized;
+            return &this->config->channel_a_state;
         case Timer0Channel::B:
-            return channel_b_initialized;
+            return &this->config->channel_b_state;
         default:
-            return false;
-        }
-    }
-
-    void setChannelInitialized(const Timer0Channel channel, bool initialized)
-    {
-        switch (channel)
-        {
-        case Timer0Channel::A:
-            channel_a_initialized = initialized;
-            break;
-        case Timer0Channel::B:
-            channel_b_initialized = initialized;
-            break;
-        default:
-            break;
+            panic("invalid timer0 channel");
+            return NULL;
         }
     }
 };

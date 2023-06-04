@@ -38,13 +38,25 @@ typedef struct timer0_interrupt_config_t
      * @brief static interrupt handler pointer
      */
     func_ptr_t interrupt_handler;
+} timer0_interrupt_config_t;
 
+/**
+ * @brief timer0 channel (A/B) state
+ */
+typedef struct timer0_channel_state_t
+{
     /**
      * @brief user callback function pointer
      * @note may be NULL
      */
     func_ptr_t user_callback;
-} timer0_interrupt_config_t;
+
+    /**
+     * @brief is the channel initialized and start()-ed?
+     */
+    bool started;
+
+} timer0_channel_state_t;
 
 /**
  * @brief timer0 device config
@@ -62,9 +74,19 @@ typedef struct timer0_config_t
     timer0_interrupt_config_t channel_a_interrupt;
 
     /**
+     * @brief timer 0 channel a state
+     */
+    timer0_channel_state_t channel_a_state;
+
+    /**
      * @brief timer 0 channel b interrupt config
      */
     timer0_interrupt_config_t channel_b_interrupt;
+
+    /**
+     * @brief timer 0 channel b state
+     */
+    timer0_channel_state_t channel_b_state;
 } timer0_config_t;
 
 /**

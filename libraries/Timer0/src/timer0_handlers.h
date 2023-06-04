@@ -19,9 +19,9 @@ static void TIMER0x_channel_a_irq(void)
     TIMER0_ClearFlag(timer0x->peripheral.register_base, Tim0_ChannelA);
 
     // call the user callback
-    if (timer0x->channel_a_interrupt.user_callback != NULL)
+    if (timer0x->channel_a_state.user_callback != NULL)
     {
-        timer0x->channel_a_interrupt.user_callback();
+        timer0x->channel_a_state.user_callback();
     }
 }
 
@@ -35,8 +35,8 @@ static void TIMER0x_channel_b_irq(void)
     TIMER0_ClearFlag(timer0x->peripheral.register_base, Tim0_ChannelB);
 
     // call the user callback
-    if (timer0x->channel_b_interrupt.user_callback != NULL)
+    if (timer0x->channel_b_state.user_callback != NULL)
     {
-        timer0x->channel_b_interrupt.user_callback();
+        timer0x->channel_b_state.user_callback();
     }
 }

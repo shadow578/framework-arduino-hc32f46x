@@ -9,12 +9,10 @@ timer0_config_t TIMER01_config = {
     .channel_a_interrupt = {
         .interrupt_source = INT_TMR01_GCMA,
         .interrupt_handler = TIMER0x_channel_a_irq<1>,
-        .user_callback = NULL,
     },
     .channel_b_interrupt = {
         .interrupt_source = INT_TMR01_GCMB,
         .interrupt_handler = TIMER0x_channel_b_irq<1>,
-        .user_callback = NULL,
     },
 };
 
