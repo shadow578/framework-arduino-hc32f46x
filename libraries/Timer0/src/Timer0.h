@@ -1,5 +1,6 @@
 #pragma once
 #include "Arduino.h"
+#include <core_debug.h>
 #include <hc32_ddl.h>
 #include "timer0_config.h"
 
@@ -40,9 +41,9 @@ public:
      * @param channel timer0 channel to start
      * @param frequency the frequency to set the timer to
      * @param prescaler the prescaler to use. must be one of [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
-     * @note compare value = (pclk1 / prescaler) / frequency
+     * @note compare value = (base_freq / prescaler) / frequency
+     * @note Timer0 Unit 1 Channel A will use LRC clock (32KHz) instead of PCLK1 (EXPERIMENTAL, might not work properly)
      * @note this function will not automatically start the timer interrupt. call resume() to start the interrupt
-     * @note only supports Timer0 Unit 2 (M4_TMR02)
      * @note if the channel is already start()-ed, this function will stop the channel first
      */
     void start(const Timer0Channel channel, const uint32_t frequency, const uint16_t prescaler = 1);

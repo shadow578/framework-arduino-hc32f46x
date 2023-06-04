@@ -1,7 +1,6 @@
 #include "Timer0.h"
 #include <drivers/sysclock/sysclock.h>
 #include <drivers/irqn/irqn.h>
-#include <core_debug.h>
 
 //
 // helpers
@@ -117,27 +116,49 @@ Timer0::Timer0(timer0_config_t *config)
 
 void Timer0::start(const Timer0Channel channel, const uint32_t frequency, const uint16_t prescaler)
 {
-    // TODO non-custom start() only supports sync mode, and thus only supports Unit 2
-    CORE_ASSERT(this->config->peripheral.register_base == M4_TMR02, "automatic start() is only supported for Timer0 Unit 2 (M4_TMR02)");
+    stc_tim0_base_init_t channel_config;
+    channel_config.Tim0_AsyncClockSource = Tim0_LRC;
+    channel_config.Tim0_SyncClockSource = Tim0_Pclk1;
 
-    // update clock frequencies and get PCLK1 frequency
-    update_system_clock_frequencies();
-    uint32_t pclk1_freq = SYSTEM_CLOCK_FREQUENCIES.pclk1;
+    // setup channel clock source and set base frequency
+    uint32_t base_frequency;
+    if (this->config->peripheral.register_base == M4_TMR01 && channel == CH_A)
+    {
+        // Timer0 Unit 1 Channel A does not support Sync mode, and thus does not support PCLK1 as clock source
+        // instead, LRC is used as clock source
+
+        // get LRC frequency (fixed, calibrated at factory)
+        base_frequency = LRC_VALUE;
+
+        // set channel clock source:
+        // Async mode, LRC
+        channel_config.Tim0_CounterMode = Tim0_Async;
+    }
+    else
+    {
+        // all other Timer channels support PCLK1 as clock source
+        // update clock frequencies and get PCLK1 frequency
+        update_system_clock_frequencies();
+        base_frequency = SYSTEM_CLOCK_FREQUENCIES.pclk1;
+
+        // set channel clock source:
+        // Sync mode, PCLK1
+        channel_config.Tim0_CounterMode = Tim0_Sync;
+    }
 
     // calculate the compare value needed to match the target frequency
-    // CMP = (PCLK1 / prescaler) / frequency
-    uint32_t compare = (pclk1_freq / uint32_t(prescaler)) / frequency;
+    // CMP = (base_freq / prescaler) / frequency
+    uint32_t compare = (base_frequency / uint32_t(prescaler)) / frequency;
 
-    // ensure compare value does not exceed 16 bits
-    CORE_ASSERT(compare <= 0xFFFF, "Timer0::start(): compare value exceeds 16 bits");
+    // ensure compare value does not exceed 16 bits, and larger than 0
+    CORE_ASSERT(compare > 0 && compare <= 0xFFFF, "Timer0::start(): compare value exceeds 16 bits");
 
-    // build timer channel config
-    stc_tim0_base_init_t channel_config = {
-        .Tim0_ClockDivision = numeric_to_clock_div(prescaler),
-        .Tim0_SyncClockSource = Tim0_Pclk1,
-        .Tim0_CounterMode = Tim0_Sync,
-        .Tim0_CmpValue = uint16_t(compare),
-    };
+    // set prescaler and compare value
+    channel_config.Tim0_ClockDivision = numeric_to_clock_div(prescaler);
+    channel_config.Tim0_CmpValue = uint16_t(compare);
+
+    // debug print auto-config values
+    CORE_DEBUG_PRINTF("auto-found cmp= %d for fBase=%d and prescaler=%d\n", int(compare), int(base_frequency), int(prescaler));
 
     // start timer channel with config
     start(channel, &channel_config);
@@ -153,6 +174,12 @@ void Timer0::start(const Timer0Channel channel, const stc_tim0_base_init_t *chan
 
     // enable Timer0 peripheral clock
     PWC_Fcg2PeriphClockCmd(this->config->peripheral.clock_id, Enable);
+
+    // enable LRC clock if used
+    if (channel_config->Tim0_CounterMode == Tim0_Async && channel_config->Tim0_AsyncClockSource == Tim0_LRC)
+    {
+        CLK_LrcCmd(Enable);
+    }
 
     // initialize timer channel
     TIMER0_BaseInit(this->config->peripheral.register_base, CHANNEL_TO_DDL_CHANNEL(channel), channel_config);
