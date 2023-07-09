@@ -19,7 +19,7 @@
 #ifndef _WIRING_INTERRUPTS_
 #define _WIRING_INTERRUPTS_
 
-#include <stdint.h>
+#include "core_types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -35,7 +35,6 @@ extern "C"
 #define DEFAULT 1
 #define EXTERNAL 0
 
-  typedef void (*voidFuncPtr)(void);
 
   /*
    * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
@@ -49,12 +48,12 @@ extern "C"
    * \note you must call checkIRQFlag() in your ISR to clear the interrupt flag.
    *      Otherwise, your ISR may be called continuously or never again.
    */
-  int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
+  int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode);
 
   /*
    * \brief Turns off the given interrupt.
    */
-  void detachInterrupt(uint32_t pin);
+  void detachInterrupt(gpio_pin_t pin);
 
   /*
    * \brief Checks if the interrupt flag is set for the given pin
@@ -63,7 +62,7 @@ extern "C"
    * \param clear If true, clear the flag if it is set
    * \return True if the flag is set, false otherwise
    */
-  bool checkIRQFlag(uint32_t pin, bool clear = true);
+  bool checkIRQFlag(gpio_pin_t pin, bool clear = true);
 
 #ifdef __cplusplus
 }

@@ -26,9 +26,7 @@
 #include <string.h>
 #include <math.h>
 
-typedef bool boolean;
-typedef uint8_t byte;
-typedef uint16_t word;
+#include "core_types.h"
 
 // some libraries and sketches depend on this AVR stuff,
 // assuming Arduino.h or WProgram.h automatically includes it...

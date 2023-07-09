@@ -65,7 +65,7 @@ inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
 //
 // Usart class implementation
 //
-Usart::Usart(struct usart_config_t *config, uint16_t tx_pin, uint16_t rx_pin)
+Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin)
 {
     this->config = config;
     this->tx_pin = tx_pin;

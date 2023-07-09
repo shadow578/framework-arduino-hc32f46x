@@ -24,6 +24,7 @@
 #endif
 
 #include "WVariant.h"
+#include "core_types.h"
 
 /**
  * \brief Configures the specified pin to behave either as an input or an output. See the description of digital pins for details.
@@ -31,7 +32,7 @@
  * \param ulPin The number of the pin whose mode you wish to set
  * \param ulMode Can be INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN
  */
-extern void pinMode( uint32_t dwPin, uint32_t dwMode ) ;
+extern void pinMode( gpio_pin_t dwPin, uint32_t dwMode ) ;
 
 /**
  * \brief get the current pin mode
@@ -39,7 +40,7 @@ extern void pinMode( uint32_t dwPin, uint32_t dwMode ) ;
  * \param dwPin The number of the pin whose mode you wish to get
  * \return the current pin mode. Can be INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN
 */
-extern uint32_t getPinMode( uint32_t dwPin) ;
+extern uint32_t getPinMode( gpio_pin_t dwPin) ;
 
 /**
  * \brief Write a HIGH or a LOW value to a digital pin.
@@ -61,7 +62,7 @@ extern uint32_t getPinMode( uint32_t dwPin) ;
  * \param dwPin the pin number
  * \param dwVal HIGH or LOW
  */
-extern void digitalWrite( uint32_t dwPin, uint32_t dwVal ) ;
+extern void digitalWrite( gpio_pin_t dwPin, uint32_t dwVal ) ;
 
 /**
  * \brief Reads the value from a specified digital pin, either HIGH or LOW.
@@ -70,7 +71,7 @@ extern void digitalWrite( uint32_t dwPin, uint32_t dwVal ) ;
  *
  * \return HIGH or LOW
  */
-extern int digitalRead( uint32_t ulPin ) ;
+extern int digitalRead( gpio_pin_t ulPin ) ;
 
 #ifdef __cplusplus
 }

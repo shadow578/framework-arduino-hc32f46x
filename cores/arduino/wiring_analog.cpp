@@ -6,7 +6,7 @@ void analogReference(eAnalogReference ulMode)
     // stub only for compatibility with existing AVR based API
 }
 
-uint32_t analogRead(uint32_t ulPin)
+uint32_t analogRead(gpio_pin_t ulPin)
 {
     if (ulPin >= BOARD_NR_GPIO_PINS)
     {

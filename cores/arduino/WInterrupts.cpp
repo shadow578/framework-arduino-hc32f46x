@@ -24,7 +24,7 @@ inline en_exti_lvl_t mapToTriggerMode(uint32_t mode)
     return ExIntFallingEdge;
 }
 
-inline en_exti_ch_t mapToExternalInterruptChannel(uint32_t pin)
+inline en_exti_ch_t mapToExternalInterruptChannel(gpio_pin_t pin)
 {
     // check range
     if (pin > BOARD_NR_GPIO_PINS)
@@ -45,7 +45,7 @@ inline en_exti_ch_t mapToExternalInterruptChannel(uint32_t pin)
     return (en_exti_ch_t)ch;
 }
 
-inline en_int_src_t mapToInterruptSource(uint32_t pin)
+inline en_int_src_t mapToInterruptSource(gpio_pin_t pin)
 {
     // check range
     if (pin > BOARD_NR_GPIO_PINS)
@@ -66,7 +66,7 @@ inline en_int_src_t mapToInterruptSource(uint32_t pin)
     return (en_int_src_t)ch;
 }
 
-void _attachInterrupt(uint32_t pin, voidFuncPtr handler, IRQn_Type irqn, uint32_t mode)
+void _attachInterrupt(gpio_pin_t pin, voidFuncPtr handler, IRQn_Type irqn, uint32_t mode)
 {
     // check inputs
     if (pin >= BOARD_NR_GPIO_PINS || !handler)
@@ -101,7 +101,7 @@ void _attachInterrupt(uint32_t pin, voidFuncPtr handler, IRQn_Type irqn, uint32_
     NVIC_EnableIRQ(irqReg.enIRQn);
 }
 
-void _detachInterrupt(uint32_t pin, IRQn_Type irqn)
+void _detachInterrupt(gpio_pin_t pin, IRQn_Type irqn)
 {
     // check inputs
     if (pin >= BOARD_NR_GPIO_PINS)
@@ -125,7 +125,7 @@ void _detachInterrupt(uint32_t pin, IRQn_Type irqn)
 // #region pin to IRQn mapping
 typedef struct pin_to_irqn_mapping_t
 {
-    uint32_t pin;
+    gpio_pin_t pin;
     IRQn_Type irqn;
     struct pin_to_irqn_mapping_t *next;
 } pin_to_irqn_mapping_t;
@@ -138,7 +138,7 @@ pin_to_irqn_mapping_t *pin_to_irqn_mapping = NULL;
 /**
  * @brief insert a pin -> irqn mapping
  */
-inline void insert_pin_to_irqn_mapping(uint32_t pin, IRQn_Type irqn)
+inline void insert_pin_to_irqn_mapping(gpio_pin_t pin, IRQn_Type irqn)
 {
     // create new node
     pin_to_irqn_mapping_t *node = new pin_to_irqn_mapping_t;
@@ -170,7 +170,7 @@ inline void insert_pin_to_irqn_mapping(uint32_t pin, IRQn_Type irqn)
 /**
  * @brief get a pin -> irqn mapping by pin number
  */
-inline bool get_pin_to_irqn_mapping(uint32_t pin, pin_to_irqn_mapping_t &mapping)
+inline bool get_pin_to_irqn_mapping(gpio_pin_t pin, pin_to_irqn_mapping_t &mapping)
 {
     // find node
     pin_to_irqn_mapping_t *node = pin_to_irqn_mapping;
@@ -193,7 +193,7 @@ inline bool get_pin_to_irqn_mapping(uint32_t pin, pin_to_irqn_mapping_t &mapping
 /**
  * @brief remove a pin -> irqn mapping by pin number
  */
-inline void remove_pin_to_irqn_mapping(uint32_t pin)
+inline void remove_pin_to_irqn_mapping(gpio_pin_t pin)
 {
     // find node
     pin_to_irqn_mapping_t *node = pin_to_irqn_mapping;
@@ -224,7 +224,7 @@ inline void remove_pin_to_irqn_mapping(uint32_t pin)
 
 // #endregion
 
-int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
+int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
 {
     // detach any existing interrupt
     detachInterrupt(pin);
@@ -235,7 +235,7 @@ int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
     {
         // no more IRQns available...
         // CORE_ASSERT_FAIL("no more IRQns available for external interrupts")
-        CORE_DEBUG_PRINTF("attachInterrupt: no IRQn available for pin=%lu\n", pin);
+        CORE_DEBUG_PRINTF("attachInterrupt: no IRQn available for pin=%d\n", pin);
         return -1;
     }
 
@@ -244,13 +244,13 @@ int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
 
     // set the interrupt
     _attachInterrupt(pin, callback, irqn, mode);
-    CORE_DEBUG_PRINTF("attachInterrupt: pin=%lu, irqn=%d, mode=%lu\n", pin, int(irqn), mode);
+    CORE_DEBUG_PRINTF("attachInterrupt: pin=%d, irqn=%d, mode=%lu\n", pin, int(irqn), mode);
 
     // return assigned irqn
     return irqn;
 }
 
-void detachInterrupt(uint32_t pin)
+void detachInterrupt(gpio_pin_t pin)
 {
     // get irqn for pin from mapping
     pin_to_irqn_mapping_t mapping;
@@ -264,14 +264,14 @@ void detachInterrupt(uint32_t pin)
     // remove the interrupt
     IRQn_Type irqn = mapping.irqn;
     _detachInterrupt(pin, irqn);
-    CORE_DEBUG_PRINTF("detachInterrupt: pin=%ld, irqn=%u\n", pin, irqn);
+    CORE_DEBUG_PRINTF("detachInterrupt: pin=%d, irqn=%u\n", pin, irqn);
 
     // clear irqn assignment and remove mapping
     remove_pin_to_irqn_mapping(pin);
     irqn_aa_resign(irqn, "external interrupt");
 }
 
-bool checkIRQFlag(uint32_t pin, bool clear)
+bool checkIRQFlag(gpio_pin_t pin, bool clear)
 {
     en_exti_ch_t ch = mapToExternalInterruptChannel(pin);
     if (EXINT_IrqFlgGet(ch) == Set)

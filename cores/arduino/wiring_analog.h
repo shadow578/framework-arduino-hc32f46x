@@ -21,6 +21,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "core_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,7 @@ extern void analogReference( eAnalogReference ulMode ) ;
  * 
  * \note analogWrite() hasn't been implemented yet.
  */
-extern void analogWrite( uint32_t ulPin, uint32_t ulValue ) ;
+extern void analogWrite( gpio_pin_t ulPin, uint32_t ulValue ) ;
 
 /*
  * \brief Reads the value from the specified analog pin.
@@ -61,7 +62,7 @@ extern void analogWrite( uint32_t ulPin, uint32_t ulValue ) ;
  * \note the pin must be configured as INPUT_ANALOG beforehand.
  * \note not all pins on the chip can be used for analog input. see the datasheet for details.
  */
-extern uint32_t analogRead( uint32_t ulPin ) ;
+extern uint32_t analogRead( gpio_pin_t ulPin ) ;
 
 /*
  * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).

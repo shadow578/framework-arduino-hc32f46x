@@ -20,6 +20,7 @@
 #define _WIRING_SHIFT_
 
 #include <stdint.h>
+#include "core_types.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -28,13 +29,13 @@
 /*
  * \brief
  */
-extern uint32_t shiftIn( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder ) ;
+extern uint32_t shiftIn( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder ) ;
 
 
 /*
  * \brief
  */
-extern void shiftOut( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal ) ;
+extern void shiftOut( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal ) ;
 
 
 #ifdef __cplusplus

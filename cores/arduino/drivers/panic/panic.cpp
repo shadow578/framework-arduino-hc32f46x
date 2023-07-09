@@ -48,7 +48,7 @@ const stc_usart_uart_init_t panic_usart_config = {
  * @param tx_pin GPIO pin to use for TX (used with GPIO_* functions)
  * @note existing USART configuration is overwritten without a way to restore it
  */
-void panic_usart_init(M4_USART_TypeDef *usart, const uint16_t tx_pin, const uint32_t baudrate, const stc_usart_uart_init_t *config)
+void panic_usart_init(M4_USART_TypeDef *usart, const gpio_pin_t tx_pin, const uint32_t baudrate, const stc_usart_uart_init_t *config)
 {
     // disable and de-init usart peripheral
     USART_FuncCmd(usart, UsartRx, Disable);

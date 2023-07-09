@@ -22,6 +22,7 @@
 #include "HardwareSerial.h"
 #include "RingBuffer.h"
 #include "usart_config.h"
+#include "../../core_types.h"
 
 class Usart : public HardwareSerial
 {
@@ -32,7 +33,7 @@ public:
    * @param tx_pin gpio pin number for tx function
    * @param rx_pin gpio pin number for rx function
    */
-  Usart(struct usart_config_t *config, uint16_t tx_pin, uint16_t rx_pin);
+  Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin);
   void begin(uint32_t baud);
   void begin(uint32_t baud, uint16_t config);
   void begin(uint32_t baud, const stc_usart_uart_init_t *config);
@@ -62,8 +63,8 @@ private:
   usart_config_t *config;
 
   // tx / rx pin numbers
-  uint16_t tx_pin;
-  uint16_t rx_pin;
+  gpio_pin_t tx_pin;
+  gpio_pin_t rx_pin;
 
   // rx / tx buffers (unboxed from config)
   RingBuffer<uint8_t> *rxBuffer;
