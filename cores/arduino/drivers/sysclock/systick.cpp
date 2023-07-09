@@ -5,7 +5,8 @@ volatile uint32_t uptime = 0;
 
 extern "C" void SysTick_IrqHandler(void)
 {
-    uptime++;
+    // uptime++;
+    __sync_fetch_and_add(&uptime, 1);
 }
 
 void systick_init()
