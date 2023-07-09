@@ -67,6 +67,9 @@ inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
 //
 Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin)
 {
+    ASSERT_GPIO_PIN_VALID(tx_pin, "USART() tx_pin");
+    ASSERT_GPIO_PIN_VALID(rx_pin, "USART() rx_pin");
+
     this->config = config;
     this->tx_pin = tx_pin;
     this->rx_pin = rx_pin;

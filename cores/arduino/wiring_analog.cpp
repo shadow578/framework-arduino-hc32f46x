@@ -1,5 +1,6 @@
 #include "wiring_analog.h"
 #include "drivers/gpio/gpio.h" // includes drivers/adc/adc.h already
+#include "core_debug.h"
 
 void analogReference(eAnalogReference ulMode)
 {
@@ -8,6 +9,8 @@ void analogReference(eAnalogReference ulMode)
 
 uint32_t analogRead(gpio_pin_t ulPin)
 {
+    ASSERT_GPIO_PIN_VALID(ulPin, "analogRead");
+
     if (ulPin >= BOARD_NR_GPIO_PINS)
     {
         return 0;
@@ -18,6 +21,7 @@ uint32_t analogRead(gpio_pin_t ulPin)
     uint8_t adc_channel = PIN_MAP[ulPin].adc_channel;
     if (adc_device == NULL || adc_channel == ADC_PIN_INVALID)
     {
+        CORE_ASSERT_FAIL("analogRead: pin is not an ADC pin")
         return 0;
     }
 

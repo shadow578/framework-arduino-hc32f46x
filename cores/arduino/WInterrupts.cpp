@@ -226,6 +226,8 @@ inline void remove_pin_to_irqn_mapping(gpio_pin_t pin)
 
 int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
 {
+    ASSERT_GPIO_PIN_VALID(pin, "attachInterrupt");
+
     // detach any existing interrupt
     detachInterrupt(pin);
 
@@ -252,6 +254,8 @@ int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
 
 void detachInterrupt(gpio_pin_t pin)
 {
+    ASSERT_GPIO_PIN_VALID(pin, "detachInterrupt");
+
     // get irqn for pin from mapping
     pin_to_irqn_mapping_t mapping;
     if (!get_pin_to_irqn_mapping(pin, mapping))
@@ -273,6 +277,8 @@ void detachInterrupt(gpio_pin_t pin)
 
 bool checkIRQFlag(gpio_pin_t pin, bool clear)
 {
+    ASSERT_GPIO_PIN_VALID(pin, "checkIRQFlag");
+
     en_exti_ch_t ch = mapToExternalInterruptChannel(pin);
     if (EXINT_IrqFlgGet(ch) == Set)
     {

@@ -32,6 +32,10 @@
     }
 #endif
 
+#include "WVariant.h"
+#define ASSERT_GPIO_PIN_VALID(gpio_pin, fn_name) \
+    CORE_ASSERT(IS_GPIO_PIN(gpio_pin), "invalid GPIO pin supplied to " fn_name)
+
 #else // !__CORE_DEBUG
 
 // no debug, dummy macros and user-macros are undefined
@@ -41,6 +45,7 @@
 #define CORE_DEBUG_PRINTF(fmt, ...)
 #define CORE_DEBUG_INIT()
 #define CORE_ASSERT(expression, message)
+#define ASSERT_GPIO_PIN_VALID(pin, fn_name)
 #endif // __CORE_DEBUG
 
 #define CORE_ASSERT_FAIL(message) CORE_ASSERT(false, message)

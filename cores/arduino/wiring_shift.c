@@ -22,6 +22,7 @@
 
 #include "wiring_digital.h"
 #include "wiring_private.h"
+#include "core_debug.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -29,6 +30,8 @@ extern "C"{
 
 uint32_t shiftIn( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder )
 {
+  ASSERT_GPIO_PIN_VALID( ulDataPin ) ;
+
   uint8_t value = 0 ;
   uint8_t i ;
 
@@ -53,6 +56,8 @@ uint32_t shiftIn( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrd
 
 void shiftOut( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal )
 {
+  ASSERT_GPIO_PIN_VALID( ulDataPin ) ;
+
   uint8_t i ;
 
   for ( i=0 ; i < 8 ; i++ )

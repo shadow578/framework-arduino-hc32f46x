@@ -2,9 +2,11 @@
 #include "drivers/gpio/gpio.h"
 #include "drivers/adc/adc.h"
 #include "wiring_constants.h"
+#include "core_debug.h"
 
 void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
 {
+    ASSERT_GPIO_PIN_VALID(dwPin, "pinMode");
     if (dwPin >= BOARD_NR_GPIO_PINS)
     {
         return;
@@ -60,6 +62,7 @@ void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
 
 uint32_t getPinMode(gpio_pin_t dwPin)
 {
+    ASSERT_GPIO_PIN_VALID(dwPin, "getPinMode");
     if (dwPin >= BOARD_NR_GPIO_PINS)
     {
         return INPUT_FLOATING;
@@ -83,6 +86,7 @@ uint32_t getPinMode(gpio_pin_t dwPin)
 
 void digitalWrite(gpio_pin_t dwPin, uint32_t dwVal)
 {
+    ASSERT_GPIO_PIN_VALID(dwPin, "digitalWrite");
     if (dwPin >= BOARD_NR_GPIO_PINS)
     {
         return;
@@ -100,6 +104,7 @@ void digitalWrite(gpio_pin_t dwPin, uint32_t dwVal)
 
 int digitalRead(gpio_pin_t ulPin)
 {
+    ASSERT_GPIO_PIN_VALID(ulPin, "digitalRead");
     if (ulPin >= BOARD_NR_GPIO_PINS)
     {
         return LOW;

@@ -14,8 +14,6 @@ extern "C"
 //
 // GPIO wrappers for PORT_* functions
 //
-#define ASSERT_GPIO_PIN(gpio_pin) \
-    CORE_ASSERT(IS_GPIO_PIN(gpio_pin), "GPIO_* called with invalid gpio pin")
 #define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].port, PIN_MAP[gpio_pin].bit_mask
 
     /**
@@ -23,7 +21,7 @@ extern "C"
      */
     inline en_result_t GPIO_Init(gpio_pin_t gpio_pin, const stc_port_init_t *pstcPortInit)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_Init");
         return PORT_Init(PIN_ARG(gpio_pin), pstcPortInit);
     }
 
@@ -32,7 +30,7 @@ extern "C"
      */
     inline en_result_t GPIO_GetConfig(gpio_pin_t gpio_pin, stc_port_init_t *pstcPortInit)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetConfig");
         return PORT_GetConfig(PIN_ARG(gpio_pin), pstcPortInit);
     }
 
@@ -41,7 +39,7 @@ extern "C"
      */
     inline en_flag_status_t GPIO_GetBit(gpio_pin_t gpio_pin)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetBit");
         return PORT_GetBit(PIN_ARG(gpio_pin));
     }
 
@@ -50,7 +48,7 @@ extern "C"
      */
     inline en_result_t GPIO_OE(gpio_pin_t gpio_pin, en_functional_state_t enNewState)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_OE");
         return PORT_OE(PIN_ARG(gpio_pin), enNewState);
     }
 
@@ -59,7 +57,7 @@ extern "C"
      */
     inline en_result_t GPIO_SetBits(gpio_pin_t gpio_pin)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_SetBits");
         return PORT_SetBits(PIN_ARG(gpio_pin));
     }
 
@@ -68,7 +66,7 @@ extern "C"
      */
     inline en_result_t GPIO_ResetBits(gpio_pin_t gpio_pin)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_ResetBits");
         return PORT_ResetBits(PIN_ARG(gpio_pin));
     }
 
@@ -77,7 +75,7 @@ extern "C"
      */
     inline en_result_t GPIO_Toggle(gpio_pin_t gpio_pin)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_Toggle");
         return PORT_Toggle(PIN_ARG(gpio_pin));
     }
 
@@ -88,7 +86,7 @@ extern "C"
      */
     inline en_result_t GPIO_SetFunc(gpio_pin_t gpio_pin, en_port_func_t enFuncSelect, en_functional_state_t enSubFunc = Disable)
     {
-        ASSERT_GPIO_PIN(gpio_pin);
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_SetFunc");
         return PORT_SetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
     }
 
