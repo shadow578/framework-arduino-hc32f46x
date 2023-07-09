@@ -135,6 +135,7 @@ void adc_enable_channel(const adc_device_t *device, const uint8_t adc_channel, u
 {
     ASSERT_INITIALIZED(device, STRINGIFY(adc_enable_channel));
     ASSERT_CHANNEL_ID(device, adc_channel);
+    CORE_ASSERT(sample_time > 0, "adc channel sample_time must be > 0")
 
     ADC_DEBUG_PRINTF(device, "enable channel %d, sample_time=%d\n", adc_channel, sample_time);
     stc_adc_ch_cfg_t channel_config = {

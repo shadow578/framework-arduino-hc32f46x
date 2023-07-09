@@ -20,7 +20,7 @@ inline en_exti_lvl_t mapToTriggerMode(uint32_t mode)
         return ExIntLowLevel;
     }
 
-    CORE_ASSERT_FAIL("Invalid external interrupt mode")
+    CORE_ASSERT_FAIL("Invalid external interrupt mode. only RISING, FALLING, CHANGE, LOW are valid");
     return ExIntFallingEdge;
 }
 
@@ -227,6 +227,7 @@ inline void remove_pin_to_irqn_mapping(gpio_pin_t pin)
 int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
 {
     ASSERT_GPIO_PIN_VALID(pin, "attachInterrupt");
+    CORE_ASSERT(callback != NULL, "interrupt callback must not be NULL");
 
     // detach any existing interrupt
     detachInterrupt(pin);

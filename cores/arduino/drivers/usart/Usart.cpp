@@ -104,6 +104,7 @@ void Usart::begin(uint32_t baud, uint16_t config)
     switch (config & HARDSER_STOP_BIT_MASK)
     {
     default:
+        CORE_ASSERT_FAIL("USART: invalid stop bit configuration");
     case HARDSER_STOP_BIT_1:
         usartConfig.enStopBit = UsartOneStopBit;
         break;
@@ -116,6 +117,7 @@ void Usart::begin(uint32_t baud, uint16_t config)
     switch (config & HARDSER_PARITY_MASK)
     {
     default:
+        CORE_ASSERT_FAIL("USART: invalid parity configuration");
     case HARDSER_PARITY_NONE:
         usartConfig.enParity = UsartParityNone;
         break;
@@ -131,6 +133,7 @@ void Usart::begin(uint32_t baud, uint16_t config)
     switch (config & HARDSER_DATA_MASK)
     {
     default:
+        CORE_ASSERT_FAIL("USART: invalid data bits configuration");
     case HARDSER_DATA_8:
         usartConfig.enDataLength = UsartDataBits8;
         break;

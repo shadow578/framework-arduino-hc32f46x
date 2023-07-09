@@ -52,6 +52,7 @@ void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
         pinConf.enPinMode = Pin_Mode_Out;
         break;
     default:
+        CORE_ASSERT_FAIL("pinMode: invalid pin mode. Must be INPUT, INPUT_PULLUP, INPUT_ANALOG or OUTPUT");
         return;
     }
 
@@ -80,6 +81,7 @@ uint32_t getPinMode(gpio_pin_t dwPin)
     case Pin_Mode_Ana:
         return INPUT_ANALOG;
     default:
+        CORE_ASSERT_FAIL("getPinMode: invalid pin mode detected");
         return INPUT_FLOATING;
     }
 }

@@ -30,7 +30,7 @@ extern "C"{
 
 uint32_t shiftIn( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder )
 {
-  ASSERT_GPIO_PIN_VALID( ulDataPin ) ;
+  ASSERT_GPIO_PIN_VALID( ulDataPin, "shiftIn" ) ;
 
   uint8_t value = 0 ;
   uint8_t i ;
@@ -56,7 +56,7 @@ uint32_t shiftIn( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrd
 
 void shiftOut( gpio_pin_t ulDataPin, gpio_pin_t ulClockPin, uint32_t ulBitOrder, uint32_t ulVal )
 {
-  ASSERT_GPIO_PIN_VALID( ulDataPin ) ;
+  ASSERT_GPIO_PIN_VALID( ulDataPin, "shiftOut" ) ;
 
   uint8_t i ;
 

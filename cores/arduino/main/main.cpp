@@ -22,4 +22,6 @@ int main(void)
 		core_hook_loop();
 		loop();
 	}
+
+	CORE_ASSERT_FAIL("main loop exited");
 }
