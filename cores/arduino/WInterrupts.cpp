@@ -101,7 +101,7 @@ void _attachInterrupt(gpio_pin_t pin, voidFuncPtr handler, IRQn_Type irqn, uint3
 
     // clear pending, set priority and enable
     NVIC_ClearPendingIRQ(irqReg.enIRQn);
-    NVIC_SetPriority(irqReg.enIRQn, DDL_IRQ_PRIORITY_06);
+    NVIC_SetPriority(irqReg.enIRQn, DDL_IRQ_PRIORITY_DEFAULT);
     NVIC_EnableIRQ(irqReg.enIRQn);
 }
 
@@ -261,7 +261,7 @@ int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
     detachInterrupt(pin);
 
     // assert EXTI channel is not already in use
-    if(is_exti_channel_in_use(mapToInterruptSource(pin)))
+    if (is_exti_channel_in_use(mapToInterruptSource(pin)))
     {
         // EXTI channel is already in use
         CORE_DEBUG_PRINTF("attachInterrupt: EXTI channel is already in use for pin=%d\n", pin);
@@ -326,4 +326,21 @@ bool checkIRQFlag(gpio_pin_t pin, bool clear)
     }
 
     return false;
+}
+
+void setInterruptPriority(gpio_pin_t pin, uint32_t priority)
+{
+    ASSERT_GPIO_PIN_VALID(pin, "detachInterrupt");
+
+    // get irqn for pin from mapping
+    pin_to_irqn_mapping_t mapping;
+    if (!get_pin_to_irqn_mapping(pin, mapping))
+    {
+        // no mapping for this pin...
+        // CORE_ASSERT_FAIL("attempted to detach interrupt with no pin mapping")
+        return;
+    }
+
+    // set the interrupt priority
+    NVIC_SetPriority(mapping.irqn, priority);
 }

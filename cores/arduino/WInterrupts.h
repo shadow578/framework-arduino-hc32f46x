@@ -35,7 +35,6 @@ extern "C"
 #define DEFAULT 1
 #define EXTERNAL 0
 
-
   /*
    * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
    *        Detaches any previously attached interrupt on the same pin.
@@ -45,12 +44,18 @@ extern "C"
    * \param mode Defines when the interrupt should be triggered.
    * \return assigned interrupt number, or -1 if the interrupt couldn't be assigned
    *
-   * \note you must call checkIRQFlag() in your ISR to clear the interrupt flag.
-   *      Otherwise, your ISR may be called continuously or never again.
-   * 
-   * \note if a interrupt is already attached to the given pin, this function will detach it first.
-   * 
+   * \note
+   * the external interrupt priority is set to DDL_IRQ_PRIORITY_DEFAULT by default.
+   * use setInterruptPriority() to change it.
+   *
    * \note 
+   * you must call checkIRQFlag() in your ISR to clear the interrupt flag.
+   * Otherwise, your ISR may be called continuously or never again.
+   *
+   * \note 
+   * if a interrupt is already attached to the given pin, this function will detach it first.
+   *
+   * \note
    * any pin may be used for external interrupts, with the following limitations:
    * - the pin should not be assigned to another function
    * - at most 16 external interrupts can be used at the same time
@@ -75,13 +80,21 @@ extern "C"
    * \param pin The pin to check
    * \param clear If true, clear the flag if it is set
    * \return True if the flag is set, false otherwise
-   * 
-   * \note 
+   *
+   * \note
    * under the hood, this will only check the interrupt flag for the pin's EXTI line.
    * this does not necessarily mean that the interrupt was caused by the pin.
    * (e.g. if the interrupt was caused by PB0, calling this function with PA0 will return true too)
    */
   bool checkIRQFlag(gpio_pin_t pin, bool clear = true);
+
+  /*
+   * \brief set the priority of the given external interrupt
+   *
+   * \param pin The pin to set the priority for
+   * \param priority The priority to set. one of DDL_IRQ_PRIORITY_xx
+   */
+  void setInterruptPriority(gpio_pin_t pin, uint32_t priority);
 
 #ifdef __cplusplus
 }
