@@ -47,6 +47,17 @@ extern "C"
    *
    * \note you must call checkIRQFlag() in your ISR to clear the interrupt flag.
    *      Otherwise, your ISR may be called continuously or never again.
+   * 
+   * 
+   * \note 
+   * any pin may be used for external interrupts, with the following limitations:
+   * - the pin should not be assigned to another function
+   * - at most 16 external interrupts can be used at the same time
+   * - not any combination of pins can be used. Each pin on the HC32F46x connects to a EXTI line,
+   *   and only one pin per EXTI line can be used for external interrupts at a time.
+   *   The EXTI line number is equal to the bit position of the pin in the port register (~= the 1 in PA1).
+   *   Thus, PA0, PB0, PC0, ... share a EXTI line, and only one of them can be used for external interrupts at a time.
+   * (this info may be incorrect. the datasheet is chinese and i'm not 100% sure i understood it correctly)
    */
   int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode);
 
