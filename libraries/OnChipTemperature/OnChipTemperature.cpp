@@ -26,6 +26,8 @@ void OnChipTemperature::begin()
 
 void OnChipTemperature::begin(const stc_ots_init_t *config)
 {
+    CORE_ASSERT(config != NULL, "OnChipTemperature::begin: config is NULL")
+
     // enable OTS clock
     PWC_Fcg3PeriphClockCmd(PWC_FCG3_PERIPH_OTS, Enable);
 

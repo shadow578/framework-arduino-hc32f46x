@@ -1,4 +1,5 @@
 #include "TrueRandom.h"
+#include "core_debug.h"
 
 //
 // TrueRandom global instance
@@ -41,6 +42,8 @@ uint64_t TrueRandom::get()
 
 void TrueRandom::fill(uint8_t *buffer, size_t size)
 {
+    CORE_ASSERT(buffer != NULL, "TrueRandom::fill: buffer is NULL")
+
     // fill buffer with random numbers
     while (size > 0)
     {

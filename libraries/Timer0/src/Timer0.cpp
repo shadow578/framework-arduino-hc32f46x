@@ -106,6 +106,9 @@ inline void timer0_irq_resign(timer0_interrupt_config_t &irq, const char *name)
 //
 Timer0::Timer0(timer0_channel_config_t *config, voidFuncPtr callback)
 {
+    CORE_ASSERT(config != nullptr, "Timer0 config must not be null")
+    CORE_ASSERT(callback != nullptr, "Timer0 callback must not be null")
+
     this->config = config;
     this->callback = callback;
 }
@@ -163,6 +166,8 @@ void Timer0::start(const uint32_t frequency, const uint16_t prescaler)
 
 void Timer0::start(const stc_tim0_base_init_t *channel_config)
 {
+    CORE_ASSERT(channel_config != nullptr, "Timer0::start(): channel_config is null");
+
     // if already started, stop first
     if (this->isStarted)
     {

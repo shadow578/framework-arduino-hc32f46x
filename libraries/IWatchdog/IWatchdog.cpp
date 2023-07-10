@@ -1,4 +1,5 @@
 #include "IWatchdog.h"
+#include "core_debug.h"
 
 //
 // global WDT object
@@ -10,6 +11,7 @@ IWatchdog WDT;
 //
 void IWatchdog::begin(const stc_wdt_init_t *config)
 {
+    CORE_ASSERT(config != NULL, "IWatchdog::begin: config is NULL")
     WDT_Init(config);
 
     // reload watchdog after init
