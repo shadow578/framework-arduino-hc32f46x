@@ -67,6 +67,7 @@ inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
 //
 Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin)
 {
+    CORE_ASSERT(config != NULL, "USART() config cannot be NULL");
     ASSERT_GPIO_PIN_VALID(tx_pin, "USART() tx_pin");
     ASSERT_GPIO_PIN_VALID(rx_pin, "USART() rx_pin");
 
@@ -147,7 +148,7 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
 {
     // clear rx and tx buffers
     this->rxBuffer->clear();
-    // this->txBuffer->clear();
+    this->txBuffer->clear();
 
     // set IO pin functions
     GPIO_SetFunc(this->tx_pin, this->config->peripheral.tx_pin_function);
