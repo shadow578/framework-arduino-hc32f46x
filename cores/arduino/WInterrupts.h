@@ -43,11 +43,12 @@ extern "C"
    * \param pin The pin number to attach the interrupt to
    * \param callback The function to call when the interrupt occurs
    * \param mode Defines when the interrupt should be triggered.
-   * \return assigned interrupt number, or -1 if there are no available interrupts
+   * \return assigned interrupt number, or -1 if the interrupt couldn't be assigned
    *
    * \note you must call checkIRQFlag() in your ISR to clear the interrupt flag.
    *      Otherwise, your ISR may be called continuously or never again.
    * 
+   * \note if a interrupt is already attached to the given pin, this function will detach it first.
    * 
    * \note 
    * any pin may be used for external interrupts, with the following limitations:
@@ -63,6 +64,8 @@ extern "C"
 
   /*
    * \brief Turns off the given interrupt.
+   *
+   * \note if no interrupt is attached to the given pin, this function does nothing.
    */
   void detachInterrupt(gpio_pin_t pin);
 
@@ -72,6 +75,11 @@ extern "C"
    * \param pin The pin to check
    * \param clear If true, clear the flag if it is set
    * \return True if the flag is set, false otherwise
+   * 
+   * \note 
+   * under the hood, this will only check the interrupt flag for the pin's EXTI line.
+   * this does not necessarily mean that the interrupt was caused by the pin.
+   * (e.g. if the interrupt was caused by PB0, calling this function with PA0 will return true too)
    */
   bool checkIRQFlag(gpio_pin_t pin, bool clear = true);
 

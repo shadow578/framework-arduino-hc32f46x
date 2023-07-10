@@ -27,6 +27,7 @@ inline en_exti_lvl_t mapToTriggerMode(uint32_t mode)
 inline en_exti_ch_t mapToExternalInterruptChannel(gpio_pin_t pin)
 {
     // check range
+    ASSERT_GPIO_PIN_VALID(pin, "mapToExternalInterruptChannel");
     if (pin > BOARD_NR_GPIO_PINS)
     {
         return ExtiCh00;
@@ -48,6 +49,7 @@ inline en_exti_ch_t mapToExternalInterruptChannel(gpio_pin_t pin)
 inline en_int_src_t mapToInterruptSource(gpio_pin_t pin)
 {
     // check range
+    ASSERT_GPIO_PIN_VALID(pin, "mapToInterruptSource");
     if (pin > BOARD_NR_GPIO_PINS)
     {
         return INT_PORT_EIRQ0;
@@ -69,7 +71,9 @@ inline en_int_src_t mapToInterruptSource(gpio_pin_t pin)
 void _attachInterrupt(gpio_pin_t pin, voidFuncPtr handler, IRQn_Type irqn, uint32_t mode)
 {
     // check inputs
-    if (pin >= BOARD_NR_GPIO_PINS || !handler)
+    ASSERT_GPIO_PIN_VALID(pin, "_attachInterrupt");
+    CORE_ASSERT(handler != NULL, "_attachInterrupt: handler cannot be NULL")
+    if (pin >= BOARD_NR_GPIO_PINS || handler == NULL)
     {
         return;
     }
@@ -104,6 +108,7 @@ void _attachInterrupt(gpio_pin_t pin, voidFuncPtr handler, IRQn_Type irqn, uint3
 void _detachInterrupt(gpio_pin_t pin, IRQn_Type irqn)
 {
     // check inputs
+    ASSERT_GPIO_PIN_VALID(pin, "_detachInterrupt");
     if (pin >= BOARD_NR_GPIO_PINS)
     {
         return;
@@ -222,6 +227,29 @@ inline void remove_pin_to_irqn_mapping(gpio_pin_t pin)
     }
 }
 
+/**
+ * @brief check if a pin -> irqn mapping exists that uses the given EXTi channel
+ */
+inline bool is_exti_channel_in_use(en_int_src_t ch)
+{
+    // loop over all pin to irqn mappings, check if any of them uses the given channel
+    pin_to_irqn_mapping_t *node = pin_to_irqn_mapping;
+    while (node != NULL)
+    {
+        // check if channel is in use
+        if (mapToInterruptSource(node->pin) == ch)
+        {
+            return true;
+        }
+
+        // next node
+        node = node->next;
+    }
+
+    // channel is not in use
+    return false;
+}
+
 // #endregion
 
 int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
@@ -232,12 +260,19 @@ int attachInterrupt(gpio_pin_t pin, voidFuncPtr callback, uint32_t mode)
     // detach any existing interrupt
     detachInterrupt(pin);
 
+    // assert EXTI channel is not already in use
+    if(is_exti_channel_in_use(mapToInterruptSource(pin)))
+    {
+        // EXTI channel is already in use
+        CORE_DEBUG_PRINTF("attachInterrupt: EXTI channel is already in use for pin=%d\n", pin);
+        return -1;
+    }
+
     // auto-assign a irqn
     IRQn_Type irqn;
     if (irqn_aa_get(irqn, "external interrupt") != Ok)
     {
         // no more IRQns available...
-        // CORE_ASSERT_FAIL("no more IRQns available for external interrupts")
         CORE_DEBUG_PRINTF("attachInterrupt: no IRQn available for pin=%d\n", pin);
         return -1;
     }
