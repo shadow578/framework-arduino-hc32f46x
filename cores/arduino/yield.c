@@ -16,6 +16,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include "core_hooks.h"
+
 /**
  * Empty yield() hook.
  *
@@ -28,5 +30,8 @@
 static void __empty()
 {
     // Empty
+
+    // wdt reload
+    core_hook_yield_wdt_reload();
 }
 void yield(void) __attribute__((weak, alias("__empty")));

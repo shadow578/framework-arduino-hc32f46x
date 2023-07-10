@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-#define DEF_HOOK(name, ...) __attribute__((weak)) extern void core_hook_##name( __VA_ARGS__ );
+#define DEF_HOOK(name, ...) __attribute__((weak)) extern void core_hook_##name(__VA_ARGS__);
 
     /**
      * called before setup(), but after SoC and core drivers are initialized
@@ -42,6 +42,13 @@ extern "C"
      * @note runs inside a IRQ, so keep it short and sweet
      */
     DEF_HOOK(usart_rx_irq, uint8_t data, uint8_t usart_channel);
+
+    /**
+     * hook for watchdog reload during yield()
+     *
+     * @note IWatchdog library uses this hook to reload the watchdog timer
+     */
+    DEF_HOOK(yield_wdt_reload);
 
 #ifdef __cplusplus
 }
