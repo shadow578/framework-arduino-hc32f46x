@@ -1,7 +1,13 @@
 #ifndef __TRUE_RANDOM_H__
 #define __TRUE_RANDOM_H__
+
+// check ddl configuration
 #if (DDL_TRNG_ENABLE != DDL_ON)
 #error "TrueRandom library requires TRNG DDL to be enabled"
+#endif
+
+#if (DDL_PWC_ENABLE != DDL_ON)
+#error "TrueRandom library requires PWC DDL to be enabled"
 #endif
 
 #include "Arduino.h"

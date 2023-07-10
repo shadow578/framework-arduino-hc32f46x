@@ -1,4 +1,14 @@
 #pragma once
+
+// check DDL configuration
+#if (DDL_TIMER0_ENABLE != DDL_ON)
+#error "Timer0 library requires TIMER0 DDL to be enabled"
+#endif
+
+#if (DDL_PWC_ENABLE != DDL_ON)
+#error "Timer0 library requires PWC DDL to be enabled"
+#endif
+
 #include "Arduino.h"
 #include <core_debug.h>
 #include <hc32_ddl.h>

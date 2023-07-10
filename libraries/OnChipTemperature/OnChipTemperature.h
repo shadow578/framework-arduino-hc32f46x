@@ -1,10 +1,20 @@
 #pragma once
-#include "Arduino.h"
-#include <hc32_ddl.h>
 
+// check ddl configuration
 #if (DDL_OTS_ENABLE != DDL_ON)
 #error "OTS library requires OTS DDL to be enabled"
 #endif
+
+#if (DDL_PWC_ENABLE != DDL_ON)
+#error "OTS library requires PWC DDL to be enabled"
+#endif
+
+#if (DDL_CLK_ENABLE != DDL_ON)
+#error "OTS library requires CLK DDL to be enabled"
+#endif
+
+#include "Arduino.h"
+#include <hc32_ddl.h>
 
 /**
  * @brief On-Chip Temperature Sensor (OTS) class

@@ -1,11 +1,13 @@
 #ifndef __IWATCHDOG_H__
 #define __IWATCHDOG_H__
-#include "Arduino.h"
-#include <hc32_ddl.h>
 
+// check ddl configuration
 #if (DDL_WDT_ENABLE != DDL_ON)
 #error "IWatchdog library requires WDT DDL to be enabled"
 #endif
+
+#include "Arduino.h"
+#include <hc32_ddl.h>
 
 class IWatchdog
 {
