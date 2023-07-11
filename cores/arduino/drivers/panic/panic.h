@@ -48,10 +48,10 @@ extern "C"
     size_t panic_printf(const char *fmt, ...);
 
     /**
-     * @brief core panic handler
+     * @brief internal panic handler
      * @param message message to print before panicing. may be set to NULL to omit message
      */
-    inline void panic(const char *message)
+    inline void _panic(const char *message)
     {
         if (message != NULL)
         {
@@ -62,22 +62,38 @@ extern "C"
         panic_end();
     }
 
+    // use __BASE_FILE__ if available, fall back to __FILE__
+    #ifdef __BASE_FILE__
+    #define PANIC_FILE_NAME __BASE_FILE__
+    #else
+    #define PANIC_FILE_NAME __FILE__
+    #endif
+
+    #define PANIC_LINE_NUMBER_STR STRINGIFY(__LINE__)
+
+    /**
+     * @brief core panic handler
+     * @param message message to print before panicing. may be set to NULL to omit message
+     * @note automatically adds file and line number to message
+     */
+    #define panic(msg) _panic("[" PANIC_FILE_NAME " l" PANIC_LINE_NUMBER_STR "]"  msg)
+
 #else // !PANIC_PRINT_ENABLED
     // if panic print is not enabled, stub panic_begin() and panic_printf()
     // and redirect panic() to panic_end()
 
-#define panic_begin()
-#define panic_printf(fmt, ...)
-#define panic(msg) panic_end()
+    #define panic_begin()
+    #define panic_printf(fmt, ...)
+    #define panic(msg) panic_end()
 
 #endif // PANIC_PRINT_ENABLED
 #else  // !__CORE_DEBUG
-// it core is not in debug mode, stub all panic functions
+    // if core is not in debug mode, stub all panic functions
 
-#define panic_begin()
-#define panic_printf(fmt, ...)
-#define panic_end()
-#define panic(msg)
+    #define panic_begin()
+    #define panic_printf(fmt, ...)
+    #define panic_end()
+    #define panic(msg)
 #endif // __CORE_DEBUG
 
 #ifdef __cplusplus

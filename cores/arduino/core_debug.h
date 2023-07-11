@@ -18,17 +18,10 @@
 #endif
 
 #ifndef CORE_ASSERT
-// use __BASE_FILE__ if available, fall back to __FILE__
-#ifdef __BASE_FILE__
-#define CORE_DEBUG_FILE __BASE_FILE__
-#else
-#define CORE_DEBUG_FILE __FILE__
-#endif
-
 #define CORE_ASSERT(expression, message)                                        \
     if (!(expression))                                                          \
     {                                                                           \
-        panic("[" CORE_DEBUG_FILE ":" STRINGIFY(__LINE__) "]:" message "\n\n"); \
+        panic("CORE_ASSERT:" message "\n\n"); \
     }
 #endif
 
