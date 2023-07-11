@@ -3,18 +3,8 @@
 #include "../drivers/sysclock/systick.h"
 #include "../drivers/panic/fault_handlers.h"
 #include "../core_debug.h"
+#include "../core_hooks.h"
 #include <hc32_ddl.h>
-
-/**
- * set flash latency and cache
- */
-inline void flash_init()
-{
-    EFM_Unlock();
-    EFM_SetLatency(EFM_LATENCY_5);
-    EFM_InstructionCacheCmd(Enable);
-    EFM_Lock();
-}
 
 /**
  * @brief check if the last reset was caused by a
@@ -52,8 +42,7 @@ void core_init()
 
     // setup the SoC and initialize drivers
     fault_handlers_init();
-    flash_init();
-    sysclock_init();
+    core_hook_sysclock_init();
     update_system_clock_frequencies();
     systick_init();
 }

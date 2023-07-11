@@ -50,6 +50,23 @@ extern "C"
      */
     DEF_HOOK(yield_wdt_reload);
 
+    /**
+     * hook for system clock initialization
+     *
+     * @note if this hook is not implemented, the cpu defaults to MCR at 8 MHz
+     * 
+     * @note use "drivers/sysclock/sysclock_util.h" to help with clock configuration
+     * 
+     * @note
+     * example workflow:
+     * 1. configure flash / sram wait cycles (if needed)
+     * 2. enable oscillator (e.g. XTAL)
+     * 3. enable and configure PLL
+     * 4. configure system clock dividers
+     * 5. switch system clock source
+     */
+    DEF_HOOK(sysclock_init);
+
 #ifdef __cplusplus
 }
 #endif

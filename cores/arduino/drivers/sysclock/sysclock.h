@@ -64,13 +64,6 @@ typedef struct system_clock_frequencies
 extern system_clock_frequencies_t SYSTEM_CLOCK_FREQUENCIES;
 
 /**
- * @brief Initialize the system clock
- *
- * @note weak implementation, can be overriden by user code to allow custom clock configuration
- */
-__attribute__((weak)) void sysclock_init();
-
-/**
  * @brief update the SYSTEM_CLOCK_FREQUENCIES variable
  */
 void update_system_clock_frequencies();
