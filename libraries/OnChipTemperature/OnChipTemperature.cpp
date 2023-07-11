@@ -1,7 +1,11 @@
 #include "OnChipTemperature.h"
+
 #include <core_debug.h>
 
-#define OTS_READ_TIMEOUT 10000u // NOT a milliseconds value; taken from examples
+#define OTS_READ_TIMEOUT_MS 25 // 25 ms
+
+// guessed 25 clock cycles per read
+#define OTS_READ_TIMEOUT (OTS_READ_TIMEOUT_MS * (SYSTEM_CLOCK_FREQUENCIES.hclk / 25 / 1000))
 
 //
 // global OTS object
@@ -66,7 +70,7 @@ bool OnChipTemperature::read(float &temperature)
     }
 
     // yes, read temperature and update last read value
-    if (read_internal(temperature))
+    if (!read_internal(temperature))
     {
         // read failed
         return false;
@@ -89,7 +93,7 @@ bool OnChipTemperature::read_internal(float &temperature)
         return false;
     }
 
-    return false;
+    return true;
 }
 
 bool OnChipTemperature::shouldRead(uint32_t &now)
