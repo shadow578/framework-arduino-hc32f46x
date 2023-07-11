@@ -22,6 +22,14 @@ inline void sysclock_configure_xtal()
 }
 
 /**
+ * @brief init internal high-speed RC clock source to 16 MHz
+ */
+inline void sysclock_configure_hrc()
+{
+    CLK_HrcCmd(Enable);
+}
+
+/**
  * @brief init main PLL (MPLL), with XTAL as source
  * @param pllSource PLL source (XTAL or HRC)
  * @param pllConfig PLL configuration. see notes below.
