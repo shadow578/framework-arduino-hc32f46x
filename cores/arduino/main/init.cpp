@@ -2,6 +2,7 @@
 #include "../drivers/sysclock/sysclock.h"
 #include "../drivers/sysclock/systick.h"
 #include "../drivers/panic/fault_handlers.h"
+#include "../core_debug.h"
 #include <hc32_ddl.h>
 
 /**
@@ -15,6 +16,28 @@ inline void flash_init()
     EFM_Lock();
 }
 
+/**
+ * @brief check if the last reset was caused by a
+ *        configuration fault (e.g. XTAL fault) that could be reoccuring
+ */
+inline void check_reoccuring_reset_fault()
+{
+    // get reset cause
+    stc_rmu_rstcause_t cause;
+    RMU_GetResetCause(&cause);
+
+    // check for possibly reoccuring faults:
+#define CHECK_RSTCAUSE(cause, msg) \
+    if (cause == Set)              \
+    {                              \
+        RMU_ClrResetFlag();        \
+        panic(msg);                \
+    }
+
+    // - XTAL error, could be caused by a invalid XTAL config or a bad circuit
+    CHECK_RSTCAUSE(cause.enXtalErr, "XTAL error, check XTAL config and circuit");
+}
+
 void core_init()
 {
 #if defined(__CC_ARM) && defined(__TARGET_FPU_VFP)
@@ -23,6 +46,9 @@ void core_init()
 
     // setup VTO register
     SCB->VTOR = (uint32_t(LD_FLASH_START) & SCB_VTOR_TBLOFF_Msk);
+
+    // check if last reset could be reoccuring
+    check_reoccuring_reset_fault();
 
     // setup the SoC and initialize drivers
     fault_handlers_init();
