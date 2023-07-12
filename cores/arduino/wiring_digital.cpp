@@ -13,8 +13,9 @@ void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
     }
 
     // if pin has ADC channel, configure ADC according to pin mode
-    adc_device_t *adc_device = PIN_MAP[dwPin].adc_device;
-    uint8_t adc_channel = PIN_MAP[dwPin].adc_channel;
+    pin_adc_info_t adc_info = PIN_MAP[dwPin].adc_info;
+    adc_device_t *adc_device = adc_info.device;
+    uint8_t adc_channel = adc_info.channel;
     if (adc_device != NULL && adc_channel != ADC_PIN_INVALID)
     {
         // is a valid ADC pin

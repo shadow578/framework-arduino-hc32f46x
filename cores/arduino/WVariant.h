@@ -33,6 +33,24 @@ extern "C"
 {
 #endif
 	/**
+	 * @brief adc info for a pin
+	 */
+	typedef struct pin_adc_info_t
+	{
+		/**
+		 * @brief pointer to the ADC device of this pin, if any
+		 * @note NULL if not a ADC pin
+		 */
+		adc_device_t *device;
+
+		/**
+		 * @brief adc channel number of this pin, if any
+		 * @note ADC_PIN_INVALID if not a ADC pin
+		 */
+		uint8_t channel;
+	} pin_adc_info_t;
+
+	/**
 	 * @brief variant pin map struct
 	 */
 	typedef struct pin_info_t
@@ -53,16 +71,10 @@ extern "C"
 		en_pin_t bit_mask;
 
 		/**
-		 * @brief pointer to the ADC device of this pin, if any
-		 * @note NULL if not a ADC pin
+		 * @brief adc configuration for this pin
 		 */
-		adc_device_t *adc_device;
+		pin_adc_info_t adc_info;
 
-		/**
-		 * @brief adc channel number of this pin, if any
-		 * @note ADC_PIN_INVALID if not a ADC pin
-		 */
-		uint8_t adc_channel;
 	} pin_info_t;
 
 	/**
