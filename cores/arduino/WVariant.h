@@ -51,6 +51,55 @@ extern "C"
 	} pin_adc_info_t;
 
 	/**
+	 * @brief TimerA info for a pin
+	 */
+	typedef struct pin_timera_info_t
+	{
+		/**
+		 * @brief TimerA unit assigned to this pin for PWM or Servo output
+		 *
+		 * @note
+		 * - 0: no timer assigned
+		 * - 1: M4_TMRA1
+		 * - 2: M4_TMRA2
+		 * - 3: M4_TMRA3
+		 * - 4: M4_TMRA4
+		 * - 5: M4_TMRA5
+		 * - 6: M4_TMRA6
+		 */
+		uint8_t unit : 3;
+
+		/**
+		 * @brief TimerA channel assigned to this pin for PWM or Servo output
+		 *
+		 * @note
+		 * - 0: TimeraCh1
+		 * - 1: TimeraCh2
+		 * - 2: TimeraCh3
+		 * - 3: TimeraCh4
+		 * - 4: TimeraCh5
+		 * - 5: TimeraCh6
+		 * - 6: TimeraCh7
+		 * - 7: TimeraCh8
+		 *
+		 * @note only valid if unit != 0
+		 */
+		uint8_t channel : 3;
+
+		/**
+		 * @brief PORT primary function to enable TimerA output for this pin
+		 *
+		 * @note
+		 * - 0: Func_Tima0
+		 * - 1: Func_Tima1
+		 * - 2: Func_Tima2
+		 *
+		 * @note only valid if unit != 0
+		 */
+		uint8_t function : 2;
+	} pin_timera_info_t;
+
+	/**
 	 * @brief variant pin map struct
 	 */
 	typedef struct pin_info_t
@@ -74,6 +123,11 @@ extern "C"
 		 * @brief adc configuration for this pin
 		 */
 		pin_adc_info_t adc_info;
+
+		/**
+		 * @brief TimerA configuration for this pin
+		 */
+		pin_timera_info_t timera_info;
 
 	} pin_info_t;
 
