@@ -158,3 +158,68 @@ inline void sysclock_configure_flash_wait_cycles()
     EFM_InstructionCacheCmd(Enable);
     EFM_Lock();
 }
+
+//
+// Power Mode utlis
+//
+
+/**
+ * @brief update power mode to highest performance allowed for new system clock
+ * @param newSystemClock new system clock frequency (SYSTEM_CLOCK_FREQUENCIES.system) after switch
+ * @param preClockSwitchOver true if this is called before switching the clock, false if called after
+ *
+ * @note this function must be called both before and after switching the clock
+ */
+void power_mode_update(uint32_t newSystemClock, bool preClockSwitchOver);
+
+#define power_mode_update_pre(newSystemClock) power_mode_update(newSystemClock, true)
+#define power_mode_update_post(newSystemClock) power_mode_update(newSystemClock, false)
+
+//
+// restore defaults
+//
+
+/**
+ * @brief restore the default clock source and frequencies
+ *
+ * @note
+ * default clock source is MCR (8 MHz) (refer to HC32F460 user manual, Section 4.8)
+ *
+ * @note
+ * default clock dividers are as follows:
+ * - HCLK:  1 (8 MHz)
+ * - EXCLK: 1 (8 MHz)
+ * - PCLK0: 1 (8 MHz)
+ * - PCLK1: 1 (8 MHz)
+ * - PCLK2: 1 (8 MHz)
+ * - PCLK3: 1 (8 MHz)
+ * - PCLK4: 1 (8 MHz)
+ *
+ * (refer to HC32F460 user manual, Section 4.11.21, register defaults)
+ */
+inline void sysclock_restore_default_clocks()
+{
+    // start MRC clock (should be running already, but make sure)
+    CLK_MrcCmd(Enable);
+
+    // update performance mode
+    power_mode_update_pre(8000000);
+
+    // switch to MCR (8 MHz)
+    CLK_SetSysClkSource(ClkSysSrcMRC);
+
+    // set clock dividers
+    stc_clk_sysclk_cfg_t div = {
+        .enHclkDiv = ClkSysclkDiv1,
+        .enExclkDiv = ClkSysclkDiv1,
+        .enPclk0Div = ClkSysclkDiv1,
+        .enPclk1Div = ClkSysclkDiv1,
+        .enPclk2Div = ClkSysclkDiv1,
+        .enPclk3Div = ClkSysclkDiv1,
+        .enPclk4Div = ClkSysclkDiv1,
+    };
+    sysclock_set_clock_dividers(&div);
+
+    // update performance mode
+    power_mode_update_post(8000000);
+}
