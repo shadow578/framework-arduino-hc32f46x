@@ -18,17 +18,13 @@
 #endif
 
 #ifndef CORE_ASSERT
-#define CORE_ASSERT(expression, message)                                        \
-    if (!(expression))                                                          \
-    {                                                                           \
+#define CORE_ASSERT(expression, message, ...) \
+    if (!(expression))                        \
+    {                                         \
         panic("CORE_ASSERT:" message "\n\n"); \
+        __VA_ARGS__;                          \
     }
 #endif
-
-#include "WVariant.h"
-#define ASSERT_GPIO_PIN_VALID(gpio_pin, fn_name) \
-    CORE_ASSERT(IS_GPIO_PIN(gpio_pin), "invalid GPIO pin supplied to " fn_name)
-
 #else // !__CORE_DEBUG
 
 // no debug, dummy macros and user-macros are undefined
@@ -37,10 +33,17 @@
 #undef CORE_ASSERT
 #define CORE_DEBUG_PRINTF(fmt, ...)
 #define CORE_DEBUG_INIT()
-#define CORE_ASSERT(expression, message)
-#define ASSERT_GPIO_PIN_VALID(pin, fn_name)
+#define CORE_ASSERT(expression, message, ...) \
+    if (!(expression))                        \
+    {                                         \
+        __VA_ARGS__;                          \
+    }
 #endif // __CORE_DEBUG
 
 #define CORE_ASSERT_FAIL(message) CORE_ASSERT(false, message)
+
+#include "WVariant.h"
+#define ASSERT_GPIO_PIN_VALID(gpio_pin, fn_name, ...) \
+    CORE_ASSERT(IS_GPIO_PIN(gpio_pin), "invalid GPIO pin supplied to " fn_name, ##__VA_ARGS__)
 
 #endif // _CORE_DEBUG_H
