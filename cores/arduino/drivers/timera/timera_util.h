@@ -1,0 +1,136 @@
+#pragma once
+#include <hc32_ddl.h>
+#include "timera_config.h"
+#include "../sysclock/sysclock.h"
+#include "../../WVariant.h"
+#include "../../core_types.h"
+#include "../../core_debug.h"
+
+/**
+ * @brief get TimerA assignment for a gpio pin
+ * @param pin the gpio pin to get assignment for
+ * @param unit_config the TimerA unit config
+ * @param output_channel the TimerA output channel
+ * @param output_function the TimerA output function
+ * @return true if pin has a TimerA assignment, false otherwise
+ */
+inline bool timera_get_assignment(
+    gpio_pin_t pin,
+    timera_config_t *&unit_config,
+    en_timera_channel_t &output_channel,
+    en_port_func_t &output_function)
+{
+    // ensure pin is valid
+    ASSERT_GPIO_PIN_VALID(pin, "get_timera_assignment", return false);
+
+    // get timera info from pin map
+    const pin_timera_info_t timera_info = PIN_MAP[pin].timera_info;
+
+    // if no assignment, return false
+    if (timera_info.unit == 0)
+    {
+        return false;
+    }
+
+    // get timera unit config
+    constexpr timera_config_t *UNIT_CONFIGS[6] = {
+        &TIMERA1_config,
+        &TIMERA2_config,
+        &TIMERA3_config,
+        &TIMERA4_config,
+        &TIMERA5_config,
+        &TIMERA6_config,
+    };
+
+    // unit is 1 <= unit <= 6
+    CORE_ASSERT(timera_info.unit >= 1 && timera_info.unit <= 6, "timera unit assignment out-of-range", return false);
+    unit_config = UNIT_CONFIGS[timera_info.unit - 1];
+
+    // get pin output channel
+    // channel is 0 <= channel <= 7, 0 is channel 1
+    CORE_ASSERT(timera_info.channel >= 0 && timera_info.channel <= 7, "timera channel assignment out-of-range", return false);
+    output_channel = static_cast<en_timera_channel_t>(timera_info.channel);
+
+    // get pin output gpio function
+    // function is 0 <= function <= 2, 0 is Func_Tima0
+    switch (timera_info.function)
+    {
+    case 0:
+        output_function = Func_Tima0;
+        break;
+    case 1:
+        output_function = Func_Tima1;
+        break;
+    case 2:
+        output_function = Func_Tima2;
+        break;
+    default:
+        CORE_ASSERT_FAIL("timera function assignment out-of-range");
+        return false;
+    }
+
+    // all ok
+    return true;
+}
+
+/**
+ * @brief check if a TimerA channel is active
+ * @param unit_config the TimerA unit config
+ * @param channel the TimerA channel
+ * @return true if channel is active, false otherwise
+ */
+inline bool timera_is_channel_active(timera_config_t *unit_config, const en_timera_channel_t channel)
+{
+    CORE_ASSERT(unit_config != NULL, "timera unit config is NULL", return false);
+
+    // cast channel to integer
+    // must be 0 <= ch <= 7, 0 == channel 1
+    const uint8_t ch = static_cast<uint8_t>(channel);
+    CORE_ASSERT(ch >= 0 && ch <= 7, "timera channel out-of-range", return false);
+
+    // check if channel is in use
+    return static_cast<bool>(unit_config->state.active_channels & TIMERA_STATE_ACTIVE_CHANNEL_BIT(ch + 1));
+}
+
+/**
+ * @brief set a TimerA channel active flag
+ * @param unit_config the TimerA unit config
+ * @param channel the TimerA channel
+ * @param is_active true to set channel as active, false to set channel as inactive
+ */
+inline void timera_set_channel_active_flag(timera_config_t *unit_config, const en_timera_channel_t channel, bool is_active)
+{
+    CORE_ASSERT(unit_config != NULL, "timera unit config is NULL", return);
+
+    // cast channel to integer
+    // must be 0 <= ch <= 7, 0 == channel 1
+    const uint8_t ch = static_cast<uint8_t>(channel);
+    CORE_ASSERT(ch >= 0 && ch <= 7, "timera channel out-of-range", return);
+
+    // update channel active flag
+    if (is_active)
+    {
+        unit_config->state.active_channels |= TIMERA_STATE_ACTIVE_CHANNEL_BIT(ch + 1);
+    }
+    else
+    {
+        unit_config->state.active_channels &= ~TIMERA_STATE_ACTIVE_CHANNEL_BIT(ch + 1);
+    }
+}
+
+/**
+ * @brief check if a TimerA unit is initialized
+ * @param unit_config the TimerA unit config
+ * @return true if unit is initialized, false otherwise
+ */
+#define timera_is_unit_initialized(unit_config) ((unit_config)->state.base_init != NULL)
+
+/**
+ * @brief get TimerA base clock (PCLK1)
+ * @return TimerA base clock (PCLK1)
+ */
+inline uint32_t timera_get_base_clock()
+{
+    update_system_clock_frequencies();
+    return SYSTEM_CLOCK_FREQUENCIES.pclk1;
+}

@@ -60,12 +60,12 @@ extern "C"
 		 *
 		 * @note
 		 * - 0: no timer assigned
-		 * - 1: M4_TMRA1
-		 * - 2: M4_TMRA2
-		 * - 3: M4_TMRA3
-		 * - 4: M4_TMRA4
-		 * - 5: M4_TMRA5
-		 * - 6: M4_TMRA6
+		 * - 1: M4_TMRA1 / TIMERA1_config
+		 * - 2: M4_TMRA2 / TIMERA2_config
+		 * - 3: M4_TMRA3 / TIMERA3_config
+		 * - 4: M4_TMRA4 / TIMERA4_config
+		 * - 5: M4_TMRA5 / TIMERA5_config
+		 * - 6: M4_TMRA6 / TIMERA6_config
 		 */
 		uint8_t unit : 3;
 
