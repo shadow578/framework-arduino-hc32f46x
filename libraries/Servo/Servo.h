@@ -11,6 +11,11 @@
 #define SERVO_PWM_FREQUENCY 50
 
 /**
+ * timer divider for servo frequency
+ */
+#define SERVO_TIMER_DIVIDER 16
+
+/**
  * shortest pulse sent to servo (== 0 degrees), in microseconds
  */
 #define SERVO_MIN_PULSE_WIDTH 544
@@ -46,7 +51,7 @@ public:
      * @note this will disable the pin's GPIO function
      *
      * @note ensure that the TimerA unit assigned to the pin is not already in use. if it is, this function will fail
-     * 
+     *
      * @note if the pin is already attached to a servo, this function will detach the pin first
      */
     inline uint8_t attach(const gpio_pin_t gpio_pin, const int32_t min_angle = 0, const int32_t max_angle = 180)

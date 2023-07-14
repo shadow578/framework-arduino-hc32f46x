@@ -1,4 +1,5 @@
 #include "Servo.h"
+#include "drivers/timera/timera_pwm.h"
 
 //
 // attach / detach
@@ -17,72 +18,17 @@ uint8_t Servo::attach(timera_config_t *timera_unit,
         detach();
     }
 
-    // ensure channel not already in use
-    CORE_ASSERT(timera_is_channel_active(timera_unit, timera_channel),
-                "Servo::attach: channel is already active",
-                return INVALID_SERVO);
-
-    // calculate period value for timer
-    uint32_t base_clock = timera_get_base_clock();
-    uint32_t period_val = (base_clock / 16) / (SERVO_PWM_FREQUENCY /* *2 */); // TODO: ref does *2, check why *2 is needed...
-    CORE_ASSERT(period_val > 0 && period_val <= 0xFFFF,
-                "Servo::attach: period value calculated is invalid",
-                return INVALID_SERVO);
-
-    // prepare unit config
-    // (when initializing, a pointer to this is stored in the unit's state. so we need to allocate it on the heap)
-    stc_timera_base_init_t *unit_config = new stc_timera_base_init_t;
-    unit_config->enClkDiv = TimeraPclkDiv16;                       // PCLK1 / 16
-    unit_config->enCntMode = TimeraCountModeTriangularWave;        // triangular wave mode
-    unit_config->enCntDir = TimeraCountDirUp;                      // count up
-    unit_config->enSyncStartupEn = Disable;                        // no sync startup
-    unit_config->u16PeriodVal = static_cast<uint16_t>(period_val); // count up to period_val, then count down to 0 (triangle wave)
-
-    // check if unit is already initialized
-    if (timera_is_unit_initialized(timera_unit))
+    // configure and start timer for PWM
+    // TODO: allow setting allow_use_incompatible_config here?
+    // -> servo should not care *too much* about frequency, as long as the period is correct
+    if (timera_pwm_start(timera_unit, SERVO_PWM_FREQUENCY, SERVO_TIMER_DIVIDER, false) != Ok)
     {
-        // already initialized, compare config
-        stc_timera_base_init_t *current_config = timera_unit->state.base_init;
-#define COMPARE_CONFIG_FIELD(field)                                                               \
-    CORE_ASSERT(current_config->field == unit_config->field,                                      \
-                "Servo::attach: unit initialized with mismatch config (at " STRINGIFY(field) ")", \
-                return INVALID_SERVO);
-
-        COMPARE_CONFIG_FIELD(enClkDiv);
-        COMPARE_CONFIG_FIELD(enCntMode);
-        COMPARE_CONFIG_FIELD(enCntDir);
-        COMPARE_CONFIG_FIELD(enSyncStartupEn);
-        COMPARE_CONFIG_FIELD(u16PeriodVal);
-
-        // if we got here, config matches and init can be skipped
-        delete[] unit_config;
-        unit_config = current_config;
-    }
-    else
-    {
-        // not initialized, initialize and start
-        TIMERA_BaseInit(timera_unit->peripheral.register_base, unit_config);
-        TIMERA_Cmd(timera_unit->peripheral.register_base, Enable);
-        timera_unit->state.base_init = unit_config;
+        CORE_ASSERT_FAIL("Servo::attach: timera_pwm_start failed");
+        return INVALID_SERVO;
     }
 
-    // configure channel and enable
-    // TODO: check these settings, eg. why is Cache enabled?
-    stc_timera_compare_init_t cmp_config = {
-        .u16CompareVal = 0,
-        .enStartCountOutput = TimeraCountStartOutputLow,     // when not active, output LOW
-        .enStopCountOutput = TimeraCountStopOutputLow,       // "
-        .enCompareMatchOutput = TimeraCompareMatchOutputLow, // when cnt == cmp, output LOW
-        .enPeriodMatchOutput = TimeraPeriodMatchOutputHigh,  // when cnt == period, output HIGH
-        .enSpecifyOutput = TimeraSpecifyOutputInvalid,       // ?
-        .enCacheEn = Enable,                                 // ?
-        .enTriangularTroughTransEn = Enable,                 // ?
-        .enTriangularCrestTransEn = Disable,                 // ?
-        .u16CompareCacheVal = unit_config->u16PeriodVal,     // ?
-    };
-    TIMERA_CompareInit(timera_unit->peripheral.register_base, timera_channel, &cmp_config);
-    TIMERA_CompareCmd(timera_unit->peripheral.register_base, timera_channel, Enable);
-    timera_set_channel_active_flag(timera_unit, timera_channel, true);
+    // initialize channel for PWM, but do not start it yet
+    timera_pwm_channel_start(timera_unit, timera_channel, false);
 
     // TODO: ref enables overflow interrupt, but only to reset the flag. is this necessary?
 
@@ -91,6 +37,9 @@ uint8_t Servo::attach(timera_config_t *timera_unit,
     this->channel = timera_channel;
     this->min_angle = min_angle;
     this->max_angle = max_angle;
+
+    // set angle to 0° (this will start the output)
+    write(0);
 
     // done, return (fake) channel number
     return 1;
@@ -104,9 +53,11 @@ void Servo::detach()
         return;
     }
 
-    // disable channel
-    TIMERA_CompareCmd(timer->peripheral.register_base, channel, Disable);
-    timera_set_channel_active_flag(timer, channel, false);
+    // stop the PWM channel
+    timera_pwm_channel_stop(timer, channel);
+
+    // stop the PWM timer if no longer in use
+    timera_pwm_stop_if_not_in_use(timer);
 
     // set detached
     this->timer = nullptr;
@@ -128,14 +79,8 @@ void Servo::writeMicroseconds(servo_pulse_width_t pulse_width, bool force)
         pulse_width = constrain(pulse_width, SERVO_MIN_PULSE_WIDTH, SERVO_MAX_PULSE_WIDTH);
     }
 
-    // convert to compare value
-    uint32_t cmp_value = (pulse_width * SERVO_PWM_FREQUENCY) / 1000000;
-    CORE_ASSERT(cmp_value > 0 && cmp_value <= 0xFFFF,
-                "Servo::writeMicroseconds: compare value calculated is invalid",
-                return);
-
-    // write compare value
-    TIMERA_SetCompareValue(timer->peripheral.register_base, channel, cmp_value);
+    // set pulse width
+    timera_pwm_set_period(timer, channel, pulse_width, TIMERA_PWM_UNIT_US);
 }
 
 servo_pulse_width_t Servo::readMicroseconds()
@@ -145,12 +90,8 @@ servo_pulse_width_t Servo::readMicroseconds()
         return 0;
     }
 
-    // read current compare and period value
-    uint32_t base_clock = TIMERA_GetClockFreq(timer->peripheral.register_base);
-    uint32_t period_value = TIMERA_GetPeriodValue(timer->peripheral.register_base);
-    uint32_t cmp_value = TIMERA_GetCompareValue(timer->peripheral.register_base, channel);
-
-    // convert to microseconds
+    // get pulse width
+    return timera_pwm_get_period(timer, channel, TIMERA_PWM_UNIT_US);
 }
 
 //
