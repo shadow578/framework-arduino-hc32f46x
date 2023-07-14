@@ -134,3 +134,45 @@ inline uint32_t timera_get_base_clock()
     update_system_clock_frequencies();
     return SYSTEM_CLOCK_FREQUENCIES.pclk1;
 }
+
+/**
+ * @brief number to TimerA clock divider
+ */
+inline en_timera_clk_div_t timera_n_to_clk_div(uint16_t n)
+{
+    switch (n)
+    {
+    default:
+        CORE_ASSERT_FAIL("invalid timera clock divider");
+    case 1:
+        return TimeraPclkDiv1;
+    case 2:
+        return TimeraPclkDiv2;
+    case 4:
+        return TimeraPclkDiv4;
+    case 8:
+        return TimeraPclkDiv8;
+    case 16:
+        return TimeraPclkDiv16;
+    case 32:
+        return TimeraPclkDiv32;
+    case 64:
+        return TimeraPclkDiv64;
+    case 128:
+        return TimeraPclkDiv128;
+    case 256:
+        return TimeraPclkDiv256;
+    case 512:
+        return TimeraPclkDiv512;
+    case 1024:
+        return TimeraPclkDiv1024;
+    }
+}
+
+/**
+ * @brief TimerA clock divider to number
+ */
+inline uint16_t timera_clk_div_to_n(en_timera_clk_div_t clk_div)
+{
+    return 1 << static_cast<uint8_t>(clk_div);
+}
