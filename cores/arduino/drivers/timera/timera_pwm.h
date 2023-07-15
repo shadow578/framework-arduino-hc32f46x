@@ -408,17 +408,19 @@ inline int32_t timera_pwm_get_period(timera_config_t *unit,
  * @brief set PWM duty cycle for a channel
  * @param unit pointer to timera unit config
  * @param channel channel to set duty for
- * @param duty duty cycle in percent (0-100)
+ * @param duty duty cycle in percent (0-duty_scale)
+ * @param duty_scale scale of duty cycle. default is 100 (for percent)
  * @param invert if true, invert the PWM signal
  */
 inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
                                        const en_timera_channel_t channel,
-                                       const int8_t duty,
+                                       const int32_t duty,
+                                       const uint32_t duty_scale = 100,
                                        const bool invert = false)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_set_duty: unit is nullptr", return ErrorInvalidParameter);
     CORE_ASSERT(unit->state.base_init != nullptr, "timera_pwm_set_duty: unit not initialized", return ErrorInvalidParameter);
-    CORE_ASSERT(duty >= 0 && duty <= 100, "timera_pwm_set_duty: duty must be between 0 and 100", return ErrorInvalidParameter);
+    CORE_ASSERT(duty >= 0 && duty <= duty_scale, "timera_pwm_set_duty: duty must be between 0 and duty_scale", return ErrorInvalidParameter);
 
     if (!timera_is_channel_active(unit, channel))
     {
@@ -429,7 +431,7 @@ inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
 
     // since we only care about the duty, we can simplify the calculation by using PERAR and taking a percentage of it
     const uint16_t PERAR = TIMERA_GetPeriodValue(unit->peripheral.register_base);
-    uint16_t cmp_s = (PERAR * duty) / 100;
+    uint16_t cmp_s = (PERAR * duty) / duty_scale;
 
     // invert if requested
     if (invert)
@@ -448,12 +450,14 @@ inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
  * @brief get PWM duty cycle for a channel
  * @param unit pointer to timera unit config
  * @param channel channel to get duty for
+ * @param duty_scale scale of duty cycle. default is 100 (for percent)
  * @param invert if true, invert the PWM signal
- * @return duty cycle in percent (0-100), or -1 on error
+ * @return duty cycle (0-duty_scale), or -1 on error
  */
-inline int8_t timera_pwm_get_duty(timera_config_t *unit,
-                                  const en_timera_channel_t channel,
-                                  const bool invert = false)
+inline int32_t timera_pwm_get_duty(timera_config_t *unit,
+                                   const en_timera_channel_t channel,
+                                   const uint32_t duty_scale = 100,
+                                   const bool invert = false)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_get_duty: unit is nullptr", return -1);
     CORE_ASSERT(unit->state.base_init != nullptr, "timera_pwm_get_duty: unit not initialized", return -1);
@@ -470,5 +474,5 @@ inline int8_t timera_pwm_get_duty(timera_config_t *unit,
     }
 
     // calculate duty
-    return (cmp_s * 100) / PERAR;
+    return (cmp_s * duty_scale) / PERAR;
 }
