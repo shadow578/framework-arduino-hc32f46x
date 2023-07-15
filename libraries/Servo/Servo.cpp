@@ -5,7 +5,7 @@
 // attach / detach
 //
 
-uint8_t Servo::attach(const gpio_pin_t gpio_pin, const int32_t min_angle = 0, const int32_t max_angle = 180)
+uint8_t Servo::attach(const gpio_pin_t gpio_pin, const int32_t min_angle, const int32_t max_angle)
 {
     ASSERT_GPIO_PIN_VALID(gpio_pin, "Servo::attach", return INVALID_SERVO);
 

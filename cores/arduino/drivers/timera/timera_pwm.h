@@ -414,7 +414,7 @@ inline int32_t timera_pwm_get_period(timera_config_t *unit,
  */
 inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
                                        const en_timera_channel_t channel,
-                                       const int32_t duty,
+                                       const uint32_t duty,
                                        const uint32_t duty_scale = 100,
                                        const bool invert = false)
 {

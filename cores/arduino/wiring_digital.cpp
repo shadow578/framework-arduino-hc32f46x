@@ -1,6 +1,7 @@
 #include "wiring_digital.h"
 #include "drivers/gpio/gpio.h"
 #include "drivers/adc/adc.h"
+#include "drivers/timera/timera_pwm.h"
 #include "wiring_constants.h"
 #include "core_debug.h"
 
@@ -49,6 +50,42 @@ void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
     case INPUT_ANALOG:
         pinConf.enPinMode = Pin_Mode_Ana;
         break;
+    case OUTPUT_PWM:
+        // get timer assignment for pin
+        timera_config_t *unit;
+        en_timera_channel_t channel;
+        en_port_func_t port_function;
+        if (!timera_get_assignment(dwPin, unit, channel, port_function))
+        {
+            CORE_ASSERT_FAIL("analogWrite: pin is not a PWM pin");
+            return;
+        }
+
+        // initialize timer unit, allow incompatible config
+        switch (timera_pwm_start(unit, 1000 /* Hz */, 16, true))
+        {
+        case Ok:
+            // all good
+            break;
+        case ErrorOperationInProgress:
+            // already initialized with incompatible config
+            CORE_ASSERT_FAIL("timera_pwm_start failed: ErrorOperationInProgress");
+            return;
+        case ErrorInvalidParameter:
+        default:
+            // invalid parameter or other error
+            CORE_ASSERT_FAIL("timera_pwm_start failed");
+            return;
+        }
+
+        // initialize channel, start later
+        timera_pwm_channel_start(unit, channel, false);
+
+        // set pin function to TimerA output, no GPIO
+        GPIO_SetFunc(dwPin, port_function, Disable);
+
+        // return immediately, as pwm needs different function
+        return;
     case OUTPUT:
         pinConf.enPinMode = Pin_Mode_Out;
         break;

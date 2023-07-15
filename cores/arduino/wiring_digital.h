@@ -30,7 +30,7 @@
  * \brief Configures the specified pin to behave either as an input or an output. See the description of digital pins for details.
  *
  * \param ulPin The number of the pin whose mode you wish to set
- * \param ulMode Can be INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN
+ * \param ulMode Can be INPUT, OUTPUT, INPUT_PULLUP, INPUT_PULLDOWN, OUTPUT_PWM
  */
 extern void pinMode( gpio_pin_t dwPin, uint32_t dwMode ) ;
 

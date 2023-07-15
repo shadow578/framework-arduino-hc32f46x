@@ -16,7 +16,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-//TODO: implement analogWrite(), analogWriteResolution() and analogReadResolution()
+//TODO: implement analogReadResolution()
 
 #pragma once
 
@@ -49,7 +49,7 @@ extern void analogReference( eAnalogReference ulMode ) ;
  * \param ulPin
  * \param ulValue
  * 
- * \note analogWrite() hasn't been implemented yet.
+ * \note the pin must be configured as OUTPUT_PWM beforehand.
  */
 extern void analogWrite( gpio_pin_t ulPin, uint32_t ulValue ) ;
 
@@ -75,13 +75,9 @@ extern void analogReadResolution(int res);
 /*
  * \brief Set the resolution of analogWrite parameters. Default is 8 bits (range from 0 to 255).
  *
- * \param res
- * 
- * \note analogWrite() hasn't been implemented yet.
+ * \param res resolution in bits (4-16)
  */
-extern void analogWriteResolution(int res);
-
-extern void analogOutputInit( void ) ;
+extern void analogWriteResolution(uint8_t res);
 
 #ifdef __cplusplus
 }
