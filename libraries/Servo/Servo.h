@@ -54,31 +54,7 @@ public:
      *
      * @note if the pin is already attached to a servo, this function will detach the pin first
      */
-    inline uint8_t attach(const gpio_pin_t gpio_pin, const int32_t min_angle = 0, const int32_t max_angle = 180)
-    {
-        ASSERT_GPIO_PIN_VALID(gpio_pin, "Servo::attach", return INVALID_SERVO);
-
-        // get assignments
-        timera_config_t *timer_unit;
-        en_timera_channel_t timera_channel;
-        en_port_func_t port_func;
-        if (!timera_get_assignment(gpio_pin, timer_unit, timera_channel, port_func))
-        {
-            CORE_ASSERT_FAIL("Servo::attach pin has no TimerA assignment");
-            return INVALID_SERVO;
-        }
-
-        // attach
-        uint8_t result = attach(timer_unit, timera_channel, min_angle, max_angle);
-
-        // set GPIO function if attached
-        if (result != INVALID_SERVO)
-        {
-            GPIO_SetFunc(gpio_pin, port_func);
-        }
-
-        return result;
-    }
+    uint8_t attach(const gpio_pin_t gpio_pin, const int32_t min_angle = 0, const int32_t max_angle = 180);
 
     /**
      * @brief attach to the given TimerA channel
@@ -92,7 +68,9 @@ public:
     /**
      * @brief detach the servo
      *
-     * @note this will disable the TimerA channel, but will not re-enable the pin's GPIO function
+     * @note this will disable the TimerA channel and disable the TimerA unit if no other channels are in use
+     *
+     * @note the pin's GPIO function will only be restored when attach(gpio_pin_t, ...) was used
      */
     void detach();
 
@@ -155,6 +133,12 @@ private:
      * @brief maximum angle in degrees
      */
     servo_angle_t max_angle;
+
+    /**
+     * @brief GPIO pin number
+     * @note if equal to INVALID_SERVO, the servo is not attached or the pin is not known
+     */
+    gpio_pin_t pin = INVALID_SERVO;
 };
 
 #endif // __SERVO_H__

@@ -5,6 +5,33 @@
 // attach / detach
 //
 
+uint8_t Servo::attach(const gpio_pin_t gpio_pin, const int32_t min_angle = 0, const int32_t max_angle = 180)
+{
+    ASSERT_GPIO_PIN_VALID(gpio_pin, "Servo::attach", return INVALID_SERVO);
+
+    // get assignments
+    timera_config_t *timer_unit;
+    en_timera_channel_t timera_channel;
+    en_port_func_t port_func;
+    if (!timera_get_assignment(gpio_pin, timer_unit, timera_channel, port_func))
+    {
+        CORE_ASSERT_FAIL("Servo::attach pin has no TimerA assignment");
+        return INVALID_SERVO;
+    }
+
+    // attach
+    uint8_t result = attach(timer_unit, timera_channel, min_angle, max_angle);
+
+    // set GPIO function if attached
+    if (result != INVALID_SERVO)
+    {
+        GPIO_SetFunc(gpio_pin, port_func);
+        this->pin = gpio_pin;
+    }
+
+    return result;
+}
+
 uint8_t Servo::attach(timera_config_t *timera_unit,
                       const en_timera_channel_t timera_channel,
                       const int32_t min_angle,
@@ -59,8 +86,15 @@ void Servo::detach()
     // stop the PWM timer if no longer in use
     timera_pwm_stop_if_not_in_use(timer);
 
+    // reset GPIO function
+    if (pin != INVALID_SERVO)
+    {
+        GPIO_SetFunc(pin, Func_Gpio, Enable);
+    }
+
     // set detached
     this->timer = nullptr;
+    pin = INVALID_SERVO;
 }
 
 //
