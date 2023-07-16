@@ -122,6 +122,8 @@
  * @param f_base base counting frequency (PCLK1 / divider)
  * @param T period time, in the given unit
  * @param unit unit of period time (TIMERA_PWM_UNIT_S, TIMERA_PWM_UNIT_MS, TIMERA_PWM_UNIT_US)
+ *
+ * @note using to-low bitness variables can lead to errors. use 64-bit variables if possible.
  */
 #define TIMERA_PWM_CALC_CMP_FROM_PERIOD(f_base, T, unit) ((f_base * T) / unit)
 
@@ -130,6 +132,8 @@
  * @param f_base base counting frequency (PCLK1 / divider)
  * @param cmp_s counter compare value (PERAR or cmp_s)
  * @param unit unit of period time (TIMERA_PWM_UNIT_S, TIMERA_PWM_UNIT_MS, TIMERA_PWM_UNIT_US)
+ *
+ * @note using to-low bitness variables can lead to errors. use 64-bit variables if possible.
  */
 #define TIMERA_PWM_CALC_PERIOD_FROM_CMP(f_base, cmp_s, unit) ((cmp_s * unit) / f_base)
 
@@ -142,6 +146,12 @@
  * @brief period time to frequency
  */
 #define PERIOD_TO_FREQ(p, unit) ((unit) / (p))
+
+/**
+ * @brief constrain a value to a given range
+ * @note copy from Arduino.h to avoid dependency
+ */
+#define TIMERA_CONSTRAIN(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 en_result_t timera_pwm_channel_stop(timera_config_t *unit, const en_timera_channel_t channel);
 
@@ -167,27 +177,31 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
     CORE_ASSERT(divider > 0 && divider <= 1024, "timera_pwm_unit_start: divider is invalid", return ErrorInvalidParameter);
 
     // get base counting frequency /w given divider
-    const uint32_t f_base = timera_get_base_clock() / divider;
+    const int64_t f_base = timera_get_base_clock() / divider;
 
     // calculate wave period in us for maximum precision
-    const int32_t T = FREQ_TO_PERIOD(frequency, TIMERA_PWM_UNIT_US);
+    const int64_t T = FREQ_TO_PERIOD(frequency, TIMERA_PWM_UNIT_US);
 
     // calculate compare value for PERAR
-    const uint32_t PERAR = TIMERA_PWM_CALC_CMP_FROM_PERIOD(f_base, T, TIMERA_PWM_UNIT_US);
+    const int64_t PERAR = TIMERA_PWM_CALC_CMP_FROM_PERIOD(f_base, T, TIMERA_PWM_UNIT_US);
     CORE_ASSERT(PERAR > 0 && PERAR <= 0xFFFF, "timera_pwm_unit_start: PERAR is out-of-range", return Error);
 
     // prepare unit config
     // (when initializing, a pointer to this is stored in the unit's state. so we need to allocate it on the heap)
     stc_timera_base_init_t *unit_config = new stc_timera_base_init_t;
-    unit_config->enClkDiv = timera_n_to_clk_div(divider); // PCLK1 / divider
-    unit_config->enCntMode = TimeraCountModeSawtoothWave; // sawtooth wave mode
-    unit_config->enCntDir = TimeraCountDirUp;             // count up
-    unit_config->enSyncStartupEn = Disable;               // no sync startup
-    unit_config->u16PeriodVal = PERAR;                    // 0..PERAR,0
+    unit_config->enClkDiv = timera_n_to_clk_div(divider);     // PCLK1 / divider
+    unit_config->enCntMode = TimeraCountModeSawtoothWave;     // sawtooth wave mode
+    unit_config->enCntDir = TimeraCountDirUp;                 // count up
+    unit_config->enSyncStartupEn = Disable;                   // no sync startup
+    unit_config->u16PeriodVal = static_cast<uint16_t>(PERAR); // 0..PERAR,0
+
+    TIMERA_DEBUG_PRINTF(unit, -2, "pwm_start: pwm init with f=%ldHz (PCLK1/%ld), f_base=%ld (T=%ld), PERAR=%d\n", frequency, divider, int32_t(f_base), int32_t(T), uint16_t(PERAR));
 
     // initialize unit
     if (timera_is_unit_initialized(unit))
     {
+        TIMERA_DEBUG_PRINTF(unit, -2, "pwm_start: check existing config\n");
+
         // already initialized, get config from state
         stc_timera_base_init_t *current_config = unit->state.base_init;
 
@@ -213,19 +227,24 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
                 return ErrorOperationInProgress;
             }
 
-            CORE_DEBUG_PRINTF("timera_pwm_start: unit initialized with different config. rolling with it...");
+            TIMERA_DEBUG_PRINTF(unit, -2, "pwm_start: semi-compatible config. rolling with it\n");
         }
 
         // sync startup really shouldn't matter...
     }
     else
     {
+        TIMERA_DEBUG_PRINTF(unit, -2, "pwm_start: init now\n");
+
         // not initialized, initialize now
+        // start peripheral clocks for TimerA unit and AOS
+        PWC_Fcg2PeriphClockCmd(unit->peripheral.clock_id, Enable);
+        PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_AOS, Enable);
+
+        // initialize unit
         TIMERA_BaseInit(unit->peripheral.register_base, unit_config);
         unit->state.base_init = unit_config;
     }
-
-    // TODO: have to start peripheral clock too?
 
     // ensure timer is started
     return TIMERA_Cmd(unit->peripheral.register_base, Enable);
@@ -238,6 +257,7 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
 inline en_result_t timera_pwm_stop_hard(timera_config_t *unit)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_unit_stop: unit is nullptr", return ErrorInvalidParameter);
+    TIMERA_DEBUG_PRINTF(unit, -2, "pwm_stop_hard\n");
 
     // stop timer unit
     TIMERA_Cmd(unit->peripheral.register_base, Disable);
@@ -263,6 +283,7 @@ inline en_result_t timera_pwm_stop_hard(timera_config_t *unit)
 inline en_result_t timera_pwm_stop_if_not_in_use(timera_config_t *unit)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_unit_stop_if_not_in_use: unit is nullptr", return ErrorInvalidParameter);
+    TIMERA_DEBUG_PRINTF(unit, -2, "pwm_stop_if_not_in_use\n");
 
     // check if any channels are still active
     if (unit->state.active_channels != 0)
@@ -283,6 +304,7 @@ inline en_result_t timera_pwm_stop_if_not_in_use(timera_config_t *unit)
 inline en_result_t timera_pwm_channel_start(timera_config_t *unit, const en_timera_channel_t channel, const bool start_now = true)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_channel_start: unit is nullptr", return ErrorInvalidParameter);
+    TIMERA_DEBUG_PRINTF(unit, channel, "pwm_channel_start: start_now=%d\n", start_now ? 1 : 0);
 
     // configure channel and enable
     stc_timera_compare_init_t cmp_config = {
@@ -315,6 +337,8 @@ inline en_result_t timera_pwm_channel_start(timera_config_t *unit, const en_time
 inline en_result_t timera_pwm_channel_stop(timera_config_t *unit, const en_timera_channel_t channel)
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_channel_stop: unit is nullptr", return ErrorInvalidParameter);
+    TIMERA_DEBUG_PRINTF(unit, channel, "pwm_channel_stop\n");
+    timera_set_channel_active_flag(unit, channel, false);
     return TIMERA_CompareCmd(unit->peripheral.register_base, channel, Disable);
 }
 
@@ -325,6 +349,8 @@ inline en_result_t timera_pwm_channel_stop(timera_config_t *unit, const en_timer
  * @param period ON period time in period_unit
  * @param period_unit unit of period. one of TIMERA_PWM_UNIT_US, TIMERA_PWM_UNIT_MS, TIMERA_PWM_UNIT_S
  * @param invert if true, invert the PWM signal
+ *
+ * @note this function will set the period to the closest possible value. it may be off by a bit.
  */
 inline en_result_t timera_pwm_set_period(timera_config_t *unit,
                                          const en_timera_channel_t channel,
@@ -334,7 +360,7 @@ inline en_result_t timera_pwm_set_period(timera_config_t *unit,
 {
     CORE_ASSERT(unit != nullptr, "timera_pwm_set_period: unit is nullptr", return ErrorInvalidParameter);
     CORE_ASSERT(unit->state.base_init != nullptr, "timera_pwm_set_period: unit not initialized", return ErrorInvalidParameter);
-    CORE_ASSERT(period <= 0, "timera_pwm_set_period: period must be positive", return ErrorInvalidParameter);
+    CORE_ASSERT(period >= 0, "timera_pwm_set_period: period must be positive", return ErrorInvalidParameter);
 
     if (!timera_is_channel_active(unit, channel))
     {
@@ -344,23 +370,28 @@ inline en_result_t timera_pwm_set_period(timera_config_t *unit,
     }
 
     // get divider from unit config
-    const uint32_t divider = timera_clk_div_to_n(unit->state.base_init->enClkDiv);
+    const int64_t divider = timera_clk_div_to_n(unit->state.base_init->enClkDiv);
 
     // get base clock frequency
-    const uint32_t f_base = timera_get_base_clock() / divider;
+    const int64_t f_base = timera_get_base_clock() / divider;
 
     // calculate compare value for cmp_s
-    uint32_t cmp_s = TIMERA_PWM_CALC_CMP_FROM_PERIOD(f_base, period, period_unit);
+    uint32_t cmp_s = TIMERA_PWM_CALC_CMP_FROM_PERIOD(f_base, period, int64_t(period_unit));
     CORE_ASSERT(cmp_s > 0 && cmp_s <= 0xFFFF, "timera_pwm_set_period: calculated compare value out of range", return Error);
 
     // invert if requested
+    const uint16_t PERAR = TIMERA_GetPeriodValue(unit->peripheral.register_base);
     if (invert)
     {
-        const uint16_t PERAR = TIMERA_GetPeriodValue(unit->peripheral.register_base);
         cmp_s = PERAR - cmp_s;
     }
 
+    // constrain to 0 <= cmp_s <= PERAR
+    cmp_s = TIMERA_CONSTRAIN(cmp_s, 0, PERAR);
+
     // set compare value
+    TIMERA_DEBUG_PRINTF(unit, channel, "pwm_set_period: period=%ld, period_unit=%ld, invert=%d, cmp_s=%d, f=%ld\n",
+                        period, period_unit, invert ? 1 : 0, int16_t(cmp_s), int32_t(f_base));
     TIMERA_SetCompareValue(unit->peripheral.register_base, channel, static_cast<uint16_t>(cmp_s));
 
     // ensure channel compare function is enabled
@@ -388,7 +419,7 @@ inline int32_t timera_pwm_get_period(timera_config_t *unit,
     const uint32_t divider = timera_clk_div_to_n(unit->state.base_init->enClkDiv);
 
     // get base clock frequency
-    const uint32_t f_base = timera_get_base_clock() / divider;
+    const int64_t f_base = timera_get_base_clock() / divider;
 
     // get compare value
     uint16_t cmp_s = TIMERA_GetCompareValue(unit->peripheral.register_base, channel);
@@ -401,7 +432,7 @@ inline int32_t timera_pwm_get_period(timera_config_t *unit,
     }
 
     // calculate period
-    return TIMERA_PWM_CALC_PERIOD_FROM_CMP(f_base, cmp_s, period_unit);
+    return TIMERA_PWM_CALC_PERIOD_FROM_CMP(f_base, int64_t(cmp_s), int64_t(period_unit));
 }
 
 /**
@@ -411,6 +442,8 @@ inline int32_t timera_pwm_get_period(timera_config_t *unit,
  * @param duty duty cycle in percent (0-duty_scale)
  * @param duty_scale scale of duty cycle. default is 100 (for percent)
  * @param invert if true, invert the PWM signal
+ *
+ * @note this function will set the duty to the closest possible value. it may be off by a bit.
  */
 inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
                                        const en_timera_channel_t channel,
@@ -439,7 +472,12 @@ inline en_result_t timera_pwm_set_duty(timera_config_t *unit,
         cmp_s = PERAR - cmp_s;
     }
 
+    // constrain to 0 <= cmp_s <= PERAR
+    cmp_s = TIMERA_CONSTRAIN(cmp_s, 0, PERAR);
+
     // set compare value
+    TIMERA_DEBUG_PRINTF(unit, channel, "pwm_set_duty: duty=%ld, duty_scale=%ld, invert=%d, cmp_s=%d, PERAR=%d\n",
+                        duty, duty_scale, invert ? 1 : 0, cmp_s, PERAR);
     TIMERA_SetCompareValue(unit->peripheral.register_base, channel, cmp_s);
 
     // ensure channel compare function is enabled

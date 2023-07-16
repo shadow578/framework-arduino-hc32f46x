@@ -6,6 +6,40 @@
 #include "../../core_types.h"
 #include "../../core_debug.h"
 
+//
+// debug print helpers
+//
+/**
+ * @brief convert TimerA register to unit number
+ * @note e.g. M4_TMRA1 -> 1
+ */
+#define TIMERA_REG_TO_X(reg) \
+    reg == M4_TMRA1   ? 1    \
+    : reg == M4_TMRA2 ? 2    \
+    : reg == M4_TMRA3 ? 3    \
+    : reg == M4_TMRA4 ? 4    \
+    : reg == M4_TMRA5 ? 5    \
+    : reg == M4_TMRA6 ? 6    \
+                      : 0
+
+/**
+ * @brief convert TimerA channel to channel number
+ * @note e.g. TimeraCh1 -> 1
+ *
+ * @note Timera channel enum is 0-based, so TimeraCh1 is enum value0
+ */
+#define TIMERA_CHANNEL_TO_X(ch) (int(ch) + 1)
+
+/**
+ * @brief TimerA CORE_DEBUG_PRINTF wrapper
+ */
+#define TIMERA_DEBUG_PRINTF(unit, channel, fmt, ...) \
+    CORE_DEBUG_PRINTF("[TimerA%dCh%d] " fmt, TIMERA_REG_TO_X((unit)->peripheral.register_base), TIMERA_CHANNEL_TO_X(channel), ##__VA_ARGS__)
+
+//
+// utility functions
+//
+
 /**
  * @brief get TimerA assignment for a gpio pin
  * @param pin the gpio pin to get assignment for
@@ -21,7 +55,7 @@ inline bool timera_get_assignment(
     en_port_func_t &output_function)
 {
     // ensure pin is valid
-    ASSERT_GPIO_PIN_VALID(pin, "get_timera_assignment", return false);
+    ASSERT_GPIO_PIN_VALID(pin, "timera_get_assignment", return false);
 
     // get timera info from pin map
     const pin_timera_info_t timera_info = PIN_MAP[pin].timera_info;
@@ -70,6 +104,7 @@ inline bool timera_get_assignment(
     }
 
     // all ok
+    TIMERA_DEBUG_PRINTF(unit_config, output_channel, "get_assignment: pin %d Func%d\n", pin, output_function);
     return true;
 }
 
@@ -116,6 +151,8 @@ inline void timera_set_channel_active_flag(timera_config_t *unit_config, const e
     {
         unit_config->state.active_channels &= ~TIMERA_STATE_ACTIVE_CHANNEL_BIT(ch + 1);
     }
+
+    TIMERA_DEBUG_PRINTF(unit_config, channel, "set_channel_active_flag: %d\n", is_active ? 1 : 0);
 }
 
 /**
