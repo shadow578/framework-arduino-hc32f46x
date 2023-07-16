@@ -78,8 +78,8 @@ void pinMode(gpio_pin_t dwPin, uint32_t dwMode)
             return;
         }
 
-        // initialize channel, start later
-        timera_pwm_channel_start(unit, channel, false);
+        // initialize channel, start now
+        timera_pwm_channel_start(unit, channel, true);
 
         // set pin function to TimerA output, no GPIO
         GPIO_SetFunc(dwPin, port_function, Disable);
