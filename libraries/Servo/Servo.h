@@ -26,6 +26,11 @@
 #define SERVO_MAX_PULSE_WIDTH 2400
 
 /**
+ * angle the servo is set to in attach()
+ */
+#define SERVO_INITIAL_ANGLE 90
+
+/**
  * flag indicating invalid servo index
  */
 #define INVALID_SERVO 255

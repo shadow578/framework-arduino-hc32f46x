@@ -5,27 +5,29 @@
 // attach / detach
 //
 
+Servo::Servo() {}
+
 uint8_t Servo::attach(const gpio_pin_t gpio_pin, const int32_t min_angle, const int32_t max_angle)
 {
     ASSERT_GPIO_PIN_VALID(gpio_pin, "Servo::attach", return INVALID_SERVO);
 
     // get assignments
     timera_config_t *timer_unit;
-    en_timera_channel_t timera_channel;
+    en_timera_channel_t timer_channel;
     en_port_func_t port_func;
-    if (!timera_get_assignment(gpio_pin, timer_unit, timera_channel, port_func))
+    if (!timera_get_assignment(gpio_pin, timer_unit, timer_channel, port_func))
     {
         CORE_ASSERT_FAIL("Servo::attach pin has no TimerA assignment");
         return INVALID_SERVO;
     }
 
     // attach
-    uint8_t result = attach(timer_unit, timera_channel, min_angle, max_angle);
+    uint8_t result = attach(timer_unit, timer_channel, min_angle, max_angle);
 
     // set GPIO function if attached
     if (result != INVALID_SERVO)
     {
-        GPIO_SetFunc(gpio_pin, port_func);
+        GPIO_SetFunc(gpio_pin, port_func, Disable);
         this->pin = gpio_pin;
     }
 
@@ -57,8 +59,6 @@ uint8_t Servo::attach(timera_config_t *timera_unit,
     // initialize channel for PWM, but do not start it yet
     timera_pwm_channel_start(timera_unit, timera_channel, false);
 
-    // TODO: ref enables overflow interrupt, but only to reset the flag. is this necessary?
-
     // set class members
     this->timer = timera_unit;
     this->channel = timera_channel;
@@ -66,7 +66,7 @@ uint8_t Servo::attach(timera_config_t *timera_unit,
     this->max_angle = max_angle;
 
     // set angle to 0° (this will start the output)
-    write(0);
+    write(SERVO_INITIAL_ANGLE);
 
     // done, return (fake) channel number
     return 1;
