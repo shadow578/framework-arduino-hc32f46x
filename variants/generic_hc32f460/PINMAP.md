@@ -16,7 +16,7 @@
 | PA13 |            | TIMA1_PWM5     | TIMA6_PWM2     |
 | PA14 |            | TIMA2_PWM6     | TIMA6_PWM3     |
 | PA15 |            | TIMA2_PWM1     | TIMA6_PWM4     |
-| PB0  | ADC12_IN8  | TIMA1_PWM6     | TIMA2_PWM3     |
+| PB0  | ADC12_IN8  | TIMA1_PWM6     | TIMA3_PWM3     |
 | PB1  | ADC12_IN9  | TIMA1_PWM7     | TIMA3_PWM4     |
 | PB2  |            | TIMA1_PWM8     |
 | PB3  |            | TIMA2_PWM2     | TIMA6_PWM5     |

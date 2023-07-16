@@ -89,7 +89,7 @@ extern const pin_info_t PIN_MAP[BOARD_NR_GPIO_PINS] = {
 													   //
 													   // ---  PBx  ---
 													   //
-	{0, PortB, Pin00, ADC(ADC12_IN8), TIMA(2, 3, 5)},  // PB0
+	{0, PortB, Pin00, ADC(ADC12_IN8), TIMA(3, 3, 5)},  // PB0
 	{1, PortB, Pin01, ADC(ADC12_IN9), TIMA(3, 4, 5)},  // PB1
 	{2, PortB, Pin02, ADC_NONE, TIMA(1, 8, 4)},		   // PB2
 	{3, PortB, Pin03, ADC_NONE, TIMA(6, 5, 5)},		   // PB3
