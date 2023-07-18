@@ -1,11 +1,11 @@
 #ifndef _CORE_DEBUG_H
 #define _CORE_DEBUG_H
 
-#ifdef __CORE_DEBUG
-
 #include <stdio.h>
 #include "drivers/panic/panic.h"
 #include "core_util.h"
+
+#ifdef __CORE_DEBUG
 
 // allow user to re-define the debug macros with custom ones
 // user macros are only active if __CORE_DEBUG is defined
