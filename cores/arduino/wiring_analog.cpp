@@ -38,7 +38,7 @@ uint32_t analogRead(gpio_pin_t ulPin)
 //
 // analogWrite
 //
-int32_t analogWriteScale = (1 << 8);
+uint32_t analogWriteScale = (1 << 8);
 
 void analogWriteResolution(uint8_t res)
 {
@@ -49,6 +49,11 @@ void analogWriteResolution(uint8_t res)
 }
 
 void analogWrite(gpio_pin_t ulPin, uint32_t ulValue)
+{
+    analogWriteScaled(ulPin, ulValue, analogWriteScale);
+}
+
+void analogWriteScaled(gpio_pin_t ulPin, uint32_t ulValue, uint32_t ulScale)
 {
     // get timer assignment for pin
     timera_config_t *unit;
@@ -65,5 +70,14 @@ void analogWrite(gpio_pin_t ulPin, uint32_t ulValue)
     CORE_ASSERT(timera_is_channel_active(unit, channel), "analogWrite: timer channel is not active", return);
 
     // set duty with requested scale
-    timera_pwm_set_duty(unit, channel, ulValue, analogWriteScale);
+    timera_pwm_set_duty(unit, channel, ulValue, ulScale);
+}
+
+bool isAnalogWritePin(gpio_pin_t ulPin)
+{
+    // if the pin has a timerA assignment, it is a PWM pin
+    timera_config_t *unit;
+    en_timera_channel_t channel;
+    en_port_func_t port_function;
+    return timera_get_assignment(ulPin, unit, channel, port_function);
 }

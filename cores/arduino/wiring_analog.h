@@ -16,7 +16,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-//TODO: implement analogReadResolution()
+// TODO: implement analogReadResolution()
 
 #pragma once
 
@@ -24,60 +24,80 @@
 #include "core_types.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef enum _eAnalogReference
-{
-  AR_DEFAULT,
-  AR_INTERNAL,
-} eAnalogReference ;
+  typedef enum _eAnalogReference
+  {
+    AR_DEFAULT,
+    AR_INTERNAL,
+  } eAnalogReference;
 
+  /*
+   * \brief Configures the reference voltage used for analog input (i.e. the value used as the top of the input range).
+   * This function is kept only for compatibility with existing AVR based API.
+   *
+   * \param ulMmode Should be set to AR_DEFAULT.
+   * \note when called, this function will do nothing and return immediately.
+   */
+  extern void analogReference(eAnalogReference ulMode);
 
-/*
- * \brief Configures the reference voltage used for analog input (i.e. the value used as the top of the input range).
- * This function is kept only for compatibility with existing AVR based API.
- *
- * \param ulMmode Should be set to AR_DEFAULT.
- * \note when called, this function will do nothing and return immediately.
- */
-extern void analogReference( eAnalogReference ulMode ) ;
+  /*
+   * \brief Writes an analog value (PWM wave) to a pin.
+   *
+   * \param ulPin
+   * \param ulValue
+   *
+   * \note the pin must be configured as OUTPUT_PWM beforehand.
+   */
+  extern void analogWrite(gpio_pin_t ulPin, uint32_t ulValue);
 
-/*
- * \brief Writes an analog value (PWM wave) to a pin.
- *
- * \param ulPin
- * \param ulValue
- * 
- * \note the pin must be configured as OUTPUT_PWM beforehand.
- */
-extern void analogWrite( gpio_pin_t ulPin, uint32_t ulValue ) ;
+  /**
+   * \brief Writes an analog value (PWM wave) to a pin, with the given scale
+   *
+   * \param ulPin
+   * \param ulValue
+   * \param ulScale
+   *
+   * \note the pin must be configured as OUTPUT_PWM beforehand.
+   */
+  extern void analogWriteScaled(gpio_pin_t ulPin, uint32_t ulValue, uint32_t ulScale);
 
-/*
- * \brief Reads the value from the specified analog pin.
- *
- * \param ulPin
- *
- * \return Read value from selected pin, if no error.
- * \note the pin must be configured as INPUT_ANALOG beforehand.
- * \note not all pins on the chip can be used for analog input. see the datasheet for details.
- */
-extern uint32_t analogRead( gpio_pin_t ulPin ) ;
+  /*
+   * \brief Reads the value from the specified analog pin.
+   *
+   * \param ulPin
+   *
+   * \return Read value from selected pin, if no error.
+   * \note the pin must be configured as INPUT_ANALOG beforehand.
+   * \note not all pins on the chip can be used for analog input. see the datasheet for details.
+   */
+  extern uint32_t analogRead(gpio_pin_t ulPin);
 
-/*
- * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).
- *
- * \param res
- * \note setting the adc resolution is not supported yet (would require ADC deinit and init with new resolution)
- */
-extern void analogReadResolution(int res);
+  /*
+   * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).
+   *
+   * \param res
+   * \note setting the adc resolution is not supported yet (would require ADC deinit and init with new resolution)
+   */
+  extern void analogReadResolution(int res);
 
-/*
- * \brief Set the resolution of analogWrite parameters. Default is 8 bits (range from 0 to 255).
- *
- * \param res resolution in bits (4-16)
- */
-extern void analogWriteResolution(uint8_t res);
+  /*
+   * \brief Set the resolution of analogWrite parameters. Default is 8 bits (range from 0 to 255).
+   *
+   * \param res resolution in bits (4-16)
+   */
+  extern void analogWriteResolution(uint8_t res);
+
+  /**
+   * \brief check if a pin can be used for analogWrite (PWM output)
+   *
+   * \param ulPin
+   *
+   * \return true if pin can be used for analogWrite, false otherwise
+   */
+  extern bool isAnalogWritePin(gpio_pin_t ulPin);
 
 #ifdef __cplusplus
 }
