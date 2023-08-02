@@ -3,6 +3,7 @@
 // only compile in core debug mode
 #ifdef __CORE_DEBUG
 #include "../gpio/gpio.h"
+#include "../../core_hooks.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <hc32_ddl.h>
@@ -100,6 +101,8 @@ char panic_printf_buffer[PANIC_PRINTF_BUFFER_SIZE];
 
 void panic_begin(void)
 {
+    core_hook_panic_begin_pre();
+
 // initialize USART
 #ifdef PANIC_USART1_TX_PIN
     panic_usart_init(M4_USART1, PANIC_USART1_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
@@ -113,6 +116,8 @@ void panic_begin(void)
 #ifdef PANIC_USART4_TX_PIN
     panic_usart_init(M4_USART4, PANIC_USART4_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
 #endif
+
+    core_hook_panic_begin_post();
 }
 
 size_t panic_printf(const char *fmt, ...)
@@ -145,6 +150,8 @@ size_t panic_printf(const char *fmt, ...)
 
 void panic_end(void)
 {
+    core_hook_panic_end();
+
 #ifdef HANG_ON_PANIC
     // enter infinite loop
     while (1)

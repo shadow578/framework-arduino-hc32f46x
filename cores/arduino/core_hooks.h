@@ -72,6 +72,37 @@ extern "C"
      */
     DEF_HOOK(sysclock_init);
 
+    /**
+     * hook called before panic_begin() is executed
+     *
+     * @note panic_printf() is not available at this point
+     * @note code in this hook should avoid creating another panic
+     * @note code in this hook should assume the system to be in a unstable state
+     * @note this hook may be called from a IRQ context, so keep it short and sweet
+     */
+    DEF_HOOK(panic_begin_pre);
+
+    /**
+     * hook called after panic_begin() was executed
+     *
+     * @note panic_printf() is available at this point
+     * @note code in this hook should avoid creating another panic
+     * @note code in this hook should assume the system to be in a unstable state
+     * @note this hook may be called from a IRQ context, so keep it short and sweet
+     */
+    DEF_HOOK(panic_begin_post);
+
+    /**
+     * hook called before panic_end() is executed
+     *
+     * @note panic_printf() is available at this point
+     * @note code in this hook should avoid creating another panic
+     * @note code in this hook should assume the system to be in a unstable state
+     * @note this hook may be called from a IRQ context, so keep it short and sweet
+     * @note the system will stop execution after this hook returns, either by reset or hang
+     */
+    DEF_HOOK(panic_end);
+
 #ifdef __cplusplus
 }
 #endif
