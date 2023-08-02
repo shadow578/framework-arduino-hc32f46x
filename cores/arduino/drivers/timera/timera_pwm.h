@@ -211,7 +211,7 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
             current_config->enCntDir != unit_config->enCntDir)
         {
             // free heap memory
-            delete[] unit_config;
+            delete unit_config;
             return ErrorOperationInProgress;
         }
 
@@ -223,7 +223,7 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
             if (!allow_use_incompatible_config)
             {
                 // free heap memory
-                delete[] unit_config;
+                delete unit_config;
                 return ErrorOperationInProgress;
             }
 
@@ -269,7 +269,7 @@ inline en_result_t timera_pwm_stop_hard(timera_config_t *unit)
     }
 
     // reset state
-    delete[] unit->state.base_init;
+    delete unit->state.base_init;
     unit->state.base_init = nullptr;
     unit->state.active_channels = 0;
     return Ok;
