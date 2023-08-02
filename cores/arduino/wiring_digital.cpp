@@ -109,17 +109,41 @@ uint32_t getPinMode(gpio_pin_t dwPin)
 
     // read pin configuration
     stc_port_init_t pinConf;
-    GPIO_GetConfig(dwPin, &pinConf);
-    switch (pinConf.enPinMode)
+    CORE_ASSERT(GPIO_GetConfig(dwPin, &pinConf) == Ok, "getPinMode: GPIO_GetConfig failed");
+
+    // read pin function
+    en_port_func_t pinFunction;
+    en_functional_state_t pinSubFunction;
+    CORE_ASSERT(GPIO_GetFunc(dwPin, &pinFunction, &pinSubFunction) == Ok, "getPinMode: GPIO_GetFunc failed");
+
+    // determine mode from function and configuration
+    switch (pinFunction)
     {
-    case Pin_Mode_Out:
-        return OUTPUT;
-    case Pin_Mode_In:
-        return (pinConf.enPullUp == Enable) ? INPUT_PULLUP : INPUT;
-    case Pin_Mode_Ana:
-        return INPUT_ANALOG;
+    case Func_Gpio:
+        // GPIO function, determine mode from configuration
+        switch (pinConf.enPinMode)
+        {
+        case Pin_Mode_Out:
+            return OUTPUT;
+        case Pin_Mode_In:
+            return (pinConf.enPullUp == Enable) ? INPUT_PULLUP : INPUT;
+        case Pin_Mode_Ana:
+            return INPUT_ANALOG;
+        default:
+            CORE_ASSERT_FAIL("getPinMode: invalid configuration for Func_Gpio");
+            return INPUT_FLOATING;
+        }
+
+    case Func_Tima0:
+    case Func_Tima1:
+    case Func_Tima2:
+        // TimerA output function, must be PWM
+        // in that case, subFunction is always disabled
+        CORE_ASSERT(pinSubFunction == Disable, "getPinMode: pinSubFunctin is Enabled for Func_TimaX");
+        return OUTPUT_PWM;
+
     default:
-        CORE_ASSERT_FAIL("getPinMode: invalid pin mode detected");
+        CORE_ASSERT_FAIL("getPinMode: invalid pin function");
         return INPUT_FLOATING;
     }
 }

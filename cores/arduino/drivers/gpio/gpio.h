@@ -90,6 +90,17 @@ extern "C"
         return PORT_SetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
     }
 
+    /**
+     * @brief GPIO wrapper for PORT_GetFunc
+     * @param enFuncSelect GPIO pin primary function select
+     * @param enSubFunc GPIO pin sub-function enable/disable (subfunction is GPIO output for most pins)
+     */
+    inline en_result_t GPIO_GetFunc(gpio_pin_t gpio_pin, en_port_func_t *enFuncSelect, en_functional_state_t *enSubFunc)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetFunc");
+        return PORT_GetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
+    }
+
 #ifdef __cplusplus
 }
 #endif
