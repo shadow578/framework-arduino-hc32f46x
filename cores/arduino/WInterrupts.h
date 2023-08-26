@@ -86,7 +86,11 @@ extern "C"
    * this does not necessarily mean that the interrupt was caused by the pin.
    * (e.g. if the interrupt was caused by PB0, calling this function with PA0 will return true too)
    */
+  #ifdef __cplusplus
   bool checkIRQFlag(gpio_pin_t pin, bool clear = true);
+  #else
+  bool checkIRQFlag(gpio_pin_t pin, bool clear);
+  #endif
 
   /*
    * \brief set the priority of the given external interrupt
