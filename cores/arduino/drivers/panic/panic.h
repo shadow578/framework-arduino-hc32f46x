@@ -62,10 +62,15 @@ extern "C"
         panic_end();
     }
 
-    // use __BASE_FILE__ if available, fall back to __FILE__
-    #ifdef __BASE_FILE__
-    #define PANIC_FILE_NAME __BASE_FILE__
+    // define file name macro for panic() to use
+    #if defined(__CORE_DEBUG_SHORT_FILENAMES) && defined(__SOURCE_FILE_NAME__) 
+    #define PANIC_FILE_NAME __SOURCE_FILE_NAME__ // only filename
     #else
+    // no short filenames, or __SOURCE_FILE_NAME__ not available
+    #if defined(__CORE_DEBUG_SHORT_FILENAMES)
+    #warning "__CORE_DEBUG_SHORT_FILENAMES is defined, but __SOURCE_FILE_NAME__ is not available."
+    #endif
+
     #define PANIC_FILE_NAME __FILE__
     #endif
 
@@ -76,7 +81,11 @@ extern "C"
      * @param message message to print before panicing. may be set to NULL to omit message
      * @note automatically adds file and line number to message
      */
+    #ifdef __CORE_DEBUG_OMIT_PANIC_MESSAGE
+    #define panic(msg) _panic(PANIC_FILE_NAME "l" PANIC_LINE_NUMBER_STR)
+    #else
     #define panic(msg) _panic("[" PANIC_FILE_NAME " l" PANIC_LINE_NUMBER_STR "]"  msg)
+    #endif
 
 #else // !PANIC_PRINT_ENABLED
     // if panic print is not enabled, stub panic_begin() and panic_printf()
