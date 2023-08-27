@@ -16,8 +16,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-// TODO: implement analogReadResolution()
-
 #pragma once
 
 #include <stdint.h>
@@ -78,8 +76,10 @@ extern "C"
   /*
    * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).
    *
-   * \param res
-   * \note setting the adc resolution is not supported yet (would require ADC deinit and init with new resolution)
+   * \param res adc resolution. one of 8, 10, 12 bits
+   * \note
+   * resolution must be set before setting a pin to INPUT_ANALOG mode using pinMode().
+   * changing the resolution afterwards will not have any effect.
    */
   extern void analogReadResolution(int res);
 

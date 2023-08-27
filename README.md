@@ -14,6 +14,7 @@ the core offers the following options, which can be set in `platformio.ini` usin
 | `ENABLE_MICROS`                          | enable `micros()` function. this increases the speed of the SysTick interrupt, which may cause reduced performance. By default, the SysTick interrupt is called every 1ms. With this option enabled, it is called every 1us. |
 | `DISABLE_SERIAL_GLOBALS`                 | disable `Serial1`, `Serial2`, `Serial3`, `Serial4` global variables. this saves a few bytes of flash space, but you'll have to define the serial objects yourself.                                                           |
 | `F_CPU=(SYSTEM_CLOCK_FREQUENCIES.pclk1)` | overwrites the `F_CPU` value. by default, `hclk` is used. refer to the HC32F460 user manual, Section 4.3, Table 4-1 for more details on the different clocks.                                                                |
+| `CORE_ADC_RESOLUTION`                    | set the default ADC resolution. can be `8`, `10`, or `12`. default is `10`. can be overwritten using `analogReadResolution()`.                                                                                               |
 
 # Arduino Core Panic
 

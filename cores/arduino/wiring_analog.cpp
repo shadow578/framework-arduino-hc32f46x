@@ -35,6 +35,28 @@ uint32_t analogRead(gpio_pin_t ulPin)
     return adc_read_sync(adc_device, adc_channel);
 }
 
+void analogReadResolution(int res)
+{
+    switch (res)
+    {
+    case 8:
+        ADC1_device.init_params.resolution = AdcResolution_8Bit;
+        break;
+    case 10:
+        ADC1_device.init_params.resolution = AdcResolution_10Bit;
+        break;
+    case 12:
+        ADC1_device.init_params.resolution = AdcResolution_12Bit;
+        break;
+    default:
+        CORE_ASSERT_FAIL("analogReadResolution: resolution must be 8, 10 or 12")
+
+        // fallback to 10 bit
+        ADC1_device.init_params.resolution = AdcResolution_10Bit;
+        break;
+    }
+}
+
 //
 // analogWrite
 //
