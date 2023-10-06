@@ -1,126 +1,106 @@
 #pragma once
-
 #include <hc32_ddl.h>
 #include <addon_gpio.h>
+#include "core_debug.h"
 #include "../adc/adc.h"
-#include "gpio_pindefs.h"
+#include "../../WVariant.h"
+#include "../../core_types.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-	//
-	// GPIO defines
-	//
+//
+// GPIO wrappers for PORT_* functions
+//
+#define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].port, PIN_MAP[gpio_pin].bit_mask
 
-#define BOARD_NR_GPIO_PINS 83
-#define BOARD_NR_ADC_PINS 16
+    /**
+     * @brief GPIO wrapper for PORT_Init
+     */
+    inline en_result_t GPIO_Init(gpio_pin_t gpio_pin, const stc_port_init_t *pstcPortInit)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_Init");
+        return PORT_Init(PIN_ARG(gpio_pin), pstcPortInit);
+    }
 
-#define BOARD_NR_SPI 3
-#define BOARD_SPI1_NSS_PIN PA4
-#define BOARD_SPI1_SCK_PIN PA5
-#define BOARD_SPI1_MISO_PIN PA6
-#define BOARD_SPI1_MOSI_PIN PA7
+    /**
+     * @brief GPIO wrapper for PORT_GetConfig
+     */
+    inline en_result_t GPIO_GetConfig(gpio_pin_t gpio_pin, stc_port_init_t *pstcPortInit)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetConfig");
+        return PORT_GetConfig(PIN_ARG(gpio_pin), pstcPortInit);
+    }
 
-#define BOARD_SPI2_NSS_PIN PB12
-#define BOARD_SPI2_SCK_PIN PB13
-#define BOARD_SPI2_MISO_PIN PB14
-#define BOARD_SPI2_MOSI_PIN PB15
+    /**
+     * @brief GPIO wrapper for PORT_GetBit
+     */
+    inline en_flag_status_t GPIO_GetBit(gpio_pin_t gpio_pin)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetBit");
+        return PORT_GetBit(PIN_ARG(gpio_pin));
+    }
 
-#define BOARD_SPI3_NSS_PIN PA15
-#define BOARD_SPI3_SCK_PIN PB3
-#define BOARD_SPI3_MISO_PIN PB4
-#define BOARD_SPI3_MOSI_PIN PB5
+    /**
+     * @brief GPIO wrapper for PORT_OE
+     */
+    inline en_result_t GPIO_OE(gpio_pin_t gpio_pin, en_functional_state_t enNewState)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_OE");
+        return PORT_OE(PIN_ARG(gpio_pin), enNewState);
+    }
 
-	//
-	// GPIO pin map
-	//
-	typedef struct hdsc_pin_info
-	{
-		uint8_t gpio_bit;
-		__IO en_port_t gpio_port;
-		__IO en_pin_t gpio_pin;
-		adc_dev *adc_device;
-		__IO uint8_t adc_channel;
-		__IO en_port_func_t function;
-	} pin_info_t;
+    /**
+     * @brief GPIO wrapper for PORT_SetBits
+     */
+    inline en_result_t GPIO_SetBits(gpio_pin_t gpio_pin)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_SetBits");
+        return PORT_SetBits(PIN_ARG(gpio_pin));
+    }
 
-	extern const pin_info_t PIN_MAP[];
-	extern const uint8_t ADC_PINS[BOARD_NR_ADC_PINS];
+    /**
+     * @brief GPIO wrapper for PORT_ResetBits
+     */
+    inline en_result_t GPIO_ResetBits(gpio_pin_t gpio_pin)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_ResetBits");
+        return PORT_ResetBits(PIN_ARG(gpio_pin));
+    }
 
-	//
-	// GPIO wrappers for PORT_*
-	//
-	extern inline en_result_t PORT_SetFuncGPIO(uint8_t pin, en_functional_state_t subFunction)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
+    /**
+     * @brief GPIO wrapper for PORT_Toggle
+     */
+    inline en_result_t GPIO_Toggle(gpio_pin_t gpio_pin)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_Toggle");
+        return PORT_Toggle(PIN_ARG(gpio_pin));
+    }
 
-		return PORT_SetFunc(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin, PIN_MAP[pin].function, subFunction);
-	}
+    /**
+     * @brief GPIO wrapper for PORT_SetFunc
+     * @param enFuncSelect GPIO pin primary function select
+     * @param enSubFunc GPIO pin sub-function enable/disable (subfunction is GPIO output for most pins)
+     */
+    inline en_result_t GPIO_SetFunc(gpio_pin_t gpio_pin, en_port_func_t enFuncSelect, en_functional_state_t enSubFunc = Disable)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_SetFunc");
+        return PORT_SetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
+    }
 
-	extern inline en_result_t PORT_InitGPIO(uint8_t pin, const stc_port_init_t *portConf)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
+    /**
+     * @brief GPIO wrapper for PORT_GetFunc
+     * @param enFuncSelect GPIO pin primary function select
+     * @param enSubFunc GPIO pin sub-function enable/disable (subfunction is GPIO output for most pins)
+     */
+    inline en_result_t GPIO_GetFunc(gpio_pin_t gpio_pin, en_port_func_t *enFuncSelect, en_functional_state_t *enSubFunc)
+    {
+        ASSERT_GPIO_PIN_VALID(gpio_pin, "GPIO_GetFunc");
+        return PORT_GetFunc(PIN_ARG(gpio_pin), enFuncSelect, enSubFunc);
+    }
 
-		return PORT_Init(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin, portConf);
-	}
-
-	extern inline en_result_t PORT_GetConfigGPIO(uint8_t pin, stc_port_init_t *portConf)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
-
-		return PORT_GetConfig(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin, portConf);
-	}
-
-	extern inline en_result_t PORT_ToggleGPIO(uint8_t pin)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
-
-		return PORT_Toggle(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin);
-	}
-
-	extern inline en_result_t PORT_SetBitsGPIO(uint8_t pin)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
-
-		return PORT_SetBits(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin);
-	}
-
-	extern inline en_result_t PORT_ResetBitsGPIO(uint8_t pin)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
-
-		return PORT_ResetBits(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin);
-	}
-
-	extern inline uint8_t PORT_GetBitGPIO(uint8_t pin)
-	{
-		if (pin > BOARD_NR_GPIO_PINS)
-		{
-			return Error;
-		}
-
-		return (PORT_GetBit(PIN_MAP[pin].gpio_port, PIN_MAP[pin].gpio_pin) == Reset) ? false : true;
-	}
 #ifdef __cplusplus
 }
 #endif

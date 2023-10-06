@@ -22,6 +22,15 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-hc32f46x")
 CORE_DIR = join(FRAMEWORK_DIR, "cores", "arduino")
 assert isdir(CORE_DIR)
 
+# get and check variant directory
+board_variant = board.get("build.variant", "")
+if not board_variant:
+    sys.stderr.write("Error: build.variant is not set")
+    env.Exit(1)
+
+VARIANT_DIR = join(FRAMEWORK_DIR, "variants", board_variant)
+assert isdir(VARIANT_DIR)
+
 
 # setup compile environment
 env.Append(
@@ -35,6 +44,12 @@ env.Append(
     CPPPATH=[
         CORE_DIR,
         join(CORE_DIR, "drivers"),
+        VARIANT_DIR,
+    ],
+
+    # add libraries path
+    LIBSOURCE_DIRS=[
+        join(FRAMEWORK_DIR, "libraries"),
     ]
 )
 
@@ -49,10 +64,9 @@ core_requirements = [
     "interrupts",
     "pwc",
     "rmu",
-    "sdioc",
     "sram",
     "usart",
-    "wdt",
+    "timera"
 ]
 for req in core_requirements:
     board.update(f"build.ddl.{req}", "true")
@@ -65,8 +79,8 @@ if not isfile(ddl_build_script):
 
 SConscript(ddl_build_script)
 
-
 #
 # Target: Build Core Library
 #
-env.BuildSources(join("$BUILD_DIR", "FrameworkArduino"), CORE_DIR)
+env.BuildSources(join("$BUILD_DIR", "FrameworkArduino", "CORE"), CORE_DIR)
+env.BuildSources(join("$BUILD_DIR", "FrameworkArduino", "VARIANT"), VARIANT_DIR)

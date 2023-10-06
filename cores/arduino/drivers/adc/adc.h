@@ -1,44 +1,85 @@
-#ifndef _ADC_H
-#define _ADC_H
-
+#pragma once
 #include <hc32_ddl.h>
+#include "adc_config.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-#define ADC_CHANNEL_COUNT 2u
-#define ADC1_SA_CHANNEL (ADC1_CH14 | ADC1_CH15)
-#define ADC1_SA_CHANNEL_COUNT (ADC_CHANNEL_COUNT)
+    /**
+     * @brief ADC peripheral init
+     * @param device ADC device configuration
+     * @note if the device is initialized, this function will do nothing
+     */
+    void adc_device_init(adc_device_t *device);
 
-// ADC irq flag bit mask
-#define ADC1_SA_DMA_IRQ_BIT (1ul << 0u)
-
-	//
-	// ADC device definition
-	//
-	typedef struct adc_dev
-	{
-		__IO uint32_t HAL_AdcDmaIrqFlag;
-		__IO uint16_t HAL_adc_results[ADC1_CH_COUNT];
-
-		M4_ADC_TypeDef *regs; 
-		__IO uint32_t PeriphClock;
-		__IO uint32_t Channel;
-
-		M4_DMA_TypeDef *DMARegs;
-		__IO uint32_t DMAPeriphClock;
-		__IO uint8_t DMAChannel;
-		__IO en_event_src_t DMAenSrc;
-	} adc_dev;
-
-	extern adc_dev adc1;
-	extern struct adc_dev *ADC1;
-
-	void adc_init();
-	uint16_t adc_read(adc_dev *dev, uint8_t channel);
 #ifdef __cplusplus
-}
+    // TODO: find out what unit sample_time is in...
+    /**
+     * @brief enable adc conversion channel
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to enable
+     * @param sample_time ADC sampling time
+     * @note requires adc_device_init() to be called first
+     */
+    void adc_enable_channel(const adc_device_t *device, const uint8_t adc_channel, uint8_t sample_time = 50);
+#else
+    void adc_enable_channel(const adc_device_t *device, const uint8_t adc_channel, uint8_t sample_time);
 #endif
 
+    /**
+     * @brief disable adc conversion channel
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to disable
+     * @note if adc_device_init() was not called before, this function will do nothing
+     */
+    void adc_disable_channel(const adc_device_t *device, const uint8_t adc_channel);
+
+    /**
+     * @brief start asynchronous conversion
+     * @param device ADC device configuration
+     * @note requires adc_device_init() to be called first
+     */
+    void adc_start_conversion(const adc_device_t *device);
+
+    /**
+     * @brief check if conversion is complete
+     * @param device ADC device configuration
+     * @return true if conversion is complete
+     * @note requires adc_device_init() to be called first
+     */
+    bool adc_is_conversion_completed(const adc_device_t *device);
+
+    /**
+     * @brief wait for conversion to complete
+     * @param device ADC device configuration
+     * @note requires adc_device_init() to be called first
+     */
+    void adc_await_conversion_completed(const adc_device_t *device);
+
+    /**
+     * @brief read asynchronous conversion result
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to read
+     * @return conversion result
+     * @note requires adc_device_init() to be called first
+     */
+    uint16_t adc_conversion_read_result(const adc_device_t *device, const uint8_t adc_channel);
+
+    /**
+     * @brief start adc conversion and wait for result synchronously
+     * @param device ADC device configuration
+     * @param adc_channel ADC channel to read
+     * @return conversion result
+     * @note requires adc_device_init() to be called first
+     */
+    inline uint16_t adc_read_sync(const adc_device_t *device, const uint8_t adc_channel)
+    {
+        adc_start_conversion(device);
+        adc_await_conversion_completed(device);
+        return adc_conversion_read_result(device, adc_channel);
+    }
+
+#ifdef __cplusplus
+}
 #endif

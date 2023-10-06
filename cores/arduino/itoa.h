@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2011 Arduino.  All right reserved.
+  Copyright (c) 2015 Arduino LLC.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -16,33 +16,24 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _ITOA_
-#define _ITOA_
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
 {
-#endif // __cplusplus
-
-#if 0
-
-extern void itoa(int n, char s[]) ;
-
-#else
-
-extern char *itoa(int value, char *string, int radix);
-extern char *ltoa(long value, char *string, int radix);
-#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 9 || \
-                                       (__GNUC_MINOR__ == 9 && __GNUC_PATCHLEVEL__ > 2)))
-extern char *utoa(unsigned value, char *string, int radix);
-#else
-extern char *utoa(unsigned long value, char *string, int radix);
 #endif
-extern char *ultoa(unsigned long value, char *string, int radix);
-#endif /* 0 */
+
+  extern char *itoa(int value, char *string, int radix);
+  extern char *ltoa(long value, char *string, int radix);
+
+#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 9 || (__GNUC_MINOR__ == 9 && __GNUC_PATCHLEVEL__ > 2)))
+  extern char *utoa(unsigned value, char *string, int radix);
+#else
+  extern char *utoa(unsigned long value, char *string, int radix);
+#endif
+
+  extern char *ultoa(unsigned long value, char *string, int radix);
 
 #ifdef __cplusplus
 } // extern "C"
-#endif // __cplusplus
-
-#endif // _ITOA_
+#endif
