@@ -111,4 +111,7 @@ void loop( void ) ;
   #define F_CPU (SYSTEM_CLOCK_FREQUENCIES.hclk)
 #endif
 
+// direct port manipulation for GPIO
+#include "drivers/gpio/direct_access.h"
+
 #endif // Arduino_h
