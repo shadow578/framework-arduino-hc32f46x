@@ -185,6 +185,10 @@ void Usart::end()
     // wait for tx buffer to empty
     flush();
 
+    // clear initialized flag early so write() ignores calls 
+    // and doesn't try to wait for tx buffer to empty
+    this->initialized = false;
+
     // disable uart peripheral
     USART_FuncCmd(this->config->peripheral.register_base, UsartTx, Disable);
     USART_FuncCmd(this->config->peripheral.register_base, UsartRx, Disable);
@@ -197,6 +201,9 @@ void Usart::end()
 
     // deinit uart
     USART_DeInit(this->config->peripheral.register_base);
+
+    // disable peripheral clock
+    PWC_Fcg1PeriphClockCmd(this->config->peripheral.clock_id, Disable);
 
     // clear rx and tx buffers
     this->rxBuffer->clear();
@@ -243,7 +250,9 @@ void Usart::flush(void)
 
     // wait for tx buffer to empty
     while (!this->txBuffer->isEmpty())
-        ;
+    {
+        yield();
+    }
 }
 
 size_t Usart::write(uint8_t ch)
