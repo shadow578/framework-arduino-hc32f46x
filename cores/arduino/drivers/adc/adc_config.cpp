@@ -30,13 +30,4 @@ adc_device_t ADC1_device = {
         .data_alignment = AdcDataAlign_Right,
         .scan_mode = AdcMode_SAOnce, // only sequence A
     },
-    .dma = {
-        .register_base = M4_DMA1,
-        .clock_id = PWC_FCG0_PERIPH_DMA1,
-        .channel = DmaCh1,
-        .event_source = EVT_ADC1_EOCA,
-    },
-    .state = {
-        .conversion_results = new uint16_t[ADC1_CH_COUNT],
-    },
 };

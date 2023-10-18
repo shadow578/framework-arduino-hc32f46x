@@ -56,52 +56,6 @@ inline void adc_adc_init(const adc_device_t *device)
     ADC_TriggerSrcCmd(device->adc.register_base, device->adc.sequence, Disable);
 }
 
-/**
- * @brief ADC DMA transfer init
- */
-inline void adc_dma_init(const adc_device_t *device)
-{
-    // prepare DMA transfer deviceuration to
-    // transfer ADCx->DR0-DRn to state.conversion_results
-    stc_dma_config_t dma_device = {
-        .u16BlockSize = device->adc.channel_count,
-        .u16TransferCnt = 0,
-        .u32SrcAddr = (uint32_t)(&device->adc.register_base->DR0),  // source address is ADCx->DR0
-        .u32DesAddr = (uint32_t)(device->state.conversion_results), // destination address is state.conversion_results
-        .u16SrcRptSize = device->adc.channel_count,
-        .u16DesRptSize = device->adc.channel_count,
-        .stcDmaChCfg = {
-            .enSrcInc = AddressIncrease,
-            .enDesInc = AddressIncrease,
-            .enSrcRptEn = Enable,
-            .enDesRptEn = Enable,
-            .enSrcNseqEn = Disable,
-            .enDesNseqEn = Disable,
-            .enTrnWidth = Dma16Bit,
-            .enLlpEn = Disable,
-            .enIntEn = Disable,
-        },
-    };
-
-    // enable DMA peripheral clock
-    PWC_Fcg0PeriphClockCmd(device->dma.clock_id, Enable);
-
-    // initialize DMA channel and enable
-    DMA_InitChannel(device->dma.register_base, device->dma.channel, &dma_device);
-    DMA_Cmd(device->dma.register_base, Enable);
-    DMA_ChannelCmd(device->dma.register_base, device->dma.channel, Enable);
-
-    // clear DMA transfer complete flag
-    DMA_ClearIrqFlag(device->dma.register_base, device->dma.channel, TrnCpltIrq);
-    DMA_ClearIrqFlag(device->dma.register_base, device->dma.channel, BlkTrnCpltIrq);
-
-    // AOS is required to trigger DMA transfer, enable AOS peripheral clock
-    PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_AOS, Enable);
-
-    // automatically start DMA transfer when ADC conversion is complete
-    DMA_SetTriggerSrc(device->dma.register_base, device->dma.channel, device->dma.event_source);
-}
-
 void adc_device_init(adc_device_t *device)
 {
     // do nothing if ADC is already initialized
@@ -111,10 +65,8 @@ void adc_device_init(adc_device_t *device)
     }
 
     // adc is set up to trigger conversion by software
-    // once conversion is completed, DMA transfer is triggered via AOS
-    // adc_wait_for_conversion() waits until the DMA transfer is complete
+    // adc_wait_for_conversion() waits until the ADC conversion is complete
     adc_adc_init(device);
-    adc_dma_init(device);
 
     // set initialized flag
     device->state.initialized = true;
@@ -168,8 +120,8 @@ void adc_start_conversion(const adc_device_t *device)
 {
     ASSERT_INITIALIZED(device, STRINGIFY(adc_start_conversion));
 
-    // clear DMA transfer complete flag
-    DMA_ClearIrqFlag(device->dma.register_base, device->dma.channel, BlkTrnCpltIrq);
+    // clear ADC conversion complete flag
+    ADC_ClrEocFlag(device->adc.register_base, device->adc.sequence);
 
     // start ADC conversion
     ADC_StartConvert(device->adc.register_base);
@@ -179,8 +131,8 @@ bool adc_is_conversion_completed(const adc_device_t *device)
 {
     ASSERT_INITIALIZED(device, STRINGIFY(adc_is_conversion_completed));
 
-    // check if DMA transfer complete flag is set
-    return DMA_GetIrqFlag(device->dma.register_base, device->dma.channel, BlkTrnCpltIrq) == Set;
+    // check if ADC conversion complete flag is set
+    return ADC_GetEocFlag(device->adc.register_base, device->adc.sequence) == Set;
 }
 
 void adc_await_conversion_completed(const adc_device_t *device)
@@ -197,9 +149,10 @@ uint16_t adc_conversion_read_result(const adc_device_t *device, const uint8_t ad
     ASSERT_INITIALIZED(device, STRINGIFY(adc_conversion_read_result));
     ASSERT_CHANNEL_ID(device, adc_channel);
 
-    // clear DMA transfer complete flag
-    DMA_ClearIrqFlag(device->dma.register_base, device->dma.channel, BlkTrnCpltIrq);
+    // clear ADC conversion complete flag
+    // ADC_ClrEocFlag(device->adc.register_base, device->adc.sequence);
 
-    // read conversion result
-    return device->state.conversion_results[adc_channel];
+    // read conversion result directly from DRx register
+    uint16_t *conversion_results = (uint16_t *)(&device->adc.register_base->DR0);
+    return conversion_results[adc_channel];
 }
