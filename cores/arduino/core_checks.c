@@ -15,3 +15,7 @@
 #if !defined(__CORE_DEBUG) && PANIC_PRINT_ENABLED
 #warning "panic output is enabled, but __CORE_DEBUG mode is disabled! panic output will not be available"
 #endif
+
+#ifdef CORE_DISABLE_FAULT_HANDLER
+#warning "'CORE_DISABLE_FAULT_HANDLER' is defined, core-internal fault handler is disabled"
+#endif

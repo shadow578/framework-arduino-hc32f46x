@@ -1,3 +1,4 @@
+#ifndef CORE_DISABLE_FAULT_HANDLER
 /**
  * hard fault handler based on:
  * - https://blog.feabhas.com/2018/09/updated-developing-a-generic-hard-fault-handler-for-arm-cortex-m3-cortex-m4-using-gcc/
@@ -36,9 +37,9 @@ void fault_handlers_init()
  */
 void print_cfsr_info()
 {
-#define CHECK_AND_APPEND(flag, fmt)  \
-    if ((SCB->CFSR & (flag)) != 0)   \
-    {                                \
+#define CHECK_AND_APPEND(flag, fmt)   \
+    if ((SCB->CFSR & (flag)) != 0)    \
+    {                                 \
         panic_printf(" * " fmt "\n"); \
     }
 
@@ -165,3 +166,7 @@ __attribute__((naked)) void HardFault_Handler(void)
         " b HardFault_Handler_C \n" // call handler in C
     );
 }
+
+#else
+__attribute__((weak)) void fault_handlers_init() {}
+#endif // CORE_DISABLE_FAULT_HANDLER
