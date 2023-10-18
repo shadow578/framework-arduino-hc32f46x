@@ -39,15 +39,38 @@ extern "C"
 	{
 		/**
 		 * @brief pointer to the ADC device of this pin, if any
-		 * @note NULL if not a ADC pin
+		 * @note
+		 * - 0 if not set / not a ADC pin
+		 * - 1 = ADC1
+		 * - 2 = ADC2
 		 */
-		adc_device_t *device;
+		const uint8_t device : 2;
 
 		/**
 		 * @brief adc channel number of this pin, if any
-		 * @note ADC_PIN_INVALID if not a ADC pin
+		 * @note only valid if device != 0
 		 */
-		uint8_t channel;
+		const uint8_t channel : 6;
+
+#ifdef __cplusplus
+		/**
+		 * @brief get the pointer to the ADC device of this pin
+		 * @return pointer to the ADC device of this pin, or NULL if no adc device is assigned
+		 */
+		adc_device_t *get_device() const
+		{
+			switch (device)
+			{
+			case 1:
+				return &ADC1_device;
+			case 2:
+				// TODO: ADC2 is not yet supported
+				// return &ADC2_device;
+			default:
+				return NULL;
+			}
+		}
+#endif
 	} pin_adc_info_t;
 
 	/**
@@ -67,7 +90,7 @@ extern "C"
 		 * - 5: M4_TMRA5 / TIMERA5_config
 		 * - 6: M4_TMRA6 / TIMERA6_config
 		 */
-		uint8_t unit : 3;
+		const uint8_t unit : 3;
 
 		/**
 		 * @brief TimerA channel assigned to this pin for PWM or Servo output
@@ -84,7 +107,7 @@ extern "C"
 		 *
 		 * @note only valid if unit != 0
 		 */
-		uint8_t channel : 3;
+		const uint8_t channel : 3;
 
 		/**
 		 * @brief PORT primary function to enable TimerA output for this pin
@@ -96,7 +119,7 @@ extern "C"
 		 *
 		 * @note only valid if unit != 0
 		 */
-		uint8_t function : 2;
+		const uint8_t function : 2;
 	} pin_timera_info_t;
 
 	/**
@@ -107,27 +130,32 @@ extern "C"
 		/**
 		 * @brief bit position of the pin in the port
 		 */
-		uint8_t bit_pos;
+		const uint8_t bit_pos : 5;
 
 		/**
 		 * @brief IO port this pin belongs to
 		 */
-		en_port_t port;
+		const en_port_t port : 3; 
 
+#ifdef __cplusplus
 		/**
 		 * @brief bit mask of the pin in the port
 		 */
-		en_pin_t bit_mask;
+		en_pin_t bit_mask() const
+		{
+			return (en_pin_t)(1 << bit_pos);
+		}
+#endif
 
 		/**
 		 * @brief adc configuration for this pin
 		 */
-		pin_adc_info_t adc_info;
+		const pin_adc_info_t adc_info;
 
 		/**
 		 * @brief TimerA configuration for this pin
 		 */
-		pin_timera_info_t timera_info;
+		const pin_timera_info_t timera_info;
 
 	} pin_info_t;
 

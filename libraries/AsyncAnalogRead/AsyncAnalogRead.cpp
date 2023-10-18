@@ -11,7 +11,7 @@ inline bool get_adc_info(gpio_pin_t pin, adc_device_t *&adc_device, uint8_t &adc
     }
 
     // get adc info from pin map
-    adc_device = PIN_MAP[pin].adc_info.device;
+    adc_device = PIN_MAP[pin].adc_info.get_device();
     adc_channel = PIN_MAP[pin].adc_info.channel;
     if (adc_device == NULL || adc_channel == ADC_PIN_INVALID)
     {

@@ -14,7 +14,7 @@ extern "C"
 //
 // GPIO wrappers for PORT_* functions
 //
-#define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].port, PIN_MAP[gpio_pin].bit_mask
+#define PIN_ARG(gpio_pin) PIN_MAP[gpio_pin].port, PIN_MAP[gpio_pin].bit_mask()
 
     /**
      * @brief GPIO wrapper for PORT_Init
