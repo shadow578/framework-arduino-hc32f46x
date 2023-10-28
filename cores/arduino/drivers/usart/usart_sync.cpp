@@ -1,4 +1,5 @@
 #include "usart_sync.h"
+#include <addon_usart.h>
 
 // USART_TypeDef to gpio function select mapping
 #define USART_DEV_TO_TX_FUNC(usart)       \
@@ -32,7 +33,7 @@ void usart_sync_init(M4_USART_TypeDef *usart, const gpio_pin_t tx_pin, const uin
 
     // initialize USART peripheral and set baudrate
     USART_UART_Init(usart, config);
-    USART_SetBaudrate(usart, baudrate);
+    SetUartBaudrate(usart, baudrate);
 }
 
 void usart_sync_putc(M4_USART_TypeDef *usart, const char ch)
