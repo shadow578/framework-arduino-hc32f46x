@@ -54,6 +54,15 @@ extern "C"
 
 #ifdef __cplusplus
 		/**
+		 * @brief test if this pin has an ADC device assigned
+		 * @return true if this pin has an ADC device assigned, false otherwise
+		 */
+		bool has_adc() const
+		{
+			return device != 0;
+		}
+
+		/**
 		 * @brief get the pointer to the ADC device of this pin
 		 * @return pointer to the ADC device of this pin, or NULL if no adc device is assigned
 		 */
@@ -135,7 +144,7 @@ extern "C"
 		/**
 		 * @brief IO port this pin belongs to
 		 */
-		const en_port_t port : 3; 
+		const en_port_t port : 3;
 
 #ifdef __cplusplus
 		/**
