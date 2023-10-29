@@ -18,7 +18,6 @@
 
 #pragma once
 #include <stdint.h>
-#include "drivers/usart/usart.h"
 #include "HardwareSerial.h"
 #include "RingBuffer.h"
 #include "usart_config.h"
