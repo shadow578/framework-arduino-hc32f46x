@@ -108,3 +108,11 @@ CORE_ASSERT_FAIL("this is a fail message"); // assert always fails
 
 the core includes a `HardFault` handler that prints information about the fault using the panic mechanism.
 For more information about the fault handler, see [HardFault.md](docs/HardFault.md).
+
+# Credits
+
+This project could not have been possible without the following projects:
+
+- [Voxelab-64/Aquila_X2](https://github.com/Voxelab-64/Aquila_X2) (original implementation)
+- [kgoveas/Arduino-Core-Template](https://github.com/kgoveas/Arduino-Core-Template) (template for Arduino headers)
+- [stm32duino/Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32) (misc. Arduino functions)
