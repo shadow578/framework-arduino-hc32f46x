@@ -1,4 +1,5 @@
 #include <hc32_ddl.h>
+#include <addon_usart.h>
 #include "Usart.h"
 #include "core_hooks.h"
 #include "core_debug.h"
@@ -159,7 +160,7 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
 
     // initialize usart peripheral and set baud rate
     USART_UART_Init(this->config->peripheral.register_base, config);
-    USART_SetBaudrate(this->config->peripheral.register_base, baud);
+    SetUartBaudrate(this->config->peripheral.register_base, baud);
 
     // setup usart interrupts
     usart_irq_register(this->config->interrupts.rx_data_available, "usart rx data available");

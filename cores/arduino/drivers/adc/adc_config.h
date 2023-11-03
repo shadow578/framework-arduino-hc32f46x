@@ -53,34 +53,6 @@ typedef struct adc_init_params_t
 } adc_init_params_t;
 
 /**
- * @brief ADC DMA configuration
- */
-typedef struct adc_dma_config_t
-{
-    /**
-     * @brief DMA peripheral register base address
-     */
-    M4_DMA_TypeDef *register_base;
-
-    /**
-     * @brief DMA peripheral clock id
-     * @note in FCG0
-     */
-    uint32_t clock_id;
-
-    /**
-     * @brief DMA channel
-     */
-    en_dma_channel_t channel;
-
-    /**
-     * @brief DMA start event source
-     * @note should be set to EVT_ADCx_EOCA (ADC end of conversion)
-     */
-    en_event_src_t event_source;
-} adc_dma_config_t;
-
-/**
  * @brief ADC runtime state
  */
 typedef struct adc_runtime_state_t
@@ -89,13 +61,6 @@ typedef struct adc_runtime_state_t
      * @brief was the adc already initialized?
      */
     bool initialized;
-
-    /**
-     * @brief adc conversion results array
-     * @note index == adc channel number
-     * @note lenght == adc channel count (see ADCx_device.adc.channel_count)
-     */
-    uint16_t *conversion_results;
 } adc_runtime_state_t;
 
 /**
@@ -112,11 +77,6 @@ typedef struct adc_device_t
      * @brief ADC init parameters
      */
     adc_init_params_t init_params;
-
-    /**
-     * @brief ADC DMA configuration
-     */
-    adc_dma_config_t dma;
 
     /**
      * @brief ADC runtime state

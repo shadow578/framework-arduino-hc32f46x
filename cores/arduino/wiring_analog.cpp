@@ -23,7 +23,7 @@ uint32_t analogRead(gpio_pin_t ulPin)
 
     // get adc info from pin map
     pin_adc_info_t adc_info = PIN_MAP[ulPin].adc_info;
-    adc_device_t *adc_device = adc_info.device;
+    adc_device_t *adc_device = adc_info.get_device();
     uint8_t adc_channel = adc_info.channel;
     if (adc_device == NULL || adc_channel == ADC_PIN_INVALID)
     {

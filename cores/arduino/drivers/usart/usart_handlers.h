@@ -8,13 +8,12 @@ usart_config_t *USARTx[USART_COUNT] = {
     &USART3_config,
 };
 
-#define IS_VALID_USARTx(x) ((x) >= 1 && (x) <= USART_COUNT)
-#define ASSERT_VALID_USARTx(x) static_assert(IS_VALID_USARTx(x), "USART number must be between 1 and USART_COUNT")
+//
+// IRQ handler implementations
+//
 
-template <uint8_t x>
-static void USARTx_rx_data_available_irq(void)
+static void USART_rx_data_available_irq(uint8_t x)
 {
-    ASSERT_VALID_USARTx(x);
     usart_config_t *usartx = USARTx[x - 1];
 
     // get the received byte and push it to the rx buffer
@@ -23,10 +22,8 @@ static void USARTx_rx_data_available_irq(void)
     usartx->state.rx_buffer->push(ch);
 }
 
-template <uint8_t x>
-static void USARTx_rx_error_irq(void)
+static void USART_rx_error_irq(uint8_t x)
 {
-    ASSERT_VALID_USARTx(x);
     usart_config_t *usartx = USARTx[x - 1];
 
     // check and clear error flags
@@ -49,10 +46,8 @@ static void USARTx_rx_error_irq(void)
     }
 }
 
-template <uint8_t x>
-static void USARTx_tx_buffer_empty_irq(void)
+static void USART_tx_buffer_empty_irq(uint8_t x)
 {
-    ASSERT_VALID_USARTx(x);
     usart_config_t *usartx = USARTx[x - 1];
 
     // get the next byte from the tx buffer
@@ -72,13 +67,46 @@ static void USARTx_tx_buffer_empty_irq(void)
     }
 }
 
-template <uint8_t x>
-static void USARTx_tx_complete_irq(void)
+static void USART_tx_complete_irq(uint8_t x)
 {
-    ASSERT_VALID_USARTx(x);
     usart_config_t *usartx = USARTx[x - 1];
 
     // disable TX and TX complete interrupts
     USART_FuncCmd(usartx->peripheral.register_base, UsartTxCmpltInt, Disable);
     USART_FuncCmd(usartx->peripheral.register_base, UsartTx, Disable);
+}
+
+//
+// IRQ handler templates
+//
+
+#define IS_VALID_USARTx(x) ((x) >= 1 && (x) <= USART_COUNT)
+#define ASSERT_VALID_USARTx(x) static_assert(IS_VALID_USARTx(x), "USART number must be between 1 and USART_COUNT")
+
+template <uint8_t x>
+static void USARTx_rx_data_available_irq(void)
+{
+    ASSERT_VALID_USARTx(x);
+    USART_rx_data_available_irq(x);
+}
+
+template <uint8_t x>
+static void USARTx_rx_error_irq(void)
+{
+    ASSERT_VALID_USARTx(x);
+    USART_rx_error_irq(x);
+}
+
+template <uint8_t x>
+static void USARTx_tx_buffer_empty_irq(void)
+{
+    ASSERT_VALID_USARTx(x);
+    USART_tx_buffer_empty_irq(x);
+}
+
+template <uint8_t x>
+static void USARTx_tx_complete_irq(void)
+{
+    ASSERT_VALID_USARTx(x);
+    USART_tx_complete_irq(x);
 }
