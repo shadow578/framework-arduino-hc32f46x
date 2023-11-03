@@ -10,15 +10,15 @@ the core offers the following multiple options, which can be set in `platformio.
 
 ## Debug Options
 
-| Option                             | Description                                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| `__CORE_DEBUG`                     | enable debug mode. this enables additional debug output at the cost of flash space.           |
-| `__CORE_DEBUG_SHORT_FILENAMES`     | use only the filename, not the full path, in debug output. saves some flash space.            |
-| `__CORE_DEBUG_OMIT_PANIC_MESSAGES` | omit error messages in `panic()` output. saves some flash space.                              |
-| `CORE_DISABLE_FAULT_HANDLER`       | disable the core-internal fault handler. only recommended if you have your own fault handler. |
-| `HARDFAULT_EXCLUDE_CFSR_INFO`      | exclude CFSR flag parsing from fault output. saves some flash space.                          |
-| `HANG_ON_PANIC`                    | enter a infinite loop on `panic()`. default behaviour is to reset the mcu.                    |
-| `PANIC_USART<n>_TX_PIN`            | set the gpio pin that is used to transmit panic messages. `[n]` can be any value in [1,2,3,4] |
+| Option                        | Description                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `__CORE_DEBUG`                | enable debug mode. this enables additional debug output at the cost of flash space.           |
+| `__PANIC_SHORT_FILENAMES`     | use only the filename, not the full path, in debug output. saves some flash space.            |
+| `__OMIT_PANIC_MESSAGE`        | omit error messages in `panic()` output. saves some flash space.                              |
+| `CORE_DISABLE_FAULT_HANDLER`  | disable the core-internal fault handler. only recommended if you have your own fault handler. |
+| `HARDFAULT_EXCLUDE_CFSR_INFO` | exclude CFSR flag parsing from fault output. saves some flash space.                          |
+| `HANG_ON_PANIC`               | enter a infinite loop on `panic()`. default behaviour is to reset the mcu.                    |
+| `PANIC_USART<n>_TX_PIN`       | set the gpio pin that is used to transmit panic messages. `[n]` can be any value in [1,2,3,4] |
 
 ## Hardware Serial Options
 
@@ -51,14 +51,14 @@ build_flags =
 the core includes a panic mechanism that can print panic messages to one or more usart outputs. this is useful for debugging, as it allows you to see what went wrong.
 the following options are available for the core panic mechanism. they can be set in `platformio.ini` using the `build_flags` option.
 
-| Name                              | Description                                                                                                                                                                |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `__CORE_DEBUG`                    | enables arduino core debug mode. if disabled, panic (and thus faults) will be silent                                                                                       |
-| `__CORE_DEBUG_SHORT_FILENAMES`    | uses only the filename, not the full path, in panic messages                                                                                                               |
-| `__CORE_DEBUG_OMIT_PANIC_MESSAGE` | omits the panic message string from panic output. only file and line number will be printed. this reduces the output size, but you'll have to look up the message yourself |
-| `PANIC_USART[n]_TX_PIN`           | set the gpio pin that is used to transmit panic messages. `[n]` can be any value in [1,2,3,4], and up to four outputs may be defined                                       |
-| `HARDFAULT_EXCLUDE_CFSR_INFO`     | exclude CFSR flag messages from fault output. this will reduce the output size, but you'll have to look up the flag values yourself                                        |
-| `HANG_ON_PANIC`                   | enter a infinite loop on panic condition. default behaviour is to reset the mcu                                                                                            |
+| Name                          | Description                                                                                                                                                                |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `__CORE_DEBUG`                | enables arduino core debug mode. if disabled, panic (and thus faults) will be silent                                                                                       |
+| `__PANIC_SHORT_FILENAMES`     | uses only the filename, not the full path, in panic messages                                                                                                               |
+| `__OMIT_PANIC_MESSAGE`        | omits the panic message string from panic output. only file and line number will be printed. this reduces the output size, but you'll have to look up the message yourself |
+| `PANIC_USART[n]_TX_PIN`       | set the gpio pin that is used to transmit panic messages. `[n]` can be any value in [1,2,3,4], and up to four outputs may be defined                                       |
+| `HARDFAULT_EXCLUDE_CFSR_INFO` | exclude CFSR flag messages from fault output. this will reduce the output size, but you'll have to look up the flag values yourself                                        |
+| `HANG_ON_PANIC`               | enter a infinite loop on panic condition. default behaviour is to reset the mcu                                                                                            |
 
 ```ini
 build_flags =
