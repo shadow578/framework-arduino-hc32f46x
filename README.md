@@ -34,7 +34,6 @@ the core offers the following multiple options, which can be set in `platformio.
 | Option                                 | Description                                                                                                                                                   |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CORE_ADC_RESOLUTION`                  | set the default resolution of ADC driver. can be `8`, `10`, or `12`. default is `10`. can be overwritten using `analogReadResolution()`                       |
-| `ENABLE_MICROS`                        | enable `micros()` function. this increases the speed of the SysTick interrupt, which may cause reduced performance. default is disabled                       |
 | `F_CPU=SYSTEM_CLOCK_FREQUENCIES.pclk1` | overwrites the `F_CPU` value. by default, `hclk` is used. refer to the HC32F460 user manual, Section 4.3, Table 4-1 for more details on the different clocks. |
 
 ## Example
@@ -43,7 +42,6 @@ the core offers the following multiple options, which can be set in `platformio.
 # ...
 build_flags =
     -D __CORE_DEBUG
-    -D ENABLE_MICROS
 ```
 
 # Arduino Core Panic

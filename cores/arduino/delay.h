@@ -40,7 +40,6 @@ extern "C"
     return systick_millis();
   }
 
-#ifdef ENABLE_MICROS
   /**
    * \brief Returns the number of microseconds since the Arduino board began running the current program.
    *
@@ -55,7 +54,6 @@ extern "C"
   {
     return systick_micros();
   }
-#endif
 
   /**
    * \brief Pauses the program for the amount of time (in miliseconds) specified as parameter.

@@ -24,7 +24,10 @@
 #endif
 #endif // ENABLE_PANIC_HANDLER
 
-
 #ifdef CORE_DISABLE_FAULT_HANDLER
 #warning "'CORE_DISABLE_FAULT_HANDLER' is defined, core-internal fault handler is disabled"
+#endif
+
+#ifdef ENABLE_MICROS
+#warning "ENABLE_MICROS is deprecated. micros() is always available"
 #endif
