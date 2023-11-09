@@ -63,12 +63,11 @@ extern "C"
 
   /**
    * @brief core panic handler
-   * @param message message to print before panicing. may be set to NULL to
-   * omit message
+   * @param message message to print before panicing. use a empty string to omit
    * @note automatically adds file and line number to message
    */
   #ifdef __OMIT_PANIC_MESSAGE
-    #define panic(msg) _panic(PANIC_FILE_NAME "l" PANIC_LINE_NUMBER_STR, NULL)
+    #define panic(msg) _panic(PANIC_FILE_NAME "l" PANIC_LINE_NUMBER_STR)
   #else
     #define panic(msg) _panic("[" PANIC_FILE_NAME " l" PANIC_LINE_NUMBER_STR "]" msg)
   #endif
