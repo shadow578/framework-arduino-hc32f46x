@@ -1,102 +1,104 @@
 #include "panic.h"
 
-// only compile in core debug mode
-#ifdef __CORE_DEBUG
-#include "../gpio/gpio.h"
-#include "../../core_hooks.h"
-#include "../usart/usart_sync.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <hc32_ddl.h>
+#if ENABLE_PANIC_HANDLER
 
-// only compile usart output code if a panic print is enabled
-#ifdef PANIC_PRINT_ENABLED
-
-// panic usart baud rate
-#ifndef PANIC_USART_BAUDRATE
-#define PANIC_USART_BAUDRATE 115200
-#endif
-
-// panic usart configuration
-const stc_usart_uart_init_t panic_usart_config = {
-    .enClkMode = UsartIntClkCkNoOutput,
-    .enClkDiv = UsartClkDiv_1,
-    .enDataLength = UsartDataBits8,
-    .enDirection = UsartDataLsbFirst,
-    .enStopBit = UsartOneStopBit,
-    .enParity = UsartParityNone,
-    .enSampleMode = UsartSampleBit8,
-    .enDetectMode = UsartStartBitFallEdge,
-    .enHwFlow = UsartRtsEnable,
-};
+  #include "../usart/usart_sync.h"
+  #include <hc32_ddl.h>
+  #include <stdarg.h>
+  #include <stdio.h>
 
 //
-// panic helper functions
+// default panic output
 //
-#define PANIC_PRINTF_BUFFER_SIZE 256
-char panic_printf_buffer[PANIC_PRINTF_BUFFER_SIZE];
-
-void panic_begin(void)
+__attribute__((weak)) void panic_begin(void)
 {
-    core_hook_panic_begin_pre();
+  #if PANIC_OUTPUT_AVAILABLE
+  const stc_usart_uart_init_t panic_usart_config = {
+      .enClkMode = UsartIntClkCkNoOutput,
+      .enClkDiv = UsartClkDiv_1,
+      .enDataLength = UsartDataBits8,
+      .enDirection = UsartDataLsbFirst,
+      .enStopBit = UsartOneStopBit,
+      .enParity = UsartParityNone,
+      .enSampleMode = UsartSampleBit8,
+      .enDetectMode = UsartStartBitFallEdge,
+      .enHwFlow = UsartRtsEnable,
+  };
 
-// initialize USART
-#ifdef PANIC_USART1_TX_PIN
-    usart_sync_init(M4_USART1, PANIC_USART1_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
-#endif
-#ifdef PANIC_USART2_TX_PIN
-    usart_sync_init(M4_USART2, PANIC_USART2_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
-#endif
-#ifdef PANIC_USART3_TX_PIN
-    usart_sync_init(M4_USART3, PANIC_USART3_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
-#endif
-#ifdef PANIC_USART4_TX_PIN
-    usart_sync_init(M4_USART4, PANIC_USART4_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
-#endif
-
-    core_hook_panic_begin_post();
+    // initialize USART
+    #ifdef PANIC_USART1_TX_PIN
+  usart_sync_init(M4_USART1, PANIC_USART1_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
+    #endif
+    #ifdef PANIC_USART2_TX_PIN
+  usart_sync_init(M4_USART2, PANIC_USART2_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
+    #endif
+    #ifdef PANIC_USART3_TX_PIN
+  usart_sync_init(M4_USART3, PANIC_USART3_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
+    #endif
+    #ifdef PANIC_USART4_TX_PIN
+  usart_sync_init(M4_USART4, PANIC_USART4_TX_PIN, PANIC_USART_BAUDRATE, &panic_usart_config);
+    #endif
+  #endif // PANIC_OUTPUT_AVAILABLE
 }
+
+__attribute__((weak)) void panic_puts(const char *str)
+{
+  // print to USART
+  #ifdef PANIC_USART1_TX_PIN
+  usart_sync_write(M4_USART1, str);
+  #endif
+  #ifdef PANIC_USART2_TX_PIN
+  usart_sync_write(M4_USART2, str);
+  #endif
+  #ifdef PANIC_USART3_TX_PIN
+  usart_sync_write(M4_USART3, str);
+  #endif
+  #ifdef PANIC_USART4_TX_PIN
+  usart_sync_write(M4_USART4, str);
+  #endif
+}
+
+__attribute__((noreturn, weak)) void panic_end(void)
+{
+  #ifdef HANG_ON_PANIC
+  // enter infinite loop
+  while (1)
+    ;
+  #else
+  // reset MCU
+  NVIC_SystemReset();
+  #endif
+}
+
+//
+// helper functions
+//
+static char panic_printf_buffer[PANIC_PRINTF_BUFFER_SIZE];
 
 size_t panic_printf(const char *fmt, ...)
 {
-    // format the string into buffer
-    va_list args;
-    va_start(args, fmt);
-    size_t len = vsnprintf(panic_printf_buffer, PANIC_PRINTF_BUFFER_SIZE, fmt, args);
-    va_end(args);
+  // format the string into buffer
+  va_list args;
+  va_start(args, fmt);
+  size_t len = vsnprintf(panic_printf_buffer, PANIC_PRINTF_BUFFER_SIZE, fmt, args);
+  va_end(args);
 
-    // print to USART
-#ifdef PANIC_USART1_TX_PIN
-    usart_sync_write(M4_USART1, panic_printf_buffer);
-#endif
-#ifdef PANIC_USART2_TX_PIN
-    usart_sync_write(M4_USART2, panic_printf_buffer);
-#endif
-#ifdef PANIC_USART3_TX_PIN
-    usart_sync_write(M4_USART3, panic_printf_buffer);
-#endif
-#ifdef PANIC_USART4_TX_PIN
-    usart_sync_write(M4_USART4, panic_printf_buffer);
-#endif
+  // then use puts to print it
+  panic_puts(panic_printf_buffer);
 
-    // return length of formatted string
-    return len;
+  // return length of formatted string
+  return len;
 }
 
-#endif // PANIC_PRINT_ENABLED
-
-void panic_end(void)
+void _panic(const char *message)
 {
-    core_hook_panic_end();
+  if (message != NULL)
+  {
+    panic_begin();
+    panic_printf(message);
+  }
 
-#ifdef HANG_ON_PANIC
-    // enter infinite loop
-    while (1)
-        ;
-#else
-    // reset MCU
-    NVIC_SystemReset();
-#endif
+  panic_end();
 }
 
-#endif // __CORE_DEBUG
+#endif // ENABLE_PANIC_HANDLER
