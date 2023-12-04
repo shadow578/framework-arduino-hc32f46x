@@ -25,7 +25,7 @@
  * @return bit mask for that pin in the port registers
  */
 #define digitalPinToBitMask(pin) \
-    ((uint16_t)PIN_MAP[pin].bit_mask()) // (uint16_t)en_pin_t
+    ((uint16_t)(1 << PIN_MAP[pin].bit_pos))
 
 /**
  * @brief offset a GPIO register by the port number. assumes 16 byte offset between port registers
