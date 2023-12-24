@@ -1,6 +1,16 @@
 #include "Wire.h"
-#include "core_debug.h"
 #include "drivers/gpio/gpio.h"
+
+/**
+ * i2c unit to number 1-3
+ */
+#define I2C_UNIT_TO_N(unit) ((unit) == M4_I2C1 ? 1 : (unit) == M4_I2C2 ? 2 : (unit) == M4_I2C3 ? 3 : -1)
+
+/**
+ * debug print for TwoWire class
+ */
+#define TWO_WIRE_DEBUG_PRINTF(fmt, ...)                                                                                \
+  CORE_DEBUG_PRINTF("[TWI%d] " fmt, I2C_UNIT_TO_N(this->device->peripheral.register_base), ##__VA_ARGS__)
 
 /**
  * @brief clone of I2C_TransData, modified to return TwoWireStatus instead of en_result_t
@@ -18,7 +28,7 @@ TwoWireStatus I2C_TransferDataW(M4_I2C_TypeDef *periph, const uint8_t data[], si
     // wait for TX buffer to be empty
     if (I2C_WaitStatus(periph, I2C_SR_TEMPTYF, Set, timeout) != Ok)
     {
-      return TwoWireStatus::TIMEOUT;
+      return I2C_TIMEOUT;
     }
 
     // send one byte of data
@@ -28,18 +38,18 @@ TwoWireStatus I2C_TransferDataW(M4_I2C_TypeDef *periph, const uint8_t data[], si
     // wait for transfer to complete
     if (I2C_WaitStatus(periph, I2C_SR_TENDF, Set, timeout) != Ok)
     {
-      return TwoWireStatus::TIMEOUT;
+      return I2C_TIMEOUT;
     }
 
     // check for NACK flag
     if (I2C_GetStatus(periph, I2C_SR_NACKF) == Set)
     {
       I2C_ClearStatus(periph, I2C_CLR_NACKFCLR);
-      return TwoWireStatus::NACK_ON_DATA;
+      return I2C_NACK_ON_DATA;
     }
   }
 
-  return TwoWireStatus::SUCCESS;
+  return I2C_SUCCESS;
 }
 
 /**
@@ -54,7 +64,7 @@ TwoWireStatus I2C_ReceiveDataW(M4_I2C_TypeDef *perih, uint8_t data[], size_t cap
     // wait for RX buffer to be full
     if (I2C_WaitStatus(perih, I2C_SR_RFULLF, Set, timeout) != Ok)
     {
-      return TwoWireStatus::TIMEOUT;
+      return I2C_TIMEOUT;
     }
 
     // ??
@@ -92,18 +102,19 @@ TwoWireStatus I2C_ReceiveDataW(M4_I2C_TypeDef *perih, uint8_t data[], size_t cap
     {
       if (I2C_WaitStatus(perih, I2C_SR_STOPF, Set, timeout) != Ok)
       {
-        return TwoWireStatus::TIMEOUT;
+        return I2C_TIMEOUT;
       }
     }
   }
 
   I2C_AckConfig(perih, I2c_ACK);
+  return I2C_SUCCESS;
 }
 
 //
 // TwoWire class implementation
 //
-TwoWire::TwoWire(i2c_device_config_t *device, const gpio_pin_t sda, const gpio_pin_t scl)
+TwoWire::TwoWire(const i2c_device_config_t *device, const gpio_pin_t sda, const gpio_pin_t scl)
 {
   this->device = device;
   this->sda_pin = sda;
@@ -113,7 +124,7 @@ TwoWire::TwoWire(i2c_device_config_t *device, const gpio_pin_t sda, const gpio_p
 void TwoWire::begin()
 {
   // ensure device & pins are configured
-  CORE_ASSERT(this->device != NULL, "device not configured");
+  CORE_ASSERT(this->device != NULL, "device not set");
   ASSERT_GPIO_PIN_VALID(this->sda_pin, "TwoWire::begin");
   ASSERT_GPIO_PIN_VALID(this->scl_pin, "TwoWire::begin");
 
@@ -129,10 +140,10 @@ void TwoWire::begin()
 
   // configure peripheral
   // TODO: i2c configuration is hard-coded here
-  stc_i2c_init_t init = {.u32ClockDiv = I2C_CLK_DIV2, .u32Baudrate = 100000, .u32SclTime = 0};
+  stc_i2c_init_t init = {.u32ClockDiv = I2C_CLK_DIV1, .u32Baudrate = 100000, .u32SclTime = 0};
   float32_t baud_error;
-  CORE_ASSERT(I2C_Init(this->device->peripheral.register_base, &init, &baud_error) == Ok, "I2C_Init failed");
-  CORE_DEBUG_PRINTF("i2c init with err=%d%%\n", (int)baud_error * 100);
+  CORE_ASSERT(I2C_Init(this->device->peripheral.register_base, &init, &baud_error) != Ok, "I2C_Init failed");
+  TWO_WIRE_DEBUG_PRINTF("init with err=%d%%\n", (int)(baud_error * 100));
 
   // enable bus wait
   I2C_BusWaitCmd(this->device->peripheral.register_base, Enable);
@@ -141,6 +152,7 @@ void TwoWire::begin()
 void TwoWire::end()
 {
   I2C_DeInit(this->device->peripheral.register_base);
+  TWO_WIRE_DEBUG_PRINTF("deinit\n");
 }
 
 void TwoWire::beginTransmission(uint8_t address)
@@ -151,6 +163,8 @@ void TwoWire::beginTransmission(uint8_t address)
 
 TwoWireStatus TwoWire::endTransmission(bool stopBit)
 {
+  TWO_WIRE_DEBUG_PRINTF("sending %d bytes to 0x%02X (stop=%d)\n", this->tx_buffer_len, this->tx_address, stopBit);
+
   // enable peripheral
   I2C_Cmd(this->device->peripheral.register_base, Enable);
 
@@ -161,18 +175,20 @@ TwoWireStatus TwoWire::endTransmission(bool stopBit)
   en_result_t rc = I2C_Start(this->device->peripheral.register_base, WIRE_TIMEOUT);
   if (rc == ErrorTimeout)
   {
-    return TwoWireStatus::TIMEOUT;
+    TWO_WIRE_DEBUG_PRINTF("timeout on I2C_Start\n");
+    return I2C_TIMEOUT;
   }
 
   // send address
   rc = I2C_TransAddr(this->device->peripheral.register_base, this->tx_address, I2CDirTrans, WIRE_TIMEOUT);
-  if (rc = ErrorTimeout)
+  if (rc == ErrorTimeout)
   {
-    return TwoWireStatus::TIMEOUT;
+    TWO_WIRE_DEBUG_PRINTF("timeout on I2C_TransAddr\n");
+    return I2C_TIMEOUT;
   }
   else if (rc == Error)
   {
-    return TwoWireStatus::NACK_ON_ADDRESS;
+    return I2C_NACK_ON_ADDRESS;
   }
 
   // send data
@@ -191,11 +207,13 @@ TwoWireStatus TwoWire::endTransmission(bool stopBit)
 
 TwoWireStatus TwoWire::requestFromInt(uint8_t address, size_t quantity, bool stopBit)
 {
-  CORE_ASSERT(quantity <= WIRE_BUFFER_LENGTH, "quantity larger than RX buffer size");
+  CORE_ASSERT(quantity <= WIRE_BUFFER_LENGTH, "quantity larger than RX buffer size", return I2C_OTHER_ERROR);
+
+  TWO_WIRE_DEBUG_PRINTF("requesting %d bytes from 0x%02X (stop=%d)\n", quantity, address, stopBit);
 
   // reset rx buffer
   this->rx_buffer_index = 0;
-  this->rx_buffer_len = quantity;
+  this->rx_buffer_len = 0;
 
   // enable peripheral
   I2C_Cmd(this->device->peripheral.register_base, Enable);
@@ -207,7 +225,8 @@ TwoWireStatus TwoWire::requestFromInt(uint8_t address, size_t quantity, bool sto
   en_result_t rc = I2C_Start(this->device->peripheral.register_base, WIRE_TIMEOUT);
   if (rc == ErrorTimeout)
   {
-    return TwoWireStatus::TIMEOUT;
+    TWO_WIRE_DEBUG_PRINTF("timeout on I2C_Start\n");
+    return I2C_TIMEOUT;
   }
 
   // ???
@@ -218,13 +237,14 @@ TwoWireStatus TwoWire::requestFromInt(uint8_t address, size_t quantity, bool sto
 
   // send address
   rc = I2C_TransAddr(this->device->peripheral.register_base, address, I2CDirReceive, WIRE_TIMEOUT);
-  if (rc = ErrorTimeout)
+  if (rc == ErrorTimeout)
   {
-    return TwoWireStatus::TIMEOUT;
+    TWO_WIRE_DEBUG_PRINTF("timeout on I2C_TransAddr\n");
+    return I2C_TIMEOUT;
   }
   else if (rc == Error)
   {
-    return TwoWireStatus::NACK_ON_ADDRESS;
+    return I2C_NACK_ON_ADDRESS;
   }
 
   // receive data
