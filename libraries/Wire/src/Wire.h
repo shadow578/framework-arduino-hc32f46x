@@ -8,6 +8,7 @@
 #endif
 
 #include "Arduino.h"
+#include "core_debug.h"
 #include "hc32_ddl.h"
 #include "i2c_config.h"
 
@@ -21,42 +22,42 @@
   #define WIRE_BUFFER_LENGTH 32
 #endif
 
-#define WIRE_TIMEOUT 1000
+#define WIRE_TIMEOUT 0x40000ul
 
 /**
  * results of a I2C transmission
  */
-enum class TwoWireStatus : uint8_t
+enum TwoWireStatus : uint8_t
 {
   /**
    * transmission was successful
    */
-  SUCCESS = 0,
+  I2C_SUCCESS = 0,
 
   /**
    * data too long to fit in transmit buffer
    */
-  DATA_TOO_LONG = 1,
+  I2C_DATA_TOO_LONG = 1,
 
   /**
    * received NACK on transmit of address
    */
-  NACK_ON_ADDRESS = 2,
+  I2C_NACK_ON_ADDRESS = 2,
 
   /**
    * received NACK on transmit of data
    */
-  NACK_ON_DATA = 3,
+  I2C_NACK_ON_DATA = 3,
 
   /**
    * other error
    */
-  OTHER_ERROR = 4,
+  I2C_OTHER_ERROR = 4,
 
   /**
    * timeout
    */
-  TIMEOUT = 5
+  I2C_TIMEOUT = 5
 };
 
 /**
@@ -70,7 +71,7 @@ public:
    * @param device the I2C device config
    * @note sda/scl pins must be set using setSDA() and setSCL() before calling begin()
    */
-  TwoWire(i2c_device_config_t *device)
+  TwoWire(const i2c_device_config_t *device)
   {
     TwoWire(device, GPIO_PIN_INVALID, GPIO_PIN_INVALID);
   }
@@ -81,7 +82,7 @@ public:
    * @param sda the sda pin
    * @param scl the scl pin
    */
-  TwoWire(i2c_device_config_t *device, const gpio_pin_t sda, const gpio_pin_t scl);
+  TwoWire(const i2c_device_config_t *device, const gpio_pin_t sda, const gpio_pin_t scl);
 
   /**
    * @brief initialize the Wire library and join a I2C bus as a controller
@@ -142,7 +143,8 @@ public:
    */
   uint8_t requestFrom(uint8_t address, size_t quantity, bool stopBit = true)
   {
-    requestFromInt(address, quantity, stopBit);
+    TwoWireStatus status = requestFromInt(address, quantity, stopBit);
+    CORE_DEBUG_PRINTF("requestFrom addr=%02X status=%d\n", address, status);
     return available();
   }
 
@@ -256,7 +258,7 @@ private:
   /**
    * i2c device
    */
-  i2c_device_config_t *device = NULL;
+  const i2c_device_config_t *device = NULL;
 
   /**
    * sda pin
