@@ -146,7 +146,7 @@ private:
     /**
      * @brief the data buffer
      */
-    volatile uint8_t *buffer;
+    volatile TElement *buffer;
 
     /**
      * @brief the length of the data buffer
