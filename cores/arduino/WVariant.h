@@ -165,9 +165,14 @@ extern "C"
 	extern const pin_info_t PIN_MAP[BOARD_NR_GPIO_PINS];
 
 /**
+ * invalid gpio pin number
+ */
+#define GPIO_PIN_INVALID BOARD_NR_GPIO_PINS + 1
+
+/**
  * @brief test if a gpio pin number is valid
  */
-#define IS_GPIO_PIN(pin) (pin >= 0 && pin < BOARD_NR_GPIO_PINS)
+#define IS_GPIO_PIN(pin) (pin >= 0 && pin < BOARD_NR_GPIO_PINS && pin != GPIO_PIN_INVALID)
 
 #ifdef __cplusplus
 } // extern "C"
