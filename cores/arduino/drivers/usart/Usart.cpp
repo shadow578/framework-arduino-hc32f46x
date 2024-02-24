@@ -6,6 +6,7 @@
 #include "yield.h"
 #include "../gpio/gpio.h"
 #include "../irqn/irqn.h"
+#include "../sysclock/sysclock.h"
 
 //
 // global instances
@@ -62,6 +63,152 @@ inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
                        : 0
 #define USART_DEBUG_PRINTF(fmt, ...) \
     CORE_DEBUG_PRINTF("[USART%d] " fmt, USART_REG_TO_X(this->config->peripheral.register_base), ##__VA_ARGS__)
+
+
+//
+// automatic clock divider + oversampling calculation
+//
+#ifdef USART_AUTO_CLKDIV_OS_CONFIG
+#define CLKDIV_OS_DEBUG_ENABLE 0
+
+#if CLKDIV_OS_DEBUG_ENABLE == 1
+#define CLKDIV_OS_DEBUG_PRINTF(fmt, ...) \
+    CORE_DEBUG_PRINTF("[CLKDIV_OS] " fmt, ##__VA_ARGS__)
+#else
+#define CLKDIV_OS_DEBUG_PRINTF(fmt, ...)
+#endif
+
+/**
+ * @brief calculate the real baudrate that will be achieved with the given parameters
+ * @param usartClkDiv the clock divider used for the USART peripheral
+ * @param over8 the oversampling mode (0: 16-bit, 1: 8-bit)
+ * @param targetBaudrate the target baudrate
+ * @return the real baudrate that will be achieved with the given parameters, or -1.0f if the parameters are invalid 
+ */
+float calculateRealBaudrate(uint32_t usartClkDiv, uint8_t over8, uint32_t targetBaudrate) 
+{
+    // the usart base clock is PCLK1 / usartClkDiv
+    update_system_clock_frequencies();
+    uint32_t usartBaseClock = SYSTEM_CLOCK_FREQUENCIES.pclk1 / usartClkDiv;
+    CLKDIV_OS_DEBUG_PRINTF("usartBaseClock: %lu\n", usartBaseClock);
+    
+    // calculate dividers (integer + fractional) as in SetUartBaudrate (hc32f460_usart.c line 1405 ff.)
+    float DIV = ((float)usartBaseClock / ((float)targetBaudrate * 8.0f * (2.0f - (float)over8))) - 1.0f;
+    uint32_t DIV_integer = (uint32_t)DIV;
+
+    uint64_t fractTmp = (uint64_t)(((uint64_t)2ul - (uint64_t)over8) * ((uint64_t)DIV_integer + 1ul) * (uint64_t)targetBaudrate);
+    uint32_t DIV_fraction = (uint32_t)(2048ul * fractTmp / usartBaseClock - 128ul);
+
+    // only use fractional divider if the fractional part is not too small
+    bool useFractionalDivider = (DIV - (float)DIV_integer) > 0.00001f;
+
+    // check if dividers are valid
+    if (DIV < 0.0f || DIV_integer > 0xFFul) {
+        // DIV must be between 0 and 0xFF
+        return -1.0f;
+    }
+
+    // if fractional divider is used, check if the fractional part is valid
+    if (useFractionalDivider && (DIV_fraction > 0x1FFul)) {
+        // DIV_fraction must be between 0 and 0x1FF
+        return -1.0f;
+    }
+
+    // calculate the baudrate realized with the calculated dividers
+    if (useFractionalDivider) {
+        // calculation with fractional divider, see ref. manual page 621, Table 25-10
+        return ((float)usartBaseClock * (128.0f + (float)DIV_fraction)) / (8.0f * (2.0f - (float)over8) * ((float)DIV_integer + 1.0f) * 256.0f);
+    } else {
+        // calculate without fractional divider, see ref. manual page 621, Table 25-9
+        return (float)usartBaseClock / (8.0f * (2.0f - (float)over8) * ((float)DIV_integer + 1.0f));
+    }
+}
+
+/**
+ * @brief find the best clock divider and oversampling mode for the given target baudrate
+ * @param targetBaudrate the target baudrate
+ * @param bestClkDiv the best clock divider found (OUTPUT)
+ * @param bestOver8 the best oversampling mode found (OUTPUT; 0: 16-bit, 1: 8-bit)
+ * @param bestError the error of the best configuration found (OUTPUT)
+ * @return true if a valid configuration was found, false if no valid configuration was found
+ */
+bool findBestClockDivAndOversamplingMode(uint32_t targetBaudrate, uint32_t &bestClkDiv, uint8_t &bestOver8, float &bestError) 
+{
+    // list of valid clock dividers
+    static const uint16_t clkDividers[] = {1, 4, 16, 64};
+    #define CLK_DIVIDER_COUNT (sizeof(clkDividers) / sizeof(clkDividers[0]))
+
+    // iterate all configurations and find the best one
+    bestClkDiv = 0;
+    bestOver8 = 0;
+    bestError = targetBaudrate;
+
+    for (uint8_t over8 = 0; over8 <= 1; over8++)
+    {
+        for (size_t clkDivIndex = 0; clkDivIndex < CLK_DIVIDER_COUNT; clkDivIndex++)
+        {
+            uint32_t clkDiv = clkDividers[clkDivIndex];
+            float realBaudrate = calculateRealBaudrate(clkDiv, over8, targetBaudrate);
+            if (realBaudrate < 0.0f) {
+                // invalid configuration
+                CLKDIV_OS_DEBUG_PRINTF("invalid configuration: clkDiv=%u, over8=%u @ targetBaud=%u\n", clkDiv, over8, targetBaudrate);
+                continue;
+            }
+
+            float error = (float)targetBaudrate - realBaudrate;
+            CLKDIV_OS_DEBUG_PRINTF("@targetBaud=%u; realBaud=%.2f (%.2f), clkDiv=%u, over8=%u\n", targetBaudrate, realBaudrate, error, clkDiv, over8);
+            if (error < 0.0f) {
+                // error shall be an absolute value
+                error = -error;
+            }
+
+            if (error < bestError) {
+                // found a new best configuration
+                bestError = error;
+                bestClkDiv = clkDiv;
+                bestOver8 = over8;
+            }
+        }
+    }
+
+    // if a valid configuration was found, bestClkDiv cannot be 0
+    return bestClkDiv != 0;
+}
+
+#define CLK_DIVIDER_INT_TO_ENUM(div) \
+    div == 1  ? UsartClkDiv_1  \
+    : div == 4  ? UsartClkDiv_4  \
+    : div == 16 ? UsartClkDiv_16 \
+    : div == 64 ? UsartClkDiv_64 \
+    : UsartClkDiv_1
+
+#define OVERSAMPLING_INT_TO_ENUM(over8) \
+    over8 == 0 ? UsartSampleBit16  \
+    : over8 == 1 ? UsartSampleBit8  \
+    : UsartSampleBit8
+
+/**
+ * @brief set the calculated clock divider and oversampling mode for the given target baudrate
+ * @param config the USART configuration to set the clock divider and oversampling mode in
+ * @param targetBaudrate the target baudrate 
+ */
+inline void setCalculatedClockDivAndOversampling(stc_usart_uart_init_t* config, uint32_t targetBaudrate)
+{
+    uint32_t bestClkDiv;
+    uint8_t bestOver8;
+    float bestError;
+    if (findBestClockDivAndOversamplingMode(targetBaudrate, bestClkDiv, bestOver8, bestError))
+    {
+        config->enClkDiv = CLK_DIVIDER_INT_TO_ENUM(bestClkDiv);
+        config->enSampleMode = OVERSAMPLING_INT_TO_ENUM(bestOver8);
+        CLKDIV_OS_DEBUG_PRINTF("final @targetBaud=%u: clkDiv=%u, over8=%u, error=%.2f\n", targetBaudrate, bestClkDiv, bestOver8, bestError);
+    }
+    else
+    {
+        panic("could not find valid clock divider and oversampling mode for target baudrate");
+    }
+}
+#endif // USART_AUTO_CLKDIV_OS_CONFIG
 
 //
 // Usart class implementation
@@ -140,6 +287,11 @@ void Usart::begin(uint32_t baud, uint16_t config)
         usartConfig.enDataLength = UsartDataBits8;
         break;
     }
+
+    #ifdef USART_AUTO_CLKDIV_OS_CONFIG
+    // auto-calculate best clock divider and oversampling mode for the given baudrate
+    setCalculatedClockDivAndOversampling(&usartConfig, baud);
+    #endif
 
     // call begin with full config
     begin(baud, &usartConfig);
