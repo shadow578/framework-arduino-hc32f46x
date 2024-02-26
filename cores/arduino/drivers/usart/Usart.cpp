@@ -297,7 +297,7 @@ void Usart::begin(uint32_t baud, uint16_t config)
     begin(baud, &usartConfig);
 }
 
-void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
+void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config, const bool rxNoiseFilter)
 {
     // clear rx and tx buffers
     this->rxBuffer->clear();
@@ -313,6 +313,9 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)
     // initialize usart peripheral and set baud rate
     USART_UART_Init(this->config->peripheral.register_base, config);
     SetUartBaudrate(this->config->peripheral.register_base, baud);
+
+    // set noise filtering on RX line
+    USART_FuncCmd(this->config->peripheral.register_base, UsartNoiseFilter, rxNoiseFilter ? Enable : Disable);
 
     // setup usart interrupts
     usart_irq_register(this->config->interrupts.rx_data_available, "usart rx data available");

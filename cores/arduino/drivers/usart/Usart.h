@@ -35,7 +35,7 @@ public:
   Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin);
   void begin(uint32_t baud);
   void begin(uint32_t baud, uint16_t config);
-  void begin(uint32_t baud, const stc_usart_uart_init_t *config);
+  void begin(uint32_t baud, const stc_usart_uart_init_t *config, const bool rxNoiseFilter = true);
   void end();
   int available();
   int availableForWrite();
