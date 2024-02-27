@@ -84,7 +84,7 @@ static void USART_rx_data_available_irq(uint8_t x)
     // get the received byte and push it to the rx buffer
     uint8_t ch = USART_RecData(usartx->peripheral.register_base);
     core_hook_usart_rx_irq(ch, x);
-    usartx->state.rx_buffer->push(ch);
+    usartx->state.rx_buffer->push(ch, /*force*/true);
 }
 
 static void USART_rx_error_irq(uint8_t x)
