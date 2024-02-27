@@ -41,11 +41,6 @@ struct usart_interrupt_config_t
     IRQn_Type interrupt_number;
 
     /**
-     * @brief interrupt priority
-     */
-    uint32_t interrupt_priority;
-
-    /**
      * @brief Interrupt source to set for this interrupt handler
      */
     en_int_src_t interrupt_source;
@@ -114,6 +109,78 @@ struct usart_runtime_state_t
     usart_receive_error_t rx_error;
 };
 
+#ifdef USART_RX_DMA_SUPPORT
+/**
+ * @brief USART DMA block transfer complete interrupt configuration
+ * @note cannot use usart_interrupt_config_t since DMA peripheral and channel are variable
+ */
+struct usart_dma_btc_interrupt_config_t
+{
+    /**
+     * @brief IRQn assigned to this interrupt handler
+     * @note auto-assigned in Usart implementation
+     */
+    IRQn_Type interrupt_number;
+
+    /**
+     * @brief Interrupt handler function pointer
+     */
+    func_ptr_t interrupt_handler;
+};
+
+/**
+ * @brief USART DMA configuration
+ */
+struct usart_dma_config_t
+{
+    /**
+     * @brief DMA unit to use for USART RX
+     * @note assigned in Usart class
+     * @note dma is disabled if this is not a valid DMA unit
+     */
+    M4_DMA_TypeDef *dma_unit;
+
+    /**
+     * @brief DMA channel to use for USART RX
+     * @note assigned in Usart class
+     */
+    en_dma_channel_t dma_channel;
+
+    /**
+     * @brief base address of the DMA target buffer
+     * @note assigned in Usart class
+     */
+    uint32_t rx_buffer_start_address;
+
+    /**
+     * @brief destination address of the last DMA transfer as observed in the block transfer complete interrupt
+     * @note initialized to rx_buffer_start_address in Usart class, 
+     *       updated in the block transfer complete interrupt
+     */
+    uint32_t rx_buffer_last_dest_address;
+
+    /**
+     * @brief AOS event source for USART rx data available
+     */
+    en_event_src_t rx_data_available_event;
+
+    /**
+     * @brief USART receive DMA block transfer complete interrupt configuration
+     */
+    usart_dma_btc_interrupt_config_t rx_data_available_dma_btc;
+    
+    #ifdef __cplusplus
+    /**
+     * @brief is dma_unit a valid DMA unit?
+     */
+    bool is_dma_enabled() const
+    {
+      return dma_unit == M4_DMA1 || dma_unit == M4_DMA2;
+    }
+    #endif
+};
+#endif // USART_RX_DMA_SUPPORT
+
 /**
  * @brief USART device configuration
  */
@@ -133,6 +200,13 @@ struct usart_config_t
      * @brief USART runtime states
      */
     usart_runtime_state_t state;
+
+    #ifdef USART_RX_DMA_SUPPORT
+    /**
+     * @brief USART DMA configuration
+     */
+    usart_dma_config_t dma;
+    #endif
 };
 
 //

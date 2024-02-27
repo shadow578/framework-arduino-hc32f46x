@@ -123,14 +123,32 @@ public:
         this->_ri = 0;
     }
 
+    /**
+     * @brief update the write index and count
+     * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
+     */
+    void _update_write_index(size_t writtenCount)
+    {
+        this->_wi = (this->_wi + writtenCount) % (this->_capacity);
+
+        // increment count atomically
+        __sync_fetch_and_add(&this->_count, writtenCount);
+    }
+
+    /**
+     * @brief get the internal data buffer
+     * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
+     */
+    volatile uint8_t *getBuffer()
+    {
+        return this->buffer;
+    }
+
 private:
     void _push(TElement element)
     {
         this->buffer[this->_wi] = element;
-        this->_wi = (this->_wi + 1) % (this->_capacity);
-
-        // increment count atomically
-        __sync_fetch_and_add(&this->_count, 1);
+        _update_write_index(1);
     }
 
     TElement _pop()

@@ -33,6 +33,7 @@ public:
    * @param rx_pin gpio pin number for rx function
    */
   Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin);
+
   void begin(uint32_t baud);
   void begin(uint32_t baud, uint16_t config);
   void begin(uint32_t baud, const stc_usart_uart_init_t *config, const bool rxNoiseFilter = true);
@@ -56,6 +57,27 @@ public:
    * @note calling this function clears the error
    */
   const usart_receive_error_t getReceiveError(void);
+
+  #ifdef USART_RX_DMA_SUPPORT
+public:
+  /**
+   * @brief enable RX DMA for this Usart
+   * @param dma pointer to the DMA peripheral
+   * @param channel DMA channel to use for RX
+   * @note must be called before begin()
+   */
+  void enableRxDma(M4_DMA_TypeDef *dma, en_dma_channel_t channel);
+
+  /**
+   * @brief disable RX DMA for this Usart
+   * @note must be called before begin()
+   * @note if begin() was already called, this function MUST be called before end()
+   */
+  void disableRxDma();
+private:
+  void rx_dma_init();
+  void rx_dma_deinit();
+  #endif // USART_RX_DMA_SUPPORT
 
 private:
   // usart configuration struct

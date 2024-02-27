@@ -29,6 +29,7 @@ the core offers the following multiple options, which can be set in `platformio.
 | `SERIAL_RX_BUFFER_SIZE`       | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE`                |
 | `DISABLE_SERIAL_GLOBALS`      | disable `Serial<n>` global variables.                                               |
 | `USART_AUTO_CLKDIV_OS_CONFIG` | enable automatic clock divider and oversampling configuration in the `Usart` driver |
+| `USART_RX_DMA_SUPPORT`        | enable support for RX DMA in the `Usart` driver                                     | 
 
 ### `USART_AUTO_CLKDIV_OS_CONFIG` Option
 
@@ -41,6 +42,15 @@ when using `Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)`, t
 > [!NOTE]
 > this option is opt-in to keep backwards compatibility.
 > it is recommended to enable this option if you can afford the flash space.
+
+### `USART_RX_DMA_SUPPORT` Option
+
+when defining the `USART_RX_DMA_SUPPORT` option, the `Usart` driver class will support receiving data using DMA.
+to use this feature, call `Usart::enableRxDma()` before calling `Usart::begin()`.
+
+> [!NOTE]
+> TODO: add more information about this feature
+
 
 ## Miscellanous Options
 

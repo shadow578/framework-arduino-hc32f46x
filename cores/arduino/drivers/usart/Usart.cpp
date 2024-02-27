@@ -36,7 +36,7 @@ inline void usart_irq_register(usart_interrupt_config_t &irq, const char *name)
 
     // register and enable irq
     enIrqRegistration(&irqConf);
-    NVIC_SetPriority(irqConf.enIRQn, irq.interrupt_priority);
+    NVIC_SetPriority(irqConf.enIRQn, DDL_IRQ_PRIORITY_03);
     NVIC_ClearPendingIRQ(irqConf.enIRQn);
     NVIC_EnableIRQ(irqConf.enIRQn);
 }
@@ -211,6 +211,182 @@ inline void setCalculatedClockDivAndOversampling(stc_usart_uart_init_t* config, 
 #endif // USART_AUTO_CLKDIV_OS_CONFIG
 
 //
+// Usart RX DMA
+//
+// [USART] -> [AOS] -> [DMA]
+// 
+// 1. USART triggers RI event
+// 2. AOS forwards the event to the DMA Channel and starts the transfer
+// 3.1. DMA transfers the data from the USART RX data register to the RX buffer
+// 3.2. DMA increments the destination address 
+//      and loops back to the start if it copied more than the buffer capacity
+// 4. DMA trigger the block transfer complete (BTC) interrupt
+// 5. the BTC handler calculates the amount of data transferred since the last BTC interrupt 
+//    and updates the ring buffer accordingly
+//
+#ifdef USART_RX_DMA_SUPPORT
+inline en_int_src_t dma_unit_and_channel_to_btc_int_src(M4_DMA_TypeDef *unit, en_dma_channel_t channel)
+{
+    if (unit == M4_DMA1)
+    {
+        switch(channel)
+        {
+            case DmaCh0: return INT_DMA1_BTC0;
+            case DmaCh1: return INT_DMA1_BTC1;
+            case DmaCh2: return INT_DMA1_BTC2;
+            case DmaCh3: return INT_DMA1_BTC3;
+            default: break;
+        }
+    }
+    else if (unit == M4_DMA2)
+    {
+        switch(channel)
+        {
+            case DmaCh0: return INT_DMA2_BTC0;
+            case DmaCh1: return INT_DMA2_BTC1;
+            case DmaCh2: return INT_DMA2_BTC2;
+            case DmaCh3: return INT_DMA2_BTC3;
+            default: break;
+        }
+    }
+
+    panic("invalid DMA unit or channel");
+    return INT_DMA1_BTC0;
+}
+
+void Usart::rx_dma_init()
+{
+    auto dma_unit = this->config->dma.dma_unit;
+    auto dma_channel = this->config->dma.dma_channel;
+
+    // enable clock of DMA and AOS
+    if (dma_unit == M4_DMA1)
+    {
+        PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_DMA1, Enable);
+    }
+    else if (dma_unit == M4_DMA2)
+    {
+        PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_DMA2, Enable);
+    }
+    else
+    {
+        panic("invalid DMA unit");
+    }
+
+    PWC_Fcg0PeriphClockCmd(PWC_FCG0_PERIPH_AOS, Enable);
+
+    // prepare DMA configuration
+    // transfer from USART RX data register to the RX buffer
+    // the source is a fixed address, the destination is incremented and loops back to the start
+    uint32_t dmaSrcAddr = (uint32_t)&this->config->peripheral.register_base->DR + 2; // the RX data register is on bits 16-24 in DR
+    uint32_t dmaDesAddr = this->config->dma.rx_buffer_start_address;
+    size_t rxBufferCapacity = this->config->state.rx_buffer->capacity();
+    if (rxBufferCapacity > UINT16_MAX)
+    {
+        panic("RX buffer capacity too large for DMA");
+    }
+
+    stc_dma_config_t dmaConfig = {
+        .u16BlockSize = 1,                              // transfer 1 block (= byte) at a time
+        .u16TransferCnt = 0,                            // do not limit transfer count
+        .u32SrcAddr = dmaSrcAddr,                       // copy from USART RX data register
+        .u32DesAddr = dmaDesAddr,                       // to the RX ring buffer
+        .u16SrcRptSize = 0,                             // RX data register is not repeated
+        .u16DesRptSize = (uint16_t) rxBufferCapacity,   // ring buffer is repeated after it is filled
+        .stcDmaChCfg = {
+            .enSrcInc = AddressFix,                     // source address remains fixed
+            .enDesInc = AddressIncrease,                // destination address is incremented
+            .enSrcRptEn = Disable,                      // source does not repeat / loop
+            .enDesRptEn = Enable,                       // destination will loop back to the start after the buffer is filled
+            .enTrnWidth = Dma8Bit,                      // transfer in 8-bit blocks
+            .enIntEn = Enable,                          // enable the BTC interrupt
+        }
+    };
+
+    // enable DMA and apply config
+    DMA_Cmd(dma_unit, Enable);
+    DMA_InitChannel(dma_unit, dma_channel, &dmaConfig);
+
+    // get irqn for BTC interrupt
+    IRQn_Type btcIrqn;
+    irqn_aa_get(btcIrqn, "usart rx dma btc");
+    this->config->dma.rx_data_available_dma_btc.interrupt_number = btcIrqn;
+
+    // setup the DMA BTC interrupt
+    stc_irq_regi_conf_t btcIrqConf = {
+        .enIntSrc = dma_unit_and_channel_to_btc_int_src(dma_unit, dma_channel),
+        .enIRQn = this->config->dma.rx_data_available_dma_btc.interrupt_number,
+        .pfnCallback = this->config->dma.rx_data_available_dma_btc.interrupt_handler,
+    };
+    enIrqRegistration(&btcIrqConf);
+    // note: irq priority should not matter much, as the btc interrupt handler can handle missed interrupts
+    NVIC_SetPriority(btcIrqConf.enIRQn, DDL_IRQ_PRIORITY_03);
+    NVIC_ClearPendingIRQ(btcIrqConf.enIRQn);
+    NVIC_EnableIRQ(btcIrqConf.enIRQn);
+
+    // enable the DMA channel
+    DMA_ChannelCmd(dma_unit, dma_channel, Enable);
+
+    // clear DMA transfer complete flags
+    DMA_ClearIrqFlag(dma_unit, dma_channel, TrnCpltIrq);
+    DMA_ClearIrqFlag(dma_unit, dma_channel, BlkTrnCpltIrq);
+
+    // set the DMA to trigger from the usart data available event using AOS
+    DMA_SetTriggerSrc(dma_unit, dma_channel, this->config->dma.rx_data_available_event);
+
+    USART_DEBUG_PRINTF("rx_dma_init completed w/ rxBufferCapacity=%u\n", rxBufferCapacity);
+}
+
+void Usart::rx_dma_deinit()
+{
+    USART_DEBUG_PRINTF("rx_dma_deinit\n");
+
+    auto dma_unit = this->config->dma.dma_unit;
+    auto dma_channel = this->config->dma.dma_channel;
+
+    // disable the DMA channel
+    DMA_ChannelCmd(dma_unit, dma_channel, Disable);
+
+    // clear DMA transfer complete flags
+    DMA_ClearIrqFlag(dma_unit, dma_channel, TrnCpltIrq);
+    DMA_ClearIrqFlag(dma_unit, dma_channel, BlkTrnCpltIrq);
+
+    // disable and resign the DMA BTC interrupt
+    auto btcIrqn = this->config->dma.rx_data_available_dma_btc.interrupt_number;
+    NVIC_DisableIRQ(btcIrqn);
+    NVIC_ClearPendingIRQ(btcIrqn);
+    enIrqResign(btcIrqn);
+
+    irqn_aa_resign(btcIrqn, "usart rx dma btc");
+
+    // reset the dma channel to default values
+    DMA_DeInit(dma_unit, dma_channel);
+
+    // note: other systems may still use the DMA unit and AOS, so we do not disable their clock
+    // or deinit the DMA unit
+}
+
+void Usart::enableRxDma(M4_DMA_TypeDef *dma, en_dma_channel_t channel)
+{
+    // set dma unit and channel
+    this->config->dma.dma_unit = dma;
+    this->config->dma.dma_channel = channel;
+
+    // set the base address of the RX buffer
+    volatile uint8_t *rxRawBuffer = this->config->state.rx_buffer->getBuffer();
+    uint32_t rxStartAddr = (uint32_t)rxRawBuffer;
+
+    this->config->dma.rx_buffer_start_address = rxStartAddr;
+    this->config->dma.rx_buffer_last_dest_address = rxStartAddr;
+}
+
+void Usart::disableRxDma()
+{
+    
+}
+#endif // USART_RX_DMA_SUPPORT
+
+//
 // Usart class implementation
 //
 Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin)
@@ -318,10 +494,22 @@ void Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config, const bool
     USART_FuncCmd(this->config->peripheral.register_base, UsartNoiseFilter, rxNoiseFilter ? Enable : Disable);
 
     // setup usart interrupts
-    usart_irq_register(this->config->interrupts.rx_data_available, "usart rx data available");
     usart_irq_register(this->config->interrupts.rx_error, "usart rx error");
     usart_irq_register(this->config->interrupts.tx_buffer_empty, "usart tx buffer empty");
     usart_irq_register(this->config->interrupts.tx_complete, "usart tx complete");
+
+    #ifdef USART_RX_DMA_SUPPORT
+    if (this->config->dma.is_dma_enabled())
+    {
+        // setup RX dma
+        rx_dma_init();
+    } 
+    else
+    #endif // USART_RX_DMA_SUPPORT
+    {
+        // setup RX interrupt
+        usart_irq_register(this->config->interrupts.rx_data_available, "usart rx data available");
+    }
 
     // enable usart RX + interrupts
     // (tx is enabled on-demand when data is available to send)
@@ -350,10 +538,22 @@ void Usart::end()
     USART_FuncCmd(this->config->peripheral.register_base, UsartRx, Disable);
 
     // resign usart interrupts
-    usart_irq_resign(this->config->interrupts.rx_data_available, "usart rx data available");
     usart_irq_resign(this->config->interrupts.rx_error, "usart rx error");
     usart_irq_resign(this->config->interrupts.tx_buffer_empty, "usart tx buffer empty");
     usart_irq_resign(this->config->interrupts.tx_complete, "usart tx complete");
+
+    #ifdef USART_RX_DMA_SUPPORT
+    if (this->config->dma.is_dma_enabled())
+    {
+        // de-init RX dma
+        rx_dma_deinit();
+    }
+    else
+    #endif // USART_RX_DMA_SUPPORT
+    {
+        // resign RX interrupt
+        usart_irq_resign(this->config->interrupts.rx_data_available, "usart rx data available");
+    }
 
     // deinit uart
     USART_DeInit(this->config->peripheral.register_base);

@@ -12,6 +12,71 @@ usart_config_t *USARTx[USART_COUNT] = {
 // IRQ handler implementations
 //
 
+#ifdef USART_RX_DMA_SUPPORT
+static void USART_rx_dma_btc_irq(uint8_t x)
+{
+    usart_config_t *usartx = USARTx[x - 1];
+
+    M4_DMA_TypeDef *dma_unit = usartx->dma.dma_unit;
+    en_dma_channel_t dma_channel = usartx->dma.dma_channel;
+
+    // get the number of bytes transferred since the last block transfer complete interrupt
+    // this *may* be more than 1 if we missed a previous interrupt, so it's calculated
+    uint32_t last_dest_address = usartx->dma.rx_buffer_last_dest_address;
+    uint32_t current_dest_address = DMA_GetDesAddr(dma_unit, dma_channel);
+
+    size_t received_bytes;
+    if (current_dest_address == last_dest_address)
+    {
+        // no data was received, ignore
+        received_bytes = 0;
+    }
+    else if (current_dest_address > last_dest_address)
+    {
+        // buffer did not overflow
+        //
+        // the amount of data received is simply the difference between the current and last destination addresses 
+        //
+        // [   0   ]
+        // [   1   ] <- last    |
+        // [   2   ]            |
+        // [   3   ]            | #1 (len = pos - old_pos)
+        // [   4   ]            |
+        // [   5   ]            |
+        // [   6   ] <- current |
+        // [   7   ]
+        // [ N - 1 ]
+        received_bytes = current_dest_address - last_dest_address;
+    }
+    else
+    {
+        // buffer did overflowed
+        //
+        // the amount of data received is the difference between the current destination address and the end of the buffer
+        // plus the difference between the last destination address and the start of the buffer
+        //
+        // [   0   ]            |
+        // [   1   ]            | #2 (len = current)
+        // [   2   ]            |
+        // [   3   ] <- current
+        // [   4   ] <- last    |
+        // [   5   ]            |
+        // [   6   ]            | #1 (len = N - last)
+        // [   7   ]            |
+        // [ N - 1 ]            |
+        size_t buffer_len = usartx->state.rx_buffer->capacity();
+        received_bytes = (buffer_len - last_dest_address) + current_dest_address;
+    }
+
+    // then, update the write pointer in the rx buffer and the last destination address
+    usartx->state.rx_buffer->_update_write_index(received_bytes);
+    usartx->dma.rx_buffer_last_dest_address = current_dest_address;
+
+    // finally, clear the DMA block transfer complete flag
+    DMA_ClearIrqFlag(dma_unit, dma_channel, BlkTrnCpltIrq);
+}
+#endif // USART_RX_DMA_SUPPORT
+
 static void USART_rx_data_available_irq(uint8_t x)
 {
     usart_config_t *usartx = USARTx[x - 1];
@@ -82,6 +147,15 @@ static void USART_tx_complete_irq(uint8_t x)
 
 #define IS_VALID_USARTx(x) ((x) >= 1 && (x) <= USART_COUNT)
 #define ASSERT_VALID_USARTx(x) static_assert(IS_VALID_USARTx(x), "USART number must be between 1 and USART_COUNT")
+
+#if USART_RX_DMA_SUPPORT
+template <uint8_t x>
+static void USARTx_rx_da_dma_btc_irq(void)
+{
+    ASSERT_VALID_USARTx(x);
+    USART_rx_dma_btc_irq(x);
+}
+#endif // USART_RX_DMA_SUPPORT
 
 template <uint8_t x>
 static void USARTx_rx_data_available_irq(void)
