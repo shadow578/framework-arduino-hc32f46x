@@ -29,7 +29,7 @@ the core offers the following multiple options, which can be set in `platformio.
 | `SERIAL_RX_BUFFER_SIZE`       | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE`                |
 | `DISABLE_SERIAL_GLOBALS`      | disable `Serial<n>` global variables.                                               |
 | `USART_AUTO_CLKDIV_OS_CONFIG` | enable automatic clock divider and oversampling configuration in the `Usart` driver |
-| `USART_RX_DMA_SUPPORT`        | enable support for RX DMA in the `Usart` driver                                     | 
+| `USART_RX_DMA_SUPPORT`        | enable support for RX DMA in the `Usart` driver                                     |
 
 ### `USART_AUTO_CLKDIV_OS_CONFIG` Option
 
@@ -47,10 +47,34 @@ when using `Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)`, t
 
 when defining the `USART_RX_DMA_SUPPORT` option, the `Usart` driver class will support receiving data using DMA.
 to use this feature, call `Usart::enableRxDma()` before calling `Usart::begin()`.
+you must pass a unused DMA peripheral and channel to `Usart::enableRxDma()`. failing to do so may result in undefined behaviour.
 
 > [!NOTE]
-> TODO: add more information about this feature
+> enabling this option will increase the flash usage by about 1KB.
 
+#### example usage:
+
+platformio.ini:
+
+```ini
+build_flags      =
+  -D USART_RX_DMA_SUPPORT # enable RX DMA support
+```
+
+main.cpp:
+
+```cpp
+#include <Arduino.h>
+
+void setup()
+{
+    Serial.enableRxDma(M4_DMA1, DmaCh0); // enable RX DMA w/ DMA1, channel 0
+    Serial.begin(115200); // start serial
+    // ...
+}
+
+void loop() {}
+```
 
 ## Miscellanous Options
 
