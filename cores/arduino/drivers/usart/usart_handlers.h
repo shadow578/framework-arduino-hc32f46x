@@ -69,8 +69,14 @@ static void USART_rx_dma_btc_irq(uint8_t x)
     }
 
     // then, update the write pointer in the rx buffer and the last destination address
-    usartx->state.rx_buffer->_update_write_index(received_bytes);
+    bool rxOverrun = usartx->state.rx_buffer->_update_write_index(received_bytes);
     usartx->dma.rx_buffer_last_dest_address = current_dest_address;
+
+    // if the buffer was overrun, set the overrun error flag
+    if (rxOverrun)
+    {
+        usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
+    }
 
     // finally, clear the DMA block transfer complete flag
     DMA_ClearIrqFlag(dma_unit, dma_channel, BlkTrnCpltIrq);
@@ -84,7 +90,15 @@ static void USART_rx_data_available_irq(uint8_t x)
     // get the received byte and push it to the rx buffer
     uint8_t ch = USART_RecData(usartx->peripheral.register_base);
     core_hook_usart_rx_irq(ch, x);
-    usartx->state.rx_buffer->push(ch, /*force*/true);
+    
+    bool rxOverrun;
+    usartx->state.rx_buffer->push(ch, /*force*/true, rxOverrun);
+
+    // if the buffer was overrun, set the overrun error flag
+    if (rxOverrun)
+    {
+        usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
+    }
 }
 
 static void USART_rx_error_irq(uint8_t x)

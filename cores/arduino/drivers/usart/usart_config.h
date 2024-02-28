@@ -82,10 +82,35 @@ struct usart_interrupts_config_t
  */
 enum class usart_receive_error_t
 {
+    /**
+     * @brief no error
+     */
     None,
+
+    /**
+     * @brief usart peripheral framing error
+     * @note occurs, for example, when the stop bit of the received data is not detected
+     */
     FramingError,
+
+    /**
+     * @brief usart peripheral parity error
+     * @note occurs when the parity of the received data does not match the expected parity
+     */
     ParityError,
-    OverrunError
+
+    /**
+     * @brief usart peripheral RX register overrun error
+     * @note occurs when the RX data register is not read before the next data is received
+     */
+    OverrunError,
+
+    /**
+     * @brief RX ring buffer was full and a new byte was received
+     * @note occurs when the RX ring buffer is full and a new byte is received
+     * @note this error indicates that the oldest data in the RX buffer was lost
+     */
+    RxDataDropped,
 };
 
 /**

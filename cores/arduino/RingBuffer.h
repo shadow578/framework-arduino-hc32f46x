@@ -87,13 +87,27 @@ public:
      */
     bool push(TElement element, bool force = false)
     {
+        bool dummy;
+        return push(element, force, dummy);
+    }
+
+    /**
+     * @brief Push an element onto the buffer
+     * @param element the element to push
+     * @param force if true, a element will be overwritten case the buffer is full
+     * @param didOverrun set to true if the buffer was overrun (count went over capacity and the oldest data was discarded)
+     *                   overruns are only possible if force is set to true
+     * @return true if the element was pushed, false if the buffer is full
+     */
+    bool push(TElement element, bool force, bool &didOverrun)
+    {
         if (!force && this->isFull())
         {
             return false;
         }
 
         // add the new element
-        this->_push(element);
+        didOverrun = this->_push(element);
         return true;
     }
 
@@ -125,14 +139,31 @@ public:
 
     /**
      * @brief update the write index and count
+     * @param writtenCount the number of elements written to the buffer
+     * @return true if the buffer was overrun
      * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
      */
-    void _update_write_index(size_t writtenCount)
+    bool _update_write_index(size_t writtenCount)
     {
-        this->_wi = (this->_wi + writtenCount) % (this->_capacity);
+        // update write index
+        this->_wi = (this->_wi + writtenCount) % (this->_capacity);               
 
         // increment count atomically
         __sync_fetch_and_add(&this->_count, writtenCount);
+
+        // if the count is greater than the capacity, we have a buffer overrun
+        if (this->_count > this->_capacity)
+        {
+            // limit the count to the capacity
+            this->_count = this->_capacity;
+
+            // set the read index to the write index
+            // this effectively discards the oldest data
+            this->_ri = this->_wi;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -145,10 +176,10 @@ public:
     }
 
 private:
-    void _push(TElement element)
+    bool _push(TElement element)
     {
         this->buffer[this->_wi] = element;
-        _update_write_index(1);
+        return _update_write_index(1);
     }
 
     TElement _pop()
