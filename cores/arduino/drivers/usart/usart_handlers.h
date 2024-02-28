@@ -77,6 +77,10 @@ static void USART_rx_dma_btc_irq(uint8_t x)
     if (rxOverrun)
     {
         usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
+        
+        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+        usartx->state.rx_error_counters.rx_data_dropped++;
+        #endif
     }
 
     // finally, clear the DMA block transfer complete flag
@@ -99,6 +103,10 @@ static void USART_rx_data_available_irq(uint8_t x)
     if (rxOverrun)
     {
         usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
+        
+        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+        usartx->state.rx_error_counters.rx_data_dropped++;
+        #endif
     }
 }
 
@@ -111,18 +119,30 @@ static void USART_rx_error_irq(uint8_t x)
     {
         USART_ClearStatus(usartx->peripheral.register_base, UsartFrameErr);
         usartx->state.rx_error = usart_receive_error_t::FramingError;
+
+        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+        usartx->state.rx_error_counters.framing_error++;
+        #endif
     }
 
     if (USART_GetStatus(usartx->peripheral.register_base, UsartParityErr) == Set)
     {
         USART_ClearStatus(usartx->peripheral.register_base, UsartParityErr);
         usartx->state.rx_error = usart_receive_error_t::ParityError;
+
+        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+        usartx->state.rx_error_counters.parity_error++;
+        #endif
     }
 
     if (USART_GetStatus(usartx->peripheral.register_base, UsartOverrunErr) == Set)
     {
         USART_ClearStatus(usartx->peripheral.register_base, UsartOverrunErr);
         usartx->state.rx_error = usart_receive_error_t::OverrunError;
+
+        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+        usartx->state.rx_error_counters.overrun_error++;
+        #endif
     }
 }
 

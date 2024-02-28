@@ -113,6 +113,34 @@ enum class usart_receive_error_t
     RxDataDropped,
 };
 
+#ifdef USART_RX_ERROR_COUNTERS_ENABLE
+/**
+ * @brief USART receive error counters
+ */
+struct usart_rx_error_counters_t
+{
+    /**
+     * @brief counter for usart_receive_error_t::FramingError
+     */
+    uint32_t framing_error;
+
+    /**
+     * @brief counter for usart_receive_error_t::ParityError
+     */
+    uint32_t parity_error;
+
+    /**
+     * @brief counter for usart_receive_error_t::OverrunError
+     */
+    uint32_t overrun_error;
+
+    /**
+     * @brief counter for usart_receive_error_t::RxDataDropped
+     */
+    uint32_t rx_data_dropped;
+};
+#endif // USART_RX_ERROR_COUNTERS_ENABLE
+
 /**
  * @brief USART runtime states
  */
@@ -132,6 +160,13 @@ struct usart_runtime_state_t
      * @brief last error in RX error interrupt handler
      */
     usart_receive_error_t rx_error;
+
+    #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+    /**
+     * @brief USART receive error counters
+     */
+    usart_rx_error_counters_t rx_error_counters;
+    #endif
 };
 
 #ifdef USART_RX_DMA_SUPPORT

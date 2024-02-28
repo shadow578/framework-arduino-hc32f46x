@@ -58,6 +58,32 @@ public:
    */
   const usart_receive_error_t getReceiveError(void);
 
+  #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+  /**
+   * @brief get the number of framing errors
+   * @note usart_receive_error_t::FramingError
+   */
+  inline uint32_t getFramingErrorCount(void) { return this->config->state.rx_error_counters.framing_error; }
+
+  /**
+   * @brief get the number of parity errors
+   * @note usart_receive_error_t::ParityError
+   */
+  inline uint32_t getParityErrorCount(void) { return this->config->state.rx_error_counters.parity_error; }
+
+  /**
+   * @brief get the number of overrun errors
+   * @note usart_receive_error_t::OverrunError
+   */
+  inline uint32_t getOverrunErrorCount(void) { return this->config->state.rx_error_counters.overrun_error; }
+
+  /**
+   * @brief get how often bytes were dropped from the RX buffer
+   * @note usart_receive_error_t::RxDataDropped
+   */
+  inline uint32_t getDroppedDataErrorCount(void) { return this->config->state.rx_error_counters.rx_data_dropped; }
+  #endif // USART_RX_ERROR_COUNTERS_ENABLE
+
   #ifdef USART_RX_DMA_SUPPORT
 public:
   /**

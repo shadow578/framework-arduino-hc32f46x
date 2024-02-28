@@ -22,14 +22,15 @@ the core offers the following multiple options, which can be set in `platformio.
 
 ## Hardware Serial Options
 
-| Option                        | Description                                                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------- |
-| `SERIAL_BUFFER_SIZE`          | set the size of both the RX and TX buffer. default value is `64`                    |
-| `SERIAL_TX_BUFFER_SIZE`       | set the size of the TX buffer. default value is `SERIAL_BUFFER_SIZE`                |
-| `SERIAL_RX_BUFFER_SIZE`       | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE`                |
-| `DISABLE_SERIAL_GLOBALS`      | disable `Serial<n>` global variables.                                               |
-| `USART_AUTO_CLKDIV_OS_CONFIG` | enable automatic clock divider and oversampling configuration in the `Usart` driver |
-| `USART_RX_DMA_SUPPORT`        | enable support for RX DMA in the `Usart` driver                                     |
+| Option                           | Description                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| `SERIAL_BUFFER_SIZE`             | set the size of both the RX and TX buffer. default value is `64`                    |
+| `SERIAL_TX_BUFFER_SIZE`          | set the size of the TX buffer. default value is `SERIAL_BUFFER_SIZE`                |
+| `SERIAL_RX_BUFFER_SIZE`          | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE`                |
+| `DISABLE_SERIAL_GLOBALS`         | disable `Serial<n>` global variables.                                               |
+| `USART_AUTO_CLKDIV_OS_CONFIG`    | enable automatic clock divider and oversampling configuration in the `Usart` driver |
+| `USART_RX_DMA_SUPPORT`           | enable support for RX DMA in the `Usart` driver                                     |
+| `USART_RX_ERROR_COUNTERS_ENABLE` | enable error counters in the `Usart` driver.                                        |
 
 ### `USART_AUTO_CLKDIV_OS_CONFIG` Option
 
@@ -75,6 +76,12 @@ void setup()
 
 void loop() {}
 ```
+
+### `USART_RX_ERROR_COUNTERS_ENABLE` Option
+
+when defining the `USART_RX_ERROR_COUNTERS_ENABLE` option, the `Usart` driver class will keep track of the number of framing, parity, overrun and dropped data errors.
+
+the counters can be accessed using the `Usart::getFramingErrorCount()`, `Usart::getParityErrorCount()`, `Usart::getOverrunErrorCount()` and `Usart::getDroppedDataErrorCount()` functions.
 
 ## Miscellanous Options
 
