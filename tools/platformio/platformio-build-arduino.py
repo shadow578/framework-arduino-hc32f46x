@@ -32,8 +32,30 @@ VARIANT_DIR = join(FRAMEWORK_DIR, "variants", board_variant)
 assert isdir(VARIANT_DIR)
 
 
+# app_config.h is a optional header file that is included via the command line in all source files
+# it can be used to define custom configuration options for the application, as a replacement for the build_flags option
+# it can be set in platformio.ini using the 'app_config' option
+# it accepts a relative path to the file, which is resolved relative to the project root
+app_config_path = board.get("build.app_config", "app_config.h")
+app_config_path = join(env.subst("$PROJECT_DIR"), app_config_path)
+if not isfile(app_config_path):
+    app_config_path = None
+else:
+    print(f"Using app_config.h: {app_config_path}")
+
+
 # setup compile environment
 env.Append(
+    # C compiler options
+    CFLAGS=[
+        f"-include{app_config_path}" if app_config_path else "",
+    ],
+
+    # C++ compiler options
+    CXXFLAGS=[
+        f"-include{app_config_path}" if app_config_path else "",
+    ],
+
     # c/c++ defines
     CPPDEFINES=[
         ("ARDUINO", 100),
