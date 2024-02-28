@@ -78,6 +78,8 @@ inline void usart_irq_resign(usart_interrupt_config_t &irq, const char *name)
 #define CLKDIV_OS_DEBUG_PRINTF(fmt, ...)
 #endif
 
+#include "usart_util.h"
+
 /**
  * @brief calculate the real baudrate that will be achieved with the given parameters
  * @param usartClkDiv the clock divider used for the USART peripheral
@@ -114,14 +116,7 @@ float calculateRealBaudrate(uint32_t usartClkDiv, uint8_t over8, uint32_t target
         return -1.0f;
     }
 
-    // calculate the baudrate realized with the calculated dividers
-    if (useFractionalDivider) {
-        // calculation with fractional divider, see ref. manual page 621, Table 25-10
-        return ((float)usartBaseClock * (128.0f + (float)DIV_fraction)) / (8.0f * (2.0f - (float)over8) * ((float)DIV_integer + 1.0f) * 256.0f);
-    } else {
-        // calculate without fractional divider, see ref. manual page 621, Table 25-9
-        return (float)usartBaseClock / (8.0f * (2.0f - (float)over8) * ((float)DIV_integer + 1.0f));
-    }
+    return calculateBaudrate(usartBaseClock, DIV_integer, DIV_fraction, over8, useFractionalDivider);
 }
 
 /**
