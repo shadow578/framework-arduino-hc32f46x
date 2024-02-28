@@ -1,11 +1,12 @@
 #include "usart_config.h"
 #include "../../core_hooks.h"
 
-#define USART_COUNT 3
+#define USART_COUNT 4
 usart_config_t *USARTx[USART_COUNT] = {
     &USART1_config,
     &USART2_config,
     &USART3_config,
+    &USART4_config,
 };
 
 //

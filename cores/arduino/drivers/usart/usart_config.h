@@ -240,3 +240,4 @@ struct usart_config_t
 extern usart_config_t USART1_config;
 extern usart_config_t USART2_config;
 extern usart_config_t USART3_config;
+extern usart_config_t USART4_config;
