@@ -377,7 +377,8 @@ void Usart::enableRxDma(M4_DMA_TypeDef *dma, en_dma_channel_t channel)
 
 void Usart::disableRxDma()
 {
-    
+    // reset dma unit to disable
+    this->config->dma.dma_unit = nullptr;
 }
 #endif // USART_RX_DMA_SUPPORT
 
