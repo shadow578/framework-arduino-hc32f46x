@@ -2,6 +2,7 @@
  * common header for all unit tests for setting up the test environment
  */
 #include <gtest/gtest.h>
+#include <core_types.h>
 
 int main(int argc, char **argv)
 {
