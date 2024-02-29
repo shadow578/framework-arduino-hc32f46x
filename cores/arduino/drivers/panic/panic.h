@@ -72,6 +72,8 @@ extern "C"
     #define panic(msg) _panic("[" PANIC_FILE_NAME " l" PANIC_LINE_NUMBER_STR "]" msg)
   #endif
 #else // !ENABLE_PANIC_HANDLER
+  #define panic_begin()
+  #define panic_end()
   #define panic_printf(fmt, ...)
   #define panic(msg)
 #endif // ENABLE_PANIC_HANDLER
