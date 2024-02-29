@@ -50,4 +50,5 @@ jobs:
       - uses: test-summary/action@v2
         with:
           paths: ".pio/test/*.xml"
+          show: "all"
         if: always()
