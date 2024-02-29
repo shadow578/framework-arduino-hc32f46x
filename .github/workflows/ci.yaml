@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # checkout the repository
+      - uses: actions/checkout@v3
+      
+      # enable caching of pip and platformio
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      
+      # install GCC for platformio native platform
+      # https://docs.platformio.org/en/latest/platforms/native.html#installation
+      - name: Install GCC
+        run: sudo apt-get install -y build-essential
+
+      # install python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # install platformio
+      - name: Install PlatformIO core
+        run: pip install --upgrade platformio
+      
+      # create .pio/test/ folder
+      - name: Create .pio/test folder
+        run: mkdir -p .pio/test
+
+      # run unit tests using 'test-native' environment
+      - name: Run Unit Tests (native)
+        run: pio test --environment test-native --junit-output-path '.pio/test/native.xml'
+
+      # upload test results
+      - uses: test-summary/action@v2
+        with:
+          paths: ".pio/test/*.xml"
+        if: always()
