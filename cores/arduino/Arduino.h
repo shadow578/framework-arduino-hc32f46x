@@ -47,7 +47,7 @@ extern "C"{
 #include "yield.h"
 
   /* system functions */
-int main( void );
+//int main( void );
 
   /* sketch */
 void setup( void ) ;
