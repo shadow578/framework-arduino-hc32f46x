@@ -107,7 +107,7 @@ char *dtostrf(double val, signed char width, unsigned char prec, char *sout)
     fmt[w - strlen(sout)] = '\0';
     if (negative == 0)
     {
-      char *tmp = malloc(strlen(sout) + 1);
+      char *tmp = (char*)malloc(strlen(sout) + 1);
       strcpy(tmp, sout);
       strcpy(sout, fmt);
       strcat(sout, tmp);

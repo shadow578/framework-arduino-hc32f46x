@@ -6,6 +6,7 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 import sys
+import json
 from os.path import isfile, isdir, join
 from SCons.Script import DefaultEnvironment, SConscript
 
@@ -31,13 +32,52 @@ if not board_variant:
 VARIANT_DIR = join(FRAMEWORK_DIR, "variants", board_variant)
 assert isdir(VARIANT_DIR)
 
+def get_version_defines() -> list[str]:
+    """Read the version property in the package.json file and return a list of CPPDEFINES for the major, minor and patch version."""
+    package_json = join(FRAMEWORK_DIR, "package.json")
+    if not isfile(package_json):
+        sys.stderr.write(f"Error: failed to find package.json file for framework-arduino-hc32f46x at '{package_json}'")
+        env.Exit(1)
+    
+    with open(package_json, "r") as f:
+        package_data = json.load(f)
+        version = package_data.get("version", "0.0.0")
+        major, minor, patch = version.split(".")
+        return [
+            f"ARDUINO_CORE_MAJOR={major}",
+            f"ARDUINO_CORE_MINOR={minor}",
+            f"ARDUINO_CORE_PATCH={patch}"
+        ]
+
+# app_config.h is a optional header file that is included via the command line in all source files
+# it can be used to define custom configuration options for the application, as a replacement for the build_flags option
+# it can be set in platformio.ini using the 'app_config' option
+# it accepts a relative path to the file, which is resolved relative to the project root
+app_config_path = board.get("build.app_config", "app_config.h")
+app_config_path = join(env.subst("$PROJECT_DIR"), app_config_path)
+if not isfile(app_config_path):
+    app_config_path = None
+else:
+    print(f"Using app_config.h: {app_config_path}")
+
 
 # setup compile environment
 env.Append(
+    # C compiler options
+    CFLAGS=[
+        f"-include{app_config_path}" if app_config_path else "",
+    ],
+
+    # C++ compiler options
+    CXXFLAGS=[
+        f"-include{app_config_path}" if app_config_path else "",
+    ],
+
     # c/c++ defines
     CPPDEFINES=[
         ("ARDUINO", 100),
         "ARDUINO_ARCH_HC32",
+        *get_version_defines(),
     ],
 
     # c/c++ include paths

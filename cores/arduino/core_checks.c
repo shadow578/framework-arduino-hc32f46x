@@ -1,4 +1,5 @@
 #include "drivers/panic/panic.h"
+#include "core_util.h"
 
 #ifdef __CORE_DEBUG
 #warning "'__CORE_DEBUG' is defined, HC32 Arduino Core Debug is Enabled"
@@ -30,4 +31,12 @@
 
 #ifdef ENABLE_MICROS
 #warning "ENABLE_MICROS is deprecated. micros() is always available"
+#endif
+
+#if !defined(ARDUINO_CORE_MAJOR) || !defined(ARDUINO_CORE_MINOR) || !defined(ARDUINO_CORE_PATCH)
+#error "ARDUINO_CORE_MAJOR, ARDUINO_CORE_MINOR, ARDUINO_CORE_PATCH must be defined by the builder"
+#endif
+
+#if ARDUINO_CORE_VERSION_INT < GET_VERSION_INT(1, 0, 0)
+#error "expected ARDUINO_CORE_VERSION_INT >= 1.0.0"
 #endif

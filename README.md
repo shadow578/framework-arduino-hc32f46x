@@ -1,5 +1,17 @@
 # PlatformIO Arduino support for HUADA HC32F460 Series
 
+<p align="center">
+    <a href="" alt="Version">
+        <img src="https://img.shields.io/github/package-json/v/shadow578/framework-arduino-hc32f46x" />
+    </a>
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/shadow578/framework-arduino-hc32f46x" />
+    </a>
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml">
+        <img src="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml/badge.svg?branch=main" alt="ci status">
+    </a>
+</p>
+
 This repository contains Arduino framework for the [HUADA HC32F460 Series](https://www.hdsc.com.cn/Category83-1487), for use with the [the hc32f46x platform](https://github.com/shadow578/platform-hc32f46x).
 
 Primary usage is for [Marlin](https://github.com/shadow578/Marlin-H32), tho other use cases should work too.
@@ -160,6 +172,34 @@ CORE_ASSERT_FAIL("this is a fail message"); // assert always fails
 
 the core includes a `HardFault` handler that prints information about the fault using the panic mechanism.
 For more information about the fault handler, see [HardFault.md](docs/HardFault.md).
+
+# `app_config.h` to replace `build_flags`
+
+the core allows applications to define a `app_config.h` file, which is automatically included for all source files.
+this file can be used to define the same options as `build_flags`, but allows for more complex configurations.
+
+to use `app_config.h`, either create a file with that name in the root of your project, or specify a custom path in the `platformio.ini` file.
+
+```ini
+[env:hc32f460]
+board_build.app_config = src/my_app_config.h
+# ...
+```
+
+# Checking the Arduino Core Version
+
+the current version of the arduino core can be accessed using the `ARDUINO_CORE_MAJOR`, `ARDUINO_CORE_MINOR`, and `ARDUINO_CORE_PATCH` macros.
+Additionally, the helper macros `GET_VERSION_INT(major, minor, patch)` and `ARDUINO_CORE_VERSION_INT` are available in `core_util.h`.
+
+example:
+
+```cpp
+#include <core_util.h>
+
+#if ARDUINO_CORE_VERSION_INT < GET_VERSION_INT(1, 0, 0)
+  #error "expected Arduino core >= 1.0.0"
+#endif
+```
 
 # Credits
 
