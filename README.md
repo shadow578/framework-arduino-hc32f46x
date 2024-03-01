@@ -1,5 +1,17 @@
 # PlatformIO Arduino support for HUADA HC32F460 Series
 
+<p align="center">
+    <a href="" alt="Version">
+        <img src="https://img.shields.io/github/package-json/v/shadow578/framework-arduino-hc32f46x" />
+    </a>
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/shadow578/framework-arduino-hc32f46x" />
+    </a>
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml">
+        <img src="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml/badge.svg?branch=main" alt="ci status">
+    </a>
+</p>
+
 This repository contains Arduino framework for the [HUADA HC32F460 Series](https://www.hdsc.com.cn/Category83-1487), for use with the [the hc32f46x platform](https://github.com/shadow578/platform-hc32f46x).
 
 Primary usage is for [Marlin](https://github.com/shadow578/Marlin-H32), tho other use cases should work too.
