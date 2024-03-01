@@ -170,7 +170,7 @@ public:
      * @brief get the internal data buffer
      * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
      */
-    volatile uint8_t *getBuffer()
+    volatile TElement *getBuffer()
     {
         return this->buffer;
     }
@@ -195,7 +195,7 @@ private:
     /**
      * @brief the data buffer
      */
-    volatile uint8_t *buffer;
+    volatile TElement *buffer;
 
     /**
      * @brief the length of the data buffer
