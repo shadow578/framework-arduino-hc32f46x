@@ -46,9 +46,6 @@ extern "C"{
 #include "wiring_constants.h"
 #include "yield.h"
 
-  /* system functions */
-int main( void );
-
   /* sketch */
 void setup( void ) ;
 void loop( void ) ;
