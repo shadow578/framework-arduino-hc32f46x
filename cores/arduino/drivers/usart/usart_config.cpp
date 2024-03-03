@@ -3,16 +3,6 @@
 #include "../../WVariant.h"
 #include "../../core_hooks.h"
 
-#ifndef SERIAL_BUFFER_SIZE
-#define SERIAL_BUFFER_SIZE 64
-#endif
-#ifndef SERIAL_TX_BUFFER_SIZE
-#define SERIAL_TX_BUFFER_SIZE SERIAL_BUFFER_SIZE
-#endif
-#ifndef SERIAL_RX_BUFFER_SIZE
-#define SERIAL_RX_BUFFER_SIZE SERIAL_BUFFER_SIZE
-#endif
-
 //
 // USART configurations
 //
@@ -42,8 +32,6 @@ usart_config_t USART1_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
     #ifdef USART_RX_DMA_SUPPORT
@@ -82,8 +70,6 @@ usart_config_t USART2_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
     #ifdef USART_RX_DMA_SUPPORT
@@ -122,8 +108,6 @@ usart_config_t USART3_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
     #ifdef USART_RX_DMA_SUPPORT
@@ -162,8 +146,6 @@ usart_config_t USART4_config = {
         },
     },
     .state = {
-        .rx_buffer = new RingBuffer<uint8_t>(SERIAL_RX_BUFFER_SIZE),
-        .tx_buffer = new RingBuffer<uint8_t>(SERIAL_TX_BUFFER_SIZE),
         .rx_error = usart_receive_error_t::None,
     },
     #ifdef USART_RX_DMA_SUPPORT

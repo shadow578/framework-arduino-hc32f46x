@@ -23,6 +23,16 @@
 #include "usart_config.h"
 #include "../../core_types.h"
 
+#ifndef SERIAL_BUFFER_SIZE
+#define SERIAL_BUFFER_SIZE 64
+#endif
+#ifndef SERIAL_TX_BUFFER_SIZE
+#define SERIAL_TX_BUFFER_SIZE SERIAL_BUFFER_SIZE
+#endif
+#ifndef SERIAL_RX_BUFFER_SIZE
+#define SERIAL_RX_BUFFER_SIZE SERIAL_BUFFER_SIZE
+#endif
+
 class Usart : public HardwareSerial
 {
 public:
@@ -31,8 +41,16 @@ public:
    * @param config pointer to the usart configuration struct
    * @param tx_pin gpio pin number for tx function
    * @param rx_pin gpio pin number for rx function
+   * @param rx_buffer_size size of the rx buffer
+   * @param tx_buffer_size size of the tx buffer
    */
-  Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin);
+  Usart(struct usart_config_t *config, 
+        gpio_pin_t tx_pin, 
+        gpio_pin_t rx_pin, 
+        size_t rx_buffer_size = SERIAL_RX_BUFFER_SIZE, 
+        size_t tx_buffer_size = SERIAL_TX_BUFFER_SIZE);
+
+  ~Usart();
 
   void begin(uint32_t baud);
   void begin(uint32_t baud, uint16_t config);

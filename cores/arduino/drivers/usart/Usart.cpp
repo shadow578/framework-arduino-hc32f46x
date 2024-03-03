@@ -385,7 +385,7 @@ void Usart::disableRxDma()
 //
 // Usart class implementation
 //
-Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin)
+Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin, size_t rx_buffer_size, size_t tx_buffer_size)
 {
     CORE_ASSERT(config != NULL, "USART() config cannot be NULL");
     ASSERT_GPIO_PIN_VALID(tx_pin, "USART() tx_pin");
@@ -394,10 +394,27 @@ Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin
     this->config = config;
     this->tx_pin = tx_pin;
     this->rx_pin = rx_pin;
+    
+    // initialize and assign rx and tx buffers
+    this->rxBuffer = new RingBuffer<uint8_t>(rx_buffer_size);
+    this->txBuffer = new RingBuffer<uint8_t>(tx_buffer_size);
 
-    // unpack rx and tx buffers from usart config
-    this->rxBuffer = config->state.rx_buffer;
-    this->txBuffer = config->state.tx_buffer;
+    this->config->state.rx_buffer = this->rxBuffer;
+    this->config->state.tx_buffer = this->txBuffer;
+}
+
+Usart::~Usart()
+{
+    // free rx and tx buffers
+    delete this->rxBuffer;
+    delete this->txBuffer;
+
+    // unassign rx and tx buffers
+    this->rxBuffer = nullptr;
+    this->txBuffer = nullptr;
+
+    this->config->state.rx_buffer = nullptr;
+    this->config->state.tx_buffer = nullptr;
 }
 
 void Usart::begin(uint32_t baud)

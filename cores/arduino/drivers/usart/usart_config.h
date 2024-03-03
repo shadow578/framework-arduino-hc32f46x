@@ -148,11 +148,13 @@ struct usart_runtime_state_t
 {
     /**
      * @brief USART receive buffer
+     * @note allocated and freed in Usart class (constructor and destructor methods)
      */
     RingBuffer<uint8_t> *rx_buffer;
 
     /**
      * @brief USART transmit buffer
+     * @note allocated and freed in Usart class (constructor and destructor methods)
      */
     RingBuffer<uint8_t> *tx_buffer;
 
