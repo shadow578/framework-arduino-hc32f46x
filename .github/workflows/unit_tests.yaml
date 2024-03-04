@@ -1,4 +1,4 @@
-name: CI
+name: CI - Unit Tests
 
 on:
   push:
@@ -9,36 +9,7 @@ on:
       - main
 
 jobs:
-  # smoke-test build
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      # checkout the repository
-      - uses: actions/checkout@v4
-      
-      # enable caching of pip and platformio
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
-      
-      # install python
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      # install platformio
-      - name: Install PlatformIO core
-        run: pip install --upgrade platformio
-      
-      # build the 'blink' environment
-      - name: Build 'blink' environment
-        run: pio run --environment blink
-
-  # unit tests
+  # run unit tests
   test:
     runs-on: ubuntu-latest
 
@@ -68,17 +39,17 @@ jobs:
       - name: Install PlatformIO core
         run: pip install --upgrade platformio
       
-      # create .pio/test/ folder
-      - name: Create .pio/test folder
-        run: mkdir -p .pio/test
+      # create test/.pio/test/ folder
+      - name: Create test/.pio/test folder
+        run: mkdir -p test/.pio/test
 
       # run unit tests using 'test-native' environment
       - name: Run Unit Tests (native)
-        run: pio test --environment test_native --junit-output-path '.pio/test/native.xml'
+        run: pio test --project-dir ./test --environment native --junit-output-path 'test/.pio/test/native.xml'
 
       # upload test results
       - uses: test-summary/action@v2
         with:
-          paths: ".pio/test/*.xml"
+          paths: "test/.pio/test/*.xml"
           show: "all"
         if: always()

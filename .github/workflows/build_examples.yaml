@@ -1,0 +1,77 @@
+name: CI - Build examples
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # generate the build matrix
+  gen_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      examples_matrix: ${{ steps.gen_matrix.outputs.matrix }}
+    steps:
+      # checkout the repository
+      - uses: actions/checkout@v4
+
+      # generate the build matrix, containing all subdirectories in the 'examples' directory
+      # that contain a 'platformio.ini' file
+      - name: Generate build matrix
+        id: gen_matrix
+        run: |
+          # Get all subdirectories containing platformio.ini in the ./example directory
+          subdirectories=$(find ./examples -type f -name "platformio.ini" -exec dirname {} \; | sort -u)
+
+          # Convert subdirectories to JSON array
+          json_array="["
+          for subdir in $subdirectories; do
+              json_array+="\"$subdir\", "
+          done
+          json_array="${json_array%, }]"
+
+          echo "$json_array"
+          echo "matrix=$json_array" >> $GITHUB_OUTPUT
+
+  # build the CI environment in all examples
+  build:
+    runs-on: ubuntu-latest
+    needs: gen_matrix
+
+    # run all examples in a matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        example: ${{ fromJson(needs.gen_matrix.outputs.examples_matrix) }}
+
+    steps:
+      # checkout the repository
+      - uses: actions/checkout@v4
+      
+      # enable caching of pip and platformio
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      
+      # install python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      # install platformio
+      - name: Install PlatformIO core
+        run: pip install --upgrade platformio
+      
+      # print the platformio.ini file path
+      - name: Print matrix value for 'example'
+        run: echo ${{ matrix.example }}
+
+      # build the 'CI' environment
+      - name: Build 'ci' environment
+        run: pio run --project-dir ${{ matrix.example }} --environment ci
