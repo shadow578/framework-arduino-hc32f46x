@@ -7,8 +7,11 @@
     <a href="https://github.com/shadow578/framework-arduino-hc32f46x/pulse" alt="Activity">
         <img src="https://img.shields.io/github/commit-activity/m/shadow578/framework-arduino-hc32f46x" />
     </a>
-    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml">
-        <img src="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/ci.yaml/badge.svg?branch=main" alt="ci status">
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/build_examples.yaml">
+        <img src="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/build_examples.yaml/badge.svg?branch=main" alt="ci status">
+    </a>
+    <a href="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/unit_tests.yaml">
+        <img src="https://github.com/shadow578/framework-arduino-hc32f46x/actions/workflows/unit_tests.yaml/badge.svg?branch=main" alt="ci status">
     </a>
 </p>
 
