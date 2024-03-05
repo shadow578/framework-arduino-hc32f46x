@@ -124,18 +124,45 @@ TEST(RingBuffer, OverwriteIfForced)
   EXPECT_FALSE(rb->isEmpty()) << "Buffer should not be empty after 4 pushes";
 
   // buffer is now full, pushing with force should return true and overwrite the oldest element
-  EXPECT_TRUE(rb->push(9, /*force*/ true)) << "Push should return true when buffer is full and forced";
+  EXPECT_TRUE(rb->push(8, /*force*/ true)) << "Push should return true when buffer is full and forced";
+
+  // pushing should also set 'didOverrun' to true
+  bool didOverrun;
+  EXPECT_TRUE(rb->push(9, /*force*/ true, didOverrun)) << "Push should return true when buffer is full and forced";
+  EXPECT_TRUE(didOverrun) << "Push should set didOverrun to true when buffer is full and forced";
 
   // buffer should still have 4 elements
-  // FIXME: force-push incorrectly increases count
-  // EXPECT_EQ(rb->count(), 4) << "Count should be 4 after forced push";
+  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after forced push";
 
   uint8_t actual;
-  for (const uint8_t expected : {9, 1, 2, 3})
+  for (const uint8_t expected : {2, 3, 8, 9})
   {
     EXPECT_TRUE(rb->pop(actual)) << "Pop should return true when buffer is not empty";
     EXPECT_EQ(actual, expected) << "Pop should return the pushed value";
   }
+
+  delete rb;
+}
+
+
+/**
+ * test _update_write_index updates the write index and count normally
+ * and when overrunning 
+ */
+TEST(RingBuffer, UpdateWriteIndex)
+{
+  auto rb = new RingBuffer<uint8_t>(4);
+
+  // writing 4 elements with _update_write_index should increase the count to 4
+  // it should also not overrun, so should return false
+  EXPECT_FALSE(rb->_update_write_index(4)) << "Update write index should not overrun when writing 4 elements";
+  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 4 elements";
+
+  // after writing 1 more element with _update_write_index:
+  // - the count() remains at 4
+  // - the function should return true, indicating that it overran
+  EXPECT_TRUE(rb->_update_write_index(1)) << "Update write index should overrun when writing 1 more element";
+  EXPECT_EQ(rb->count(), 4) << "Count should still be 4 after writing 1 more element with overrun";
 
   delete rb;
 }

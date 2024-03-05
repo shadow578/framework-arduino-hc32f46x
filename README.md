@@ -34,12 +34,66 @@ the core offers the following multiple options, which can be set in `platformio.
 
 ## Hardware Serial Options
 
-| Option                   | Description                                                          |
-| ------------------------ | -------------------------------------------------------------------- |
-| `SERIAL_BUFFER_SIZE`     | set the size of both the RX and TX buffer. default value is `64`     |
-| `SERIAL_TX_BUFFER_SIZE`  | set the size of the TX buffer. default value is `SERIAL_BUFFER_SIZE` |
-| `SERIAL_RX_BUFFER_SIZE`  | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE` |
-| `DISABLE_SERIAL_GLOBALS` | disable `Serial<n>` global variables.                                |
+| Option                           | Description                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| `SERIAL_BUFFER_SIZE`             | set the size of both the RX and TX buffer. default value is `64`                    |
+| `SERIAL_TX_BUFFER_SIZE`          | set the size of the TX buffer. default value is `SERIAL_BUFFER_SIZE`                |
+| `SERIAL_RX_BUFFER_SIZE`          | set the size of the RX buffer. default value is `SERIAL_BUFFER_SIZE`                |
+| `DISABLE_SERIAL_GLOBALS`         | disable `Serial<n>` global variables.                                               |
+| `USART_AUTO_CLKDIV_OS_CONFIG`    | enable automatic clock divider and oversampling configuration in the `Usart` driver |
+| `USART_RX_DMA_SUPPORT`           | enable support for RX DMA in the `Usart` driver                                     |
+| `USART_RX_ERROR_COUNTERS_ENABLE` | enable error counters in the `Usart` driver.                                        |
+
+### `USART_AUTO_CLKDIV_OS_CONFIG` Option
+
+when defining the `USART_AUTO_CLKDIV_OS_CONFIG` option, the `Usart` driver will automatically configure the clock divider and oversampling settings based on the baudrate and the system clock frequency in such a way that the error to the actually achieved baudrate is minimized.
+this decreases the chance of communication errors due to a mismatch between the configured and the actual baudrate, at the cost of about 560 bytes of flash space.
+
+not enabling this option may limit the values that can be used for the baudrate when using the 'traditional' `Usart::begin()` functions.
+when using `Usart::begin(uint32_t baud, const stc_usart_uart_init_t *config)`, this option is not required, as the clock divider and oversampling settings can be set manually.
+
+> [!NOTE]
+> this option is opt-in to keep backwards compatibility.
+> it is recommended to enable this option if you can afford the flash space.
+
+### `USART_RX_DMA_SUPPORT` Option
+
+when defining the `USART_RX_DMA_SUPPORT` option, the `Usart` driver class will support receiving data using DMA.
+to use this feature, call `Usart::enableRxDma()` before calling `Usart::begin()`.
+you must pass a unused DMA peripheral and channel to `Usart::enableRxDma()`. failing to do so may result in undefined behaviour.
+
+> [!NOTE]
+> enabling this option will increase the flash usage by about 1KB.
+
+#### example usage:
+
+platformio.ini:
+
+```ini
+build_flags      =
+  -D USART_RX_DMA_SUPPORT # enable RX DMA support
+```
+
+main.cpp:
+
+```cpp
+#include <Arduino.h>
+
+void setup()
+{
+    Serial.enableRxDma(M4_DMA1, DmaCh0); // enable RX DMA w/ DMA1, channel 0
+    Serial.begin(115200); // start serial
+    // ...
+}
+
+void loop() {}
+```
+
+### `USART_RX_ERROR_COUNTERS_ENABLE` Option
+
+when defining the `USART_RX_ERROR_COUNTERS_ENABLE` option, the `Usart` driver class will keep track of the number of framing, parity, overrun and dropped data errors.
+
+the counters can be accessed using the `Usart::getFramingErrorCount()`, `Usart::getParityErrorCount()`, `Usart::getOverrunErrorCount()` and `Usart::getDroppedDataErrorCount()` functions.
 
 ## Miscellanous Options
 
