@@ -3,6 +3,7 @@
 #include "../drivers/sysclock/sysclock_util.h"
 #include "../drivers/sysclock/systick.h"
 #include "../drivers/panic/fault_handlers.h"
+#include "../drivers/interrupts/interrupts.h"
 #include "../core_debug.h"
 #include "../core_hooks.h"
 #include <hc32_ddl.h>
@@ -53,6 +54,9 @@ void core_init()
     // - call user setup hook
     core_hook_sysclock_init();
     update_system_clock_frequencies();
+
+    // initialize interrupts driver and dynamic vector table
+    interrupts_init();
 
     // initialize systick
     systick_init();

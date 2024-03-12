@@ -2,10 +2,6 @@
 #include <hc32_ddl.h>
 #include "../../core_debug.h"
 
-#define IRQN_AA_FIRST_IRQN 0                                                 // IRQ0 is the first auto-assignable IRQn
-#define IRQN_AA_AVAILABLE_COUNT 128                                          // IRQ0 - IRQ127 are available for auto-assignment (all normal IRQn)
-#define IRQN_AA_LAST_IRQN (IRQN_AA_FIRST_IRQN + IRQN_AA_AVAILABLE_COUNT - 1) // last IRQn available for auto-assignment
-
 #ifdef __cplusplus
 extern "C"
 {

@@ -77,6 +77,7 @@ env.Append(
     CPPDEFINES=[
         ("ARDUINO", 100),
         "ARDUINO_ARCH_HC32",
+        ("DDL_INTERRUPTS_CUSTOM_HANDLER_MANAGEMENT", 1),
         *get_version_defines(),
     ],
 
