@@ -96,21 +96,15 @@ en_result_t enIrqRegistration(const stc_irq_regi_conf_t *pstcIrqRegiConf)
   const int irqn = static_cast<int>(pstcIrqRegiConf->enIntSrc);
   CORE_ASSERT(irqn >= 0 && irqn < USEABLE_IRQ_COUNT, "IRQn out of range", return ErrorInvalidParameter);
 
-  // TODO: some kind of missing assert : "IRQ032~127 whether out of range" (?)
-  // if (((((pstcIrqRegiConf->enIntSrc / 32) * 6 + 32) > pstcIrqRegiConf->enIRQn) ||
-  //     (((pstcIrqRegiConf->enIntSrc / 32) * 6 + 37) < pstcIrqRegiConf->enIRQn)) &&
-  //    (pstcIrqRegiConf->enIRQn >= 32))
-  //{
-  //    enRet = ErrorInvalidParameter;
-  //}
-  // =
-  // (
-  //   (((pstcIrqRegiConf->enIntSrc / 32) * 6 + 32) > pstcIrqRegiConf->enIRQn)
-  //   OR
-  //   (((pstcIrqRegiConf->enIntSrc / 32) * 6 + 37) < pstcIrqRegiConf->enIRQn)
-  // )
-  // AND
-  // (pstcIrqRegiConf->enIRQn >= 32)
+  // IRQ#0~31 can select all sources, IRQ#32~127 have a limited selection
+  if (irqn >= 32 && irqn <= 127)
+  {
+    auto intSrc = pstcIrqRegiConf->enIntSrc;
+    CORE_ASSERT((((pstcIrqRegiConf->enIntSrc / 32) * 6 + 32) <= pstcIrqRegiConf->enIRQn) &&
+                    (((pstcIrqRegiConf->enIntSrc / 32) * 6 + 37) >= pstcIrqRegiConf->enIRQn),
+                "invalid source selection for IRQ032~127", return ErrorInvalidParameter);
+    CORE_ASSERT()
+  }
 
   // get the interrupt source selection register
   stc_intc_sel_field_t *intSel = get_interrupt_selection_register(irqn);
