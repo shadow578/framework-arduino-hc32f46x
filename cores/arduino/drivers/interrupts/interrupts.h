@@ -37,6 +37,16 @@ extern "C"
    */
   bool interrupt_resign(const int irqn);
 
+  /**
+   * @brief automatically assign IRQn for the specified source
+   * @param irqn IRQn to assign
+   * @param source interrupt source the IRQn will be used for. INT_MAX if not specified
+   * @return true if successful, false if failed
+   * @note new version of _irqn_aa_get
+   * @note automatically ensures the IRQ#n can be used for a interrupt of the specified source
+   */
+  bool irqn_auto_assign_ex(IRQn_Type &irqn, const en_int_src_t source);
+
 #ifdef __cplusplus
 }
 #endif

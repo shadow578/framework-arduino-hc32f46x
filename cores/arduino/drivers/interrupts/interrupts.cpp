@@ -39,6 +39,35 @@ static inline volatile stc_intc_sel_field_t *get_interrupt_selection_register(co
   return reinterpret_cast<volatile stc_intc_sel_field_t *>(reinterpret_cast<uint32_t>(&M4_INTC->SEL0) + (sizeof(stc_intc_sel_field_t) * irqn));
 }
 
+/**
+ * @brief check if the specified source is valid for the specified IRQn
+ * @param irqn IRQ#n
+ * @param source interrupt source
+ * @return true if the source is valid for the IRQn, false otherwise
+ * @note only supports IRQ#0~127
+ */
+static bool is_valid_source_for_irqn(const int irqn, const en_int_src_t source)
+{
+  // IRQ < 0 and IRQ > 128 are invalid for the driver
+  // IRQ#128-144 only support shared interrupts using a bit mask, so we don't support them
+  if (irqn < 0 || (irqn >= 128 /*&& irqn <= 144*/))
+  {
+    return false;
+  }
+
+  // IRQ#32~127 have a limited selection
+  if (irqn >= 32 && irqn <= 127)
+  {
+    // see reference manual, section 10.3.2 "Interrupt Event Request Sequence Number"
+    // and table 10-2 "Interrupt Event Request Sequence Number and Selection", column "NVIC Vector 32~127"
+    // for details on what sources can be selected for IRQ#32~127
+    return (((source / 32) * 6 + 32) <= irqn) && (((source / 32) * 6 + 37) >= irqn);
+  }
+
+  // IRQ#0~31 can select all sources
+  return true;
+}
+
 void interrupts_init()
 {
   // copy the current vector table to RAM
@@ -96,6 +125,28 @@ bool interrupt_resign(const int irqn)
   return true;
 }
 
+bool irqn_auto_assign_ex(IRQn_Type &irqn, const en_int_src_t source)
+{
+  // find the next irq handler #n that is not already assigned
+  // where n is the irq number and 0 <= n <= USEABLE_IRQ_COUNT
+  for (int i = 0; i < USEABLE_IRQ_COUNT; i++)
+  {
+    if (ram_vector_table.irqs[i] == no_handler)
+    {
+      // this IRQ#n is free, check it can be used for the specified source
+      // skip the check if the source is INT_MAX
+      if (source == INT_MAX || is_valid_source_for_irqn(i, source))
+      {
+        irqn = static_cast<IRQn_Type>(i);
+        return true;
+      }
+    }
+  }
+
+  // no irq available
+  return false;
+}
+
 //
 // compatibility layer for the old interrupt API
 //
@@ -109,15 +160,10 @@ en_result_t enIrqRegistration(const stc_irq_regi_conf_t *pstcIrqRegiConf)
   const int irqn = static_cast<int>(pstcIrqRegiConf->enIRQn);
   CORE_ASSERT(irqn >= 0 && irqn < USEABLE_IRQ_COUNT, "IRQn out of range", return ErrorInvalidParameter);
 
-  // IRQ#0~31 can select all sources, IRQ#32~127 have a limited selection
-  if (irqn >= 32 && irqn <= 127)
-  {
-    auto intSrc = pstcIrqRegiConf->enIntSrc;
-    CORE_ASSERT((((pstcIrqRegiConf->enIntSrc / 32) * 6 + 32) <= pstcIrqRegiConf->enIRQn) &&
-                    (((pstcIrqRegiConf->enIntSrc / 32) * 6 + 37) >= pstcIrqRegiConf->enIRQn),
-                "invalid source selection for IRQ032~127", return ErrorInvalidParameter);
-    CORE_ASSERT()
-  }
+  // check if the source is valid for the IRQn
+  const en_int_src_t source = pstcIrqRegiConf->enIntSrc;
+  CORE_ASSERT(is_valid_source_for_irqn(irqn, source), "invalid source selection for IRQn",
+              return ErrorInvalidParameter);
 
   // get the interrupt source selection register
   auto intSel = get_interrupt_selection_register(irqn);
@@ -163,19 +209,7 @@ en_result_t enIrqResign(IRQn_Type enIRQn)
 
 en_result_t _irqn_aa_get(IRQn_Type &irqn)
 {
-  // find the next irq handler #n that is not already assigned
-  // where n is the irq number and 0 <= n <= USEABLE_IRQ_COUNT
-  for (int i = 0; i < USEABLE_IRQ_COUNT; i++)
-  {
-    if (ram_vector_table.irqs[i].handler == no_handler)
-    {
-      irqn = static_cast<IRQn_Type>(i);
-      return Ok;
-    }
-  }
-
-  // no free irq available
-  return Error;
+  return irqn_auto_assign_ex(irqn, INT_MAX) ? Ok : Error;
 }
 
 en_result_t _irqn_aa_resign(IRQn_Type &irqn)
