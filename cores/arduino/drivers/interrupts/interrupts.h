@@ -3,6 +3,12 @@
 #include <hc32_ddl.h>
 #include <startup.h>
 
+/**
+ * @brief number of usable IRQ#n
+ * @note only IRQn 0-127 can be used by the driver
+ */
+#define USEABLE_IRQ_COUNT 128
+
 #ifdef __cplusplus
 extern "C"
 {
