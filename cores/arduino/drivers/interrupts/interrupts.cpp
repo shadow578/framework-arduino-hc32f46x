@@ -2,6 +2,13 @@
 #include "../../core_debug.h"
 #include <algorithm>
 
+void __on_default_handler()
+{
+    panic("__default_handler called");
+    while (true)
+        ;
+}
+
 /**
  * @brief default value for interrupt source selection register
  */
@@ -25,10 +32,11 @@ __attribute__((aligned(1024))) volatile vector_table_t ram_vector_table;
  * @brief get the interrupt selection register for the specified IRQn
  * @param irqn IRQ#n
  * @return pointer to the interrupt selection register
+ * @note only valid for IRQ#0-127
  */
-static inline stc_intc_sel_field_t *get_interrupt_selection_register(const int irqn)
+static inline volatile stc_intc_sel_field_t *get_interrupt_selection_register(const int irqn)
 {
-  return static_cast<stc_intc_sel_field_t *>(&M4_INTC->SEL0 + (sizeof(stc_intc_sel_field_t) * irqn));
+  return reinterpret_cast<volatile stc_intc_sel_field_t *>(reinterpret_cast<uint32_t>(&M4_INTC->SEL0) + (sizeof(stc_intc_sel_field_t) * irqn));
 }
 
 /**
@@ -64,11 +72,11 @@ void interrupts_init()
 {
   // copy the current vector table to RAM
   vector_table_t *current_vt = (vector_table_t *)SCB->VTOR;
-  vector_table_t *target_vt = &ram_vector_table;
-  std::copy(current_vt, current_vt + sizeof(vector_table_t), target_vt);
+  vector_table_t *target_vt = (vector_table_t *) &ram_vector_table;
+  memcpy(target_vt, current_vt, sizeof(vector_table_t));
 
   // check the copy was successful
-  CORE_ASSERT(std::equal(current_vt, current_vt + sizeof(vector_table_t), target_vt), "vector table copy failed!",
+  CORE_ASSERT(memcmp(target_vt, current_vt, sizeof(vector_table_t)) == 0, "vector table copy failed!",
               return);
 
   // check the target vector table address is valid:
@@ -91,7 +99,7 @@ int interrupt_register(const en_int_src_t source, func_ptr_t handler)
 
   // get next free IRQ#n
   IRQn_Type irqn;
-  CORE_ASSERT(_irqn_aa_get(irqn) == Ok, "no free IRQn available", return -1);
+  CORE_ASSERT(irqn_auto_assign_ex(irqn, source), "no free IRQn available", return -1);
 
   // register the interrupt
   stc_irq_regi_conf_t irqRegiConf = {
@@ -105,10 +113,11 @@ int interrupt_register(const en_int_src_t source, func_ptr_t handler)
 
 bool interrupt_resign(const int irqn)
 {
-  CORE_ASSERT(irqn >= 0 && irqn < VECTOR_TABLE_IRQ_COUNT, "IRQn out of range", return false);
+  CORE_ASSERT(irqn >= 0 && irqn < USEABLE_IRQ_COUNT, "IRQn out of range", return false);
 
-  enIrqResign(static_cast<IRQn_Type>(irqn));
-  _irqn_aa_resign(static_cast<IRQn_Type>(irqn));
+  IRQn_Type iirqn = static_cast<IRQn_Type>(irqn);
+  enIrqResign(iirqn);
+  _irqn_aa_resign(iirqn);
   return true;
 }
 
@@ -118,7 +127,7 @@ bool irqn_auto_assign_ex(IRQn_Type &irqn, const en_int_src_t source)
   // where n is the irq number and 0 <= n <= USEABLE_IRQ_COUNT
   for (int i = 0; i < USEABLE_IRQ_COUNT; i++)
   {
-    if (ram_vector_table.irqs[i].handler == no_handler)
+    if (ram_vector_table.irqs[i] == no_handler)
     {
       // this IRQ#n is free, check it can be used for the specified source
       // skip the check if the source is INT_MAX
@@ -144,21 +153,22 @@ en_result_t enIrqRegistration(const stc_irq_regi_conf_t *pstcIrqRegiConf)
   CORE_ASSERT(pstcIrqRegiConf->pfnCallback != NULL, "pstcIrqRegiConf->pfnCallback is NULL",
               return ErrorInvalidParameter);
 
-  const int irqn = static_cast<int>(pstcIrqRegiConf->enIntSrc);
+  const int irqn = static_cast<int>(pstcIrqRegiConf->enIRQn);
   CORE_ASSERT(irqn >= 0 && irqn < USEABLE_IRQ_COUNT, "IRQn out of range", return ErrorInvalidParameter);
 
   // check if the source is valid for the IRQn
-  CORE_ASSERT(is_valid_source_for_irqn(irqn, pstcIrqRegiConf->enIntSrc), "invalid source selection for IRQn",
+  const en_int_src_t source = pstcIrqRegiConf->enIntSrc;
+  CORE_ASSERT(is_valid_source_for_irqn(irqn, source), "invalid source selection for IRQn",
               return ErrorInvalidParameter);
 
   // get the interrupt source selection register
-  stc_intc_sel_field_t *intSel = get_interrupt_selection_register(irqn);
+  auto intSel = get_interrupt_selection_register(irqn);
 
   // interrupt selection register should be the default value
   CORE_ASSERT(intSel->INTSEL == INTSEL_DEFAULT, "INTSEL is not at reset value", return ErrorUninitialized);
 
   // set the interrupt source selection
-  intSel->INTSEL = pstcIrqRegiConf->enIntSrc;
+  intSel->INTSEL = source;
 
   // set the handler in the vector table
   CORE_ASSERT(ram_vector_table.irqs[irqn] == no_handler, "IRQn handler already assigned", return ErrorUninitialized);
@@ -172,7 +182,7 @@ en_result_t enIrqResign(IRQn_Type enIRQn)
   CORE_ASSERT(irqn >= 0 && irqn < USEABLE_IRQ_COUNT, "IRQn out of range", return ErrorInvalidParameter);
 
   // get the interrupt source selection register
-  stc_intc_sel_field_t *intSel = get_interrupt_selection_register(irqn);
+  auto intSel = get_interrupt_selection_register(irqn);
 
   // interrupt selection register should NOT be the default value
   // if it is, no interrupt source was configured for this IRQn and we print a warning
@@ -180,8 +190,6 @@ en_result_t enIrqResign(IRQn_Type enIRQn)
   {
     CORE_DEBUG_PRINTF("cannot resign IRQ#%d: INTSEL already reset\n", irqn);
   }
-
-  // reset the interrupt source selection
   intSel->INTSEL = INTSEL_DEFAULT;
 
   // reset the handler in the vector table
@@ -191,6 +199,7 @@ en_result_t enIrqResign(IRQn_Type enIRQn)
     CORE_DEBUG_PRINTF("cannot resign IRQ#%d: handler already no_handler\n", irqn);
   }
   ram_vector_table.irqs[irqn] = no_handler;
+
   return Ok;
 }
 
@@ -203,7 +212,7 @@ en_result_t _irqn_aa_resign(IRQn_Type &irqn)
 {
   // do nothing since resigning the interrupt already frees the IRQn
   // only check that the interrupt was actually resigned before calling this function
-  CORE_ASSERT(ram_vector_table.irqs[irqn].handler != no_handler, "IRQ was not resigned before auto-assign resignment",
+  CORE_ASSERT(ram_vector_table.irqs[irqn] != no_handler, "IRQ was not resigned before auto-assign resignment",
               return Error);
   return Ok;
 }
