@@ -16,12 +16,6 @@ extern "C"
 #endif
 
   /**
-   * @brief vector table located in RAM, used by arduino core interrupt management
-   * @note do not use this directly unless you know what you are doing
-   */
-  //volatile vector_table_t ram_vector_table;
-
-  /**
    * @brief initialize dynamic vector table
    * @note called by arduino core init
    */
