@@ -75,3 +75,16 @@ jobs:
       # build the 'CI' environment
       - name: Build 'ci' environment
         run: pio run --project-dir ${{ matrix.example }} --environment ci
+  
+  # dummy job after all examples were build, 
+  all_build:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always()
+    steps:
+    - name: Decide whether the needed jobs succeeded or failed
+      uses: re-actors/alls-green@release/v1
+      with:
+        allowed-failures: docs, linters
+        allowed-skips: non-voting-flaky-job
+        jobs: ${{ toJSON(needs) }}
