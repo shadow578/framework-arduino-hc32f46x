@@ -189,6 +189,8 @@ inline en_result_t timera_pwm_start(timera_config_t *unit,
     // prepare unit config
     // (when initializing, a pointer to this is stored in the unit's state. so we need to allocate it on the heap)
     stc_timera_base_init_t *unit_config = new stc_timera_base_init_t;
+    CORE_ASSERT(unit_config != nullptr, "");
+
     unit_config->enClkDiv = timera_n_to_clk_div(divider);     // PCLK1 / divider
     unit_config->enCntMode = TimeraCountModeSawtoothWave;     // sawtooth wave mode
     unit_config->enCntDir = TimeraCountDirUp;                 // count up
