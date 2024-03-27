@@ -91,6 +91,10 @@ void interrupts_init()
   __DSB();
 
   __enable_irq();
+
+  // assert the VTOR was actually updated
+  // this assertion should always panic, even when core debug is disabled
+  CORE_ASSERT(SCB->VTOR == target_vt, "failed to update VTOR", panic(""))
 }
 
 int interrupt_register(const en_int_src_t source, func_ptr_t handler)
