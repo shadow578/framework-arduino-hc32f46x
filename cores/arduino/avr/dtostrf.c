@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../core_debug.h"
 
 char *dtostrf(double val, signed char width, unsigned char prec, char *sout)
 {
@@ -108,6 +109,8 @@ char *dtostrf(double val, signed char width, unsigned char prec, char *sout)
     if (negative == 0)
     {
       char *tmp = (char*)malloc(strlen(sout) + 1);
+      CORE_ASSERT(tmp != NULL, "");
+
       strcpy(tmp, sout);
       strcpy(sout, fmt);
       strcat(sout, tmp);

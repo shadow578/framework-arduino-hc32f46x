@@ -398,6 +398,8 @@ Usart::Usart(struct usart_config_t *config, gpio_pin_t tx_pin, gpio_pin_t rx_pin
     // initialize and assign rx and tx buffers
     this->rxBuffer = new RingBuffer<uint8_t>(rx_buffer_size);
     this->txBuffer = new RingBuffer<uint8_t>(tx_buffer_size);
+    CORE_ASSERT(this->rxBuffer != nullptr, "");
+    CORE_ASSERT(this->txBuffer != nullptr, "");
 
     this->config->state.rx_buffer = this->rxBuffer;
     this->config->state.tx_buffer = this->txBuffer;

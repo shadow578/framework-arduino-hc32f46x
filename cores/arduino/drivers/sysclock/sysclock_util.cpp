@@ -142,4 +142,39 @@ void power_mode_update(uint32_t newSystemClock, bool preClockSwitchOver)
             panic("power mode switch failed");
         }
     }
+
+    if (!preClockSwitchOver)
+    {
+        // update GPIO wait cycles
+        // see reference manual Section 9.4.8 "Public Control Register (PCCR)"
+        uint8_t newRDWT;
+        if (newSystemClock <= 42000000)
+        {
+            // <= 42 MHz
+            newRDWT = 0;
+        }
+        else if (newSystemClock < 84000000)
+        {
+            // 42 - 84 MHz
+            newRDWT = 1;
+        }
+        else if (newSystemClock < 126000000)
+        {
+            // 84 - 126 MHz
+            newRDWT = 2;
+        }
+        else
+        {
+            // freq >= 126 MHz
+            newRDWT = 3;
+        }
+
+        // update register if different
+        if (M4_PORT->PCCR_f.RDWT != newRDWT)
+        {
+            PORT_Unlock();
+            M4_PORT->PCCR_f.RDWT = newRDWT;
+            PORT_Lock();
+        }
+    }
 }

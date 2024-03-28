@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "core_debug.h"
 
 /**
  * @brief generic ring buffer
@@ -15,6 +16,8 @@ public:
     RingBuffer(size_t capacity)
     {
         this->buffer = new TElement[capacity];
+        CORE_ASSERT(this->buffer != nullptr, "");
+
         this->_capacity = capacity;
         clear();
     }
