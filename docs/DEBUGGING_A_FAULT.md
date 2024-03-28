@@ -3,6 +3,10 @@
 the arduino core includes a `HardFault` handler that prints information about the fault using the panic mechanism.
 using the handler, information about the fault and what caused it can be extracted from the mcu.
 
+> [!TIP]
+> the hardfault format used by the arduino core is supported by [shadow578/CrashAlyzer](https://github.com/shadow578/CrashAlyzer/).
+
+
 ## Determining the Fault Cause
 
 the fault cause can be determined by analysing the `FSR / FAR` section of the output.
