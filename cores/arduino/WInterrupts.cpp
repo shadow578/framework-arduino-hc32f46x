@@ -147,6 +147,8 @@ inline void insert_pin_to_irqn_mapping(gpio_pin_t pin, IRQn_Type irqn)
 {
     // create new node
     pin_to_irqn_mapping_t *node = new pin_to_irqn_mapping_t;
+    CORE_ASSERT(node != nullptr, "");
+
     node->pin = pin;
     node->irqn = irqn;
     node->next = NULL;
