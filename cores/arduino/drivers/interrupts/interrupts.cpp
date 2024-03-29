@@ -2,11 +2,59 @@
 #include "../../core_debug.h"
 #include <algorithm>
 
+#if !defined(PROTECT_VECTOR_TABLE)
+  #define PROTECT_VECTOR_TABLE 1
+#endif
+
+#if PROTECT_VECTOR_TABLE
+  #include "../mpu/mpu.h"
+
+/**
+ * vector table MPU region
+ */
+constexpr uint8_t VT_MPU_REGION = 0;
+
+  /**
+   * @brief allow ram vector table to be written to during this section
+   * @param fn code block
+   */
+  #define RAM_VT_ALLOW_WRITE(fn)                                                                                       \
+    {                                                                                                                  \
+      mpu::set_region_enabled(VT_MPU_REGION, false);                                                                   \
+      fn;                                                                                                              \
+      mpu::set_region_enabled(VT_MPU_REGION, true);                                                                    \
+    }
+#else
+  #define RAM_VT_ALLOW_WRITE(fn) fn
+#endif // PROTECT_VECTOR_TABLE
+
+/**
+ * @brief vector table with (optional) padding to 1024 bytes
+ */
+struct ram_vector_table_t : vector_table_t
+{
+#if PROTECT_VECTOR_TABLE
+  uint8_t _mpu_padding[1024 - sizeof(vector_table_t)];
+#endif
+};
+
+static_assert(sizeof(ram_vector_table_t) == (PROTECT_VECTOR_TABLE ? 1024 : sizeof(vector_table_t)),
+              "invalid RAM vector table size");
+
+/**
+ * @note
+ * required to be aligned to the boundary width of the lowest power
+ * of 2 that will fit the entire vector table.
+ * since the vector table takes [(144 + 16) * 4 =] 640 bytes, the
+ * lowest power of 2 that will fit the entire vector table is 1024.
+ */
+__attribute__((aligned(1024))) volatile ram_vector_table_t ram_vector_table;
+
 void __on_default_handler()
 {
-    panic("__default_handler called");
-    while (true)
-        ;
+  panic("__default_handler called");
+  while (true)
+    ;
 }
 
 /**
@@ -20,15 +68,6 @@ constexpr uint32_t INTSEL_DEFAULT = 0x1FFu;
 #define no_handler (&__default_handler)
 
 /**
- * @note
- * required to be aligned to the boundary width of the lowest power
- * of 2 that will fit the entire vector table.
- * since the vector table takes [(144 + 16) * 4 =] 640 bytes, the
- * lowest power of 2 that will fit the entire vector table is 1024.
- */
-__attribute__((aligned(1024))) volatile vector_table_t ram_vector_table;
-
-/**
  * @brief get the interrupt selection register for the specified IRQn
  * @param irqn IRQ#n
  * @return pointer to the interrupt selection register
@@ -36,7 +75,8 @@ __attribute__((aligned(1024))) volatile vector_table_t ram_vector_table;
  */
 static inline volatile stc_intc_sel_field_t *get_interrupt_selection_register(const int irqn)
 {
-  return reinterpret_cast<volatile stc_intc_sel_field_t *>(reinterpret_cast<uint32_t>(&M4_INTC->SEL0) + (sizeof(stc_intc_sel_field_t) * irqn));
+  return reinterpret_cast<volatile stc_intc_sel_field_t *>(reinterpret_cast<uint32_t>(&M4_INTC->SEL0) +
+                                                           (sizeof(stc_intc_sel_field_t) * irqn));
 }
 
 /**
@@ -72,12 +112,11 @@ void interrupts_init()
 {
   // copy the current vector table to RAM
   vector_table_t *current_vt = (vector_table_t *)SCB->VTOR;
-  vector_table_t *target_vt = (vector_table_t *) &ram_vector_table;
+  vector_table_t *target_vt = (vector_table_t *)&ram_vector_table;
   memcpy(target_vt, current_vt, sizeof(vector_table_t));
 
   // check the copy was successful
-  CORE_ASSERT(memcmp(target_vt, current_vt, sizeof(vector_table_t)) == 0, "vector table copy failed!",
-              return);
+  CORE_ASSERT(memcmp(target_vt, current_vt, sizeof(vector_table_t)) == 0, "vector table copy failed!", return);
 
   // check the target vector table address is valid:
   // - bits [8:0] of the table offset are always zero
@@ -95,6 +134,18 @@ void interrupts_init()
   // assert the VTOR was actually updated
   // this assertion should always panic, even when core debug is disabled
   CORE_ASSERT(SCB->VTOR == (uint32_t)target_vt, "failed to update VTOR", panic(""))
+
+#if PROTECT_VECTOR_TABLE
+  // protect the vector table using the MPU
+  mpu::init();
+  mpu::enable_region(VT_MPU_REGION, //
+                     {
+                         .base_address = (uint32_t)target_vt,
+                         .size = 10, // 1024 bytes
+                         .access_permissions = mpu::get_access_permissions(mpu::READ_ONLY, mpu::READ_ONLY),
+                         .allow_execute = false,
+                     });
+#endif
 }
 
 int interrupt_register(const en_int_src_t source, func_ptr_t handler)
@@ -176,7 +227,8 @@ en_result_t enIrqRegistration(const stc_irq_regi_conf_t *pstcIrqRegiConf)
 
   // set the handler in the vector table
   CORE_ASSERT(ram_vector_table.irqs[irqn] == no_handler, "IRQn handler already assigned", return ErrorUninitialized);
-  ram_vector_table.irqs[irqn] = pstcIrqRegiConf->pfnCallback;
+
+  RAM_VT_ALLOW_WRITE({ ram_vector_table.irqs[irqn] = pstcIrqRegiConf->pfnCallback; });
   return Ok;
 }
 
@@ -202,7 +254,8 @@ en_result_t enIrqResign(IRQn_Type enIRQn)
   {
     CORE_DEBUG_PRINTF("cannot resign IRQ#%d: handler already no_handler\n", irqn);
   }
-  ram_vector_table.irqs[irqn] = no_handler;
+
+  RAM_VT_ALLOW_WRITE({ ram_vector_table.irqs[irqn] = no_handler; });
 
   return Ok;
 }

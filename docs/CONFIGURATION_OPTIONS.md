@@ -52,3 +52,4 @@ see the Documentation for the [`panic`](./PANIC.md) and [`fault_handler`](./FAUL
 | -------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | `CORE_ADC_RESOLUTION`                  | adc    | set the default resolution of ADC driver. can be `8`, `10`, or `12`. can be overwritten using `analogReadResolution()`            | `10`                            |
 | `F_CPU=SYSTEM_CLOCK_FREQUENCIES.pclk1` | sysclk | overwrites the `F_CPU` value. refer to the HC32F460 user manual, Section 4.3, Table 4-1 for more details on the different clocks. | `SYSTEM_CLOCK_FREQUENCIES.hclk` |
+| `PROTECT_VECTOR_TABLE` | interrupts | protect the vector table from getting accidentally overwritten. [Documentation](./mpu/PROTECT_VECTOR_TABLE.md) | `1` | 
