@@ -40,3 +40,8 @@
 #if ARDUINO_CORE_VERSION_INT < GET_VERSION_INT(1, 0, 0)
 #error "expected ARDUINO_CORE_VERSION_INT >= 1.0.0"
 #endif
+
+#if FRAMEWORK_DDL_VERSION_INT < GET_VERSION_INT(2, 2, 2)
+// required for custom interrupt management feature
+#error "this version of the arduino core requires DDL >= 2.2.2. Please update the DDL"
+#endif

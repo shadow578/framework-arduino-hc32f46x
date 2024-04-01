@@ -59,8 +59,8 @@ usage examples are available in the [examples](./examples) directory.
 for documentation on configuration and non-standard features, see following documents:
 
 - [Arduino Core Configuration Options](./docs/CONFIGURATION_OPTIONS.md)
-- [Checking the Version](./docs//VERSION_CHECK.md)
-- [Dynamic Core Configuration](./docs//APP_CONFIG.md)
+- [Checking the Version](./docs/VERSION_CHECK.md)
+- [Dynamic Core Configuration](./docs/APP_CONFIG.md)
 - [Assert Mechanism](./docs/ASSERT.md)
 - [Panic Mechanism](./docs/PANIC.md)
 - [Fault Handler](./docs/FAULT_HANDLER.md)
