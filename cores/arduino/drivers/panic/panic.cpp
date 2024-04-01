@@ -60,14 +60,29 @@ __attribute__((weak)) void panic_puts(const char *str)
 
 __attribute__((noreturn, weak)) void panic_end(void)
 {
-  #ifdef HANG_ON_PANIC
-  // enter infinite loop
-  while (1)
-    ;
-  #else
-  // reset MCU
-  NVIC_SystemReset();
+  #define PANIC_END_BKPT 1
+  #define PANIC_END_HANG 2
+  #define PANIC_END_RESET 3
+
+  #ifndef PANIC_END_MODE
+    #define PANIC_END_MODE PANIC_END_BKPT
   #endif
+  
+  // do whatever we need to do to end panic forever
+  while (1) 
+  {
+    #if PANIC_END_MODE == PANIC_END_BKPT
+      // enter breakpoint
+      __BKPT(0);
+    #elif PANIC_END_MODE == PANIC_END_HANG
+      // enter infinite loop
+    #elif PANIC_END_MODE == PANIC_END_RESET
+      // reset MCU
+      NVIC_SystemReset();
+    #else
+      #error "Invalid PANIC_END_MODE"
+    #endif
+  }
 }
 
 //
