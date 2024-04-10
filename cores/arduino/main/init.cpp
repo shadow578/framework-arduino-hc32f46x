@@ -47,13 +47,18 @@ void core_init()
 
     // initialize system clock:
     // - restore default clock settings
-#ifndef CORE_DONT_RESTORE_DEFAULT_CLOCKS
-    sysclock_restore_default_clocks();
-#endif
+    #if !defined(CORE_DONT_RESTORE_DEFAULT_CLOCKS)
+      sysclock_restore_default_clocks();
+    #endif
 
     // - call user setup hook
     core_hook_sysclock_init();
     update_system_clock_frequencies();
+
+    // enable flash ICACHE
+    #if !defined(CORE_DONT_ENABLE_ICACHE)
+      EFM_InstructionCacheCmd(Enable);
+    #endif
 
     // initialize interrupts driver and dynamic vector table
     interrupts_init();
