@@ -73,6 +73,17 @@ static void USART_rx_dma_btc_irq(uint8_t x)
     bool rxOverrun = usartx->state.rx_buffer->_update_write_index(received_bytes);
     usartx->dma.rx_buffer_last_dest_address = current_dest_address;
 
+    // get the last n elements written to the buffer and call the rx hook for each
+    uint8_t *received_chars = new uint8_t[received_bytes];
+    size_t last_written_count = usartx->state.rx_buffer->_get_last_written_elements(received_chars, received_bytes);
+    
+    // call hook in reverse order
+    for (size_t i = last_written_count; i > 0; i--)
+    {
+        core_hook_usart_rx_irq(received_chars[i - 1], x);
+    }
+    delete[] received_chars;
+
     // if the buffer was overrun, set the overrun error flag
     if (rxOverrun)
     {

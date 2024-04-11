@@ -170,6 +170,31 @@ public:
     }
 
     /**
+     * @brief get the last n elements that were written to the buffer
+     * @param out_elements the array to write the elements to. must be at least n elements long
+     * @param count the maximum number of elements to get
+     * @return the number of elements written to out_elements
+     * @note elements are returned in the order they were written to the buffer, so 
+     *       the first element in out_elements is most recent, and the last element is the oldest
+     * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
+     */
+    size_t _get_last_written_elements(TElement *out_elements, size_t count)
+    {
+        // calculate the number of elements to get
+        // if the count is less than the number of elements in the buffer, the count remains the same
+        // if the count is greater than the capacity, the count is limited to the capacity
+        size_t elements_to_get = (count > this->capacity()) ? this->capacity() : count;
+
+        // get the last elements
+        for (size_t i = 0; i < elements_to_get; i++)
+        {
+            out_elements[i] = this->buffer[(this->_wi - 1 - i) % this->_capacity];
+        }
+
+        return elements_to_get;
+    }
+
+    /**
      * @brief get the internal data buffer
      * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
      */

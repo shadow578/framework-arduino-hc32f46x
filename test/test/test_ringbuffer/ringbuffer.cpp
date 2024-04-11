@@ -166,3 +166,74 @@ TEST(RingBuffer, UpdateWriteIndex)
 
   delete rb;
 }
+
+/**
+ * test _get_last_written_elements returns the correct elements
+ */
+TEST(RingBuffer, GetLastWrittenElements)
+{
+  auto rb = new RingBuffer<uint8_t>(4);
+
+  // write 4 elements to the buffer
+  rb->push(1);
+  rb->push(2);
+  rb->push(3);
+  rb->push(4);
+
+  // the count should be 4
+  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 4 elements";
+
+  // get the last 4 written elements
+  uint8_t last_written[4];
+  size_t last_written_count = rb->_get_last_written_elements(last_written, 4);
+
+  // the last_written_count should be 4
+  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4";
+
+  // elements should be [4, 3, 2, 1]
+  EXPECT_EQ(last_written[0], 4) << "Last written element should be 1";
+  EXPECT_EQ(last_written[1], 3) << "Last written element should be 2";
+  EXPECT_EQ(last_written[2], 2) << "Last written element should be 3";
+  EXPECT_EQ(last_written[3], 1) << "Last written element should be 4";
+
+  // write 2 more elements to the buffer, forcing an overrun
+  rb->push(5, /*force*/ true);
+  rb->push(6, /*force*/ true);
+
+  // the count should still be 4
+  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 2 more elements with overrun";
+
+  // get the last 4 written elements
+  last_written_count = rb->_get_last_written_elements(last_written, 4);
+
+  // the last_written_count should be 4 still
+  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4 after overrun";
+
+  // elements should be [6, 5, 4, 3]
+  EXPECT_EQ(last_written[0], 6) << "Last written element should be 3 after overrun";
+  EXPECT_EQ(last_written[1], 5) << "Last written element should be 4 after overrun";
+  EXPECT_EQ(last_written[2], 4) << "Last written element should be 5 after overrun";
+  EXPECT_EQ(last_written[3], 3) << "Last written element should be 6 after overrun";
+
+  // read 2 elements from the buffer
+  uint8_t dummy;
+  rb->pop(dummy);
+  rb->pop(dummy);
+
+  // the count should be 2
+  EXPECT_EQ(rb->count(), 2) << "Count should be 2 after reading 2 elements";
+
+  // get the last 4 written elements
+  last_written_count = rb->_get_last_written_elements(last_written, 4);
+ 
+  // the last_written_count should be 4 still
+  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4 after reading 2 elements";
+
+  // elements should be [6, 5, 4, 3]
+  EXPECT_EQ(last_written[0], 6) << "Last written element should be 3 after reading 2 elements";
+  EXPECT_EQ(last_written[1], 5) << "Last written element should be 4 after reading 2 elements";
+  EXPECT_EQ(last_written[2], 4) << "Last written element should be 5 after reading 2 elements";
+  EXPECT_EQ(last_written[3], 3) << "Last written element should be 6 after reading 2 elements";
+
+  delete rb;
+}
