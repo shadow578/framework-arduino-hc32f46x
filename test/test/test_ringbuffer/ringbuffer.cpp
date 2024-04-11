@@ -173,47 +173,49 @@ TEST(RingBuffer, UpdateWriteIndex)
 TEST(RingBuffer, GetLastWrittenElements)
 {
   auto rb = new RingBuffer<uint8_t>(4);
+  uint8_t last_written;
 
-  // write 4 elements to the buffer
+  // write 3 elements to the buffer
   rb->push(1);
   rb->push(2);
   rb->push(3);
-  rb->push(4);
 
-  // the count should be 4
-  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 4 elements";
+  // the count should be 3
+  EXPECT_EQ(rb->count(), 3) << "Count should be 3 after writing 3 elements";
 
-  // get the last 4 written elements
-  uint8_t last_written[4];
-  size_t last_written_count = rb->_get_last_written_elements(last_written, 4);
+  // elements should be [3, 2, 1]
+  EXPECT_EQ(rb->_get_nth_push_element(0, last_written), true) << "0 pushes ago should succeed after 3 pushes";
+  EXPECT_EQ(last_written, 3) << "0 pushes ago should be 3";
 
-  // the last_written_count should be 4
-  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4";
+  EXPECT_EQ(rb->_get_nth_push_element(1, last_written), true) << "1 pushes ago should succeed after 3 pushes";
+  EXPECT_EQ(last_written, 2) << "1 pushes ago should be 2";
 
-  // elements should be [4, 3, 2, 1]
-  EXPECT_EQ(last_written[0], 4) << "Last written element should be 1";
-  EXPECT_EQ(last_written[1], 3) << "Last written element should be 2";
-  EXPECT_EQ(last_written[2], 2) << "Last written element should be 3";
-  EXPECT_EQ(last_written[3], 1) << "Last written element should be 4";
+  EXPECT_EQ(rb->_get_nth_push_element(2, last_written), true) << "2 pushes ago should succeed after 3 pushes";
+  EXPECT_EQ(last_written, 1) << "2 pushes ago should be 1";
 
-  // write 2 more elements to the buffer, forcing an overrun
-  rb->push(5, /*force*/ true);
+
+  // write 3 more elements to the buffer, forcing an overrun
+  rb->push(4); // still fits
+  rb->push(5, /*force*/ true); // overruns
   rb->push(6, /*force*/ true);
 
-  // the count should still be 4
-  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 2 more elements with overrun";
+  // the count should be 4
+  EXPECT_EQ(rb->count(), 4) << "Count should be 4 after writing 1+2 more elements (1 normal, 2 with overrun)";
 
-  // get the last 4 written elements
-  last_written_count = rb->_get_last_written_elements(last_written, 4);
-
-  // the last_written_count should be 4 still
-  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4 after overrun";
 
   // elements should be [6, 5, 4, 3]
-  EXPECT_EQ(last_written[0], 6) << "Last written element should be 3 after overrun";
-  EXPECT_EQ(last_written[1], 5) << "Last written element should be 4 after overrun";
-  EXPECT_EQ(last_written[2], 4) << "Last written element should be 5 after overrun";
-  EXPECT_EQ(last_written[3], 3) << "Last written element should be 6 after overrun";
+  EXPECT_EQ(rb->_get_nth_push_element(0, last_written), true) << "0 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 6) << "0 pushes ago should be 6";
+
+  EXPECT_EQ(rb->_get_nth_push_element(1, last_written), true) << "1 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 5) << "1 pushes ago should be 5";
+
+  EXPECT_EQ(rb->_get_nth_push_element(2, last_written), true) << "2 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 4) << "2 pushes ago should be 4";
+
+  EXPECT_EQ(rb->_get_nth_push_element(3, last_written), true) << "3 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 3) << "3 pushes ago should be 3";
+
 
   // read 2 elements from the buffer
   uint8_t dummy;
@@ -223,17 +225,23 @@ TEST(RingBuffer, GetLastWrittenElements)
   // the count should be 2
   EXPECT_EQ(rb->count(), 2) << "Count should be 2 after reading 2 elements";
 
-  // get the last 4 written elements
-  last_written_count = rb->_get_last_written_elements(last_written, 4);
- 
-  // the last_written_count should be 4 still
-  EXPECT_EQ(last_written_count, 4) << "Last written count should be 4 after reading 2 elements";
 
-  // elements should be [6, 5, 4, 3]
-  EXPECT_EQ(last_written[0], 6) << "Last written element should be 3 after reading 2 elements";
-  EXPECT_EQ(last_written[1], 5) << "Last written element should be 4 after reading 2 elements";
-  EXPECT_EQ(last_written[2], 4) << "Last written element should be 5 after reading 2 elements";
-  EXPECT_EQ(last_written[3], 3) << "Last written element should be 6 after reading 2 elements";
+  // elements should still be [6, 5, 4, 3], as reading doesn't affect what was last written
+  EXPECT_EQ(rb->_get_nth_push_element(0, last_written), true) << "0 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 6) << "0 pushes ago should be 6";
+
+  EXPECT_EQ(rb->_get_nth_push_element(1, last_written), true) << "1 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 5) << "1 pushes ago should be 5";
+
+  EXPECT_EQ(rb->_get_nth_push_element(2, last_written), true) << "2 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 4) << "2 pushes ago should be 4";
+
+  EXPECT_EQ(rb->_get_nth_push_element(3, last_written), true) << "3 pushes ago should succeed after 4 pushes";
+  EXPECT_EQ(last_written, 3) << "3 pushes ago should be 3";
+
+
+  // 5 pushes ago in a 4-element buffer doesn't exist
+  EXPECT_EQ(rb->_get_nth_push_element(4, last_written), false) << "4 pushes ago should fail for buffer of size 4";
 
   delete rb;
 }
