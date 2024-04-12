@@ -40,6 +40,7 @@ inline uint8_t get_region_type(const uint32_t address)
  */
 #define MPU_CRITICAL_SECTION(fn)                                                                                       \
   {                                                                                                                    \
+    const bool irqon = !__get_PRIMASK();                                                                               \
     __disable_irq();                                                                                                   \
     uint32_t mpu_ctrl = MPU->CTRL;                                                                                     \
     MPU->CTRL = mpu_ctrl & ~MPU_CTRL_ENABLE_Msk;                                                                       \
@@ -49,7 +50,7 @@ inline uint8_t get_region_type(const uint32_t address)
     }                                                                                                                  \
     __DSB();                                                                                                           \
     MPU->CTRL = mpu_ctrl;                                                                                              \
-    __enable_irq();                                                                                                    \
+    if (irqon) __enable_irq();                                                                                         \
   }
 
 namespace mpu
