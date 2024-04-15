@@ -21,6 +21,8 @@
 
 #define WIRE_TIMEOUT 0x40000ul
 
+#define WIRE_PIN_INVALID 0xff
+
 /**
  * results of a I2C transmission
  */
@@ -70,7 +72,7 @@ public:
    */
   TwoWire(M4_I2C_TypeDef *peripheral)
   {
-    TwoWire(peripheral, GPIO_PIN_INVALID, GPIO_PIN_INVALID);
+    TwoWire(peripheral, WIRE_PIN_INVALID, WIRE_PIN_INVALID);
   }
 
   /**
