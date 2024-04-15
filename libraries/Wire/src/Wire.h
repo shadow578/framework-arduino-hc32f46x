@@ -1,8 +1,6 @@
 #ifndef TWO_WIRE_H_
 #define TWO_WIRE_H_
 
-#warning "Wire library is WIP on HC32F460. Use at your own risk."
-
 #if DDL_I2C_ENABLE != DDL_ON
   #error "Wire library requires I2C to be enabled"
 #endif
@@ -10,7 +8,6 @@
 #include "Arduino.h"
 #include "core_debug.h"
 #include "hc32_ddl.h"
-#include "i2c_config.h"
 
 /**
  * the wire library has a end() function.
@@ -68,21 +65,21 @@ class TwoWire : public Stream
 public:
   /**
    * @brief initialize without sda/scl pins.
-   * @param device the I2C device config
+   * @param peripheral I2C peripheral
    * @note sda/scl pins must be set using setSDA() and setSCL() before calling begin()
    */
-  TwoWire(const i2c_device_config_t *device)
+  TwoWire(M4_I2C_TypeDef *peripheral)
   {
-    TwoWire(device, GPIO_PIN_INVALID, GPIO_PIN_INVALID);
+    TwoWire(peripheral, GPIO_PIN_INVALID, GPIO_PIN_INVALID);
   }
 
   /**
    * @brief initialize with sda/scl pins
-   * @param device the I2C device config
+   * @param peripheral I2C peripheral
    * @param sda the sda pin
    * @param scl the scl pin
    */
-  TwoWire(const i2c_device_config_t *device, const gpio_pin_t sda, const gpio_pin_t scl);
+  TwoWire(M4_I2C_TypeDef *peripheral, const gpio_pin_t sda, const gpio_pin_t scl);
 
   /**
    * @brief initialize the Wire library and join a I2C bus as a controller
@@ -131,7 +128,7 @@ public:
    *
    * @note the number of bytes received can be obtained using available()
    */
-  TwoWireStatus requestFromInt(uint8_t address, size_t quantity, bool stopBit = true);
+  TwoWireStatus _requestFrom(uint8_t address, size_t quantity, bool stopBit = true);
 
   /**
    * @brief request a number of bytes from a I2C peripheral
@@ -143,7 +140,7 @@ public:
    */
   uint8_t requestFrom(uint8_t address, size_t quantity, bool stopBit = true)
   {
-    TwoWireStatus status = requestFromInt(address, quantity, stopBit);
+    const TwoWireStatus status = _requestFrom(address, quantity, stopBit);
     CORE_DEBUG_PRINTF("requestFrom addr=%02X status=%d\n", address, status);
     return available();
   }
@@ -256,47 +253,47 @@ public:
 
 private:
   /**
-   * i2c device
+   * @brief I2C peripheral
    */
-  const i2c_device_config_t *device = NULL;
+  M4_I2C_TypeDef *peripheral = nullptr;
 
   /**
-   * sda pin
+   * @brief SDA pin
    */
   gpio_pin_t sda_pin;
 
   /**
-   * scl pin
+   * @brief SCL pin
    */
   gpio_pin_t scl_pin;
 
   /**
-   * receive buffer
+   * @brief receive buffer
    */
   uint8_t rx_buffer[WIRE_BUFFER_LENGTH];
 
   /**
-   * amount of data in the receive buffer
+   * @brief amount of data in the receive buffer
    */
   size_t rx_buffer_len = 0;
 
   /**
-   * index of the next byte to read from the receive buffer
+   * @brief index of the next byte to read from the receive buffer
    */
   size_t rx_buffer_index = 0;
 
   /**
-   * transmit buffer
+   * @brief transmit buffer
    */
   uint8_t tx_buffer[WIRE_BUFFER_LENGTH];
 
   /**
-   * amount of data in the transmit buffer
+   * @brief amount of data in the transmit buffer
    */
   size_t tx_buffer_len = 0;
 
   /**
-   * the address of the peripheral to transmit to
+   * @brief the address of the peripheral to transmit to
    */
   uint8_t tx_address;
 };

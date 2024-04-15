@@ -26,11 +26,16 @@
 // This sketch tests the standard 7-bit addresses
 // Devices with higher bit address might not be seen properly.
 //
-
+#include <Arduino.h>
 #include <Wire.h>
 
+#define SDA_PIN PA1
+#define SCL_PIN PA2
+
+TwoWire wire(M4_I2C1, SDA_PIN, SCL_PIN);
+
 void setup() {
-  Wire.begin();
+  wire.begin();
 
   Serial.begin(9600);
   while (!Serial); // Leonardo: wait for Serial Monitor
@@ -44,10 +49,10 @@ void loop() {
 
   for (byte address = 1; address < 127; ++address) {
     // The i2c_scanner uses the return value of
-    // the Wire.endTransmission to see if
+    // the wire.endTransmission to see if
     // a device did acknowledge to the address.
-    Wire.beginTransmission(address);
-    byte error = Wire.endTransmission();
+    wire.beginTransmission(address);
+    byte error = wire.endTransmission();
 
     if (error == 0) {
       Serial.print("I2C device found at address 0x");
