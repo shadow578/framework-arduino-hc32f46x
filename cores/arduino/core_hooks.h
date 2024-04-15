@@ -40,6 +40,14 @@ extern "C"
      * @param data the data byte that was received
      * @param usart_channel the usart channel. (one of [1,2,3,4]; 1 => M4_USART1)
      * @note runs inside a IRQ, so keep it short and sweet
+     * @note 
+     * When using IRQ RX on the usart channel, this hook is called for each character before it is added to the RX queue. 
+     * This ensures that the hook is called for each character before it can be consumed by Usart::read.
+     *
+     * When using DMA RX, this guarantee does NOT hold. 
+     * This means that the hook may be called for characters that have already been consumed by Usart::read.
+     * 
+     * @note no gurantees are made to the timing when this hook is called.
      */
     DEF_HOOK(usart_rx_irq, uint8_t data, uint8_t usart_channel);
 
