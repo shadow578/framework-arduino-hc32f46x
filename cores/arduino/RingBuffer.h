@@ -45,7 +45,7 @@ public:
     /**
      * @brief Get the number of elements in the buffer
      */
-    size_t count()
+    size_t count() const
     {
         return this->_count;
     }
@@ -53,7 +53,7 @@ public:
     /**
      * @brief Get the capacity of the buffer
      */
-    size_t capacity()
+    size_t capacity() const
     {
         return this->_capacity;
     }
@@ -61,7 +61,7 @@ public:
     /**
      * @brief Test if the buffer is full
      */
-    bool isFull()
+    bool isFull() const
     {
         return this->count() >= this->capacity();
     }
@@ -69,7 +69,7 @@ public:
     /**
      * @brief Test if the buffer is empty
      */
-    bool isEmpty()
+    bool isEmpty() const
     {
         return this->count() == 0;
     }
@@ -77,7 +77,7 @@ public:
     /**
      * @brief Get the next element in the buffer without removing it
      */
-    TElement peek()
+    TElement peek() const
     {
         return this->isEmpty() ? 0 : this->buffer[this->_ri];
     }
@@ -144,9 +144,11 @@ public:
      * @brief update the write index and count
      * @param writtenCount the number of elements written to the buffer
      * @return true if the buffer was overrun
-     * @note this is a internal operation that is made public to allow for DMA transfers into the buffer
+     * @note 
+     * this is a internal operation that is made public to allow for DMA transfers into the buffer.
+     * only call this function if you know what you are doing.
      */
-    bool _update_write_index(size_t writtenCount)
+    bool _update_write_index(const size_t writtenCount)
     {
         // update write index
         this->_wi = (this->_wi + writtenCount) % (this->_capacity);               
@@ -167,6 +169,25 @@ public:
         }
 
         return false;
+    }
+
+    /**
+     * @brief get the element pushed N push() calls ago
+     * @param n the number of push() calls ago. 0 gets the last pushed element, 1 gets the element before that, etc.
+     * @param element the element to get
+     * @return false if no such element exists, true otherwise
+     * @note internal function. only call this function if you know what you are doing
+     * @note when n > total number of past pushes, behavior is undefined and garbage data may be returned
+     */
+    bool _get_nth_push_element(const size_t n, TElement &element) const
+    {
+        if (n >= this->capacity())
+        {
+            return false;
+        }
+
+        element = this->buffer[(this->_wi - 1 - n) % this->_capacity];
+        return true;
     }
 
     /**

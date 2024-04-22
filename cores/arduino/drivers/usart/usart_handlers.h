@@ -69,18 +69,32 @@ static void USART_rx_dma_btc_irq(uint8_t x)
         received_bytes = (buffer_len - last_dest_address) + current_dest_address;
     }
 
-    // then, update the write pointer in the rx buffer and the last destination address
-    bool rxOverrun = usartx->state.rx_buffer->_update_write_index(received_bytes);
-    usartx->dma.rx_buffer_last_dest_address = current_dest_address;
-
-    // if the buffer was overrun, set the overrun error flag
-    if (rxOverrun)
+    if (received_bytes > 0)
     {
-        usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
-        
-        #ifdef USART_RX_ERROR_COUNTERS_ENABLE
-        usartx->state.rx_error_counters.rx_data_dropped++;
-        #endif
+        // then, update the write pointer in the rx buffer and the last destination address
+        bool rxOverrun = usartx->state.rx_buffer->_update_write_index(received_bytes);
+        usartx->dma.rx_buffer_last_dest_address = current_dest_address;
+
+        // get the last n elements written to the buffer and call the rx hook on each
+        // have to do this in reverse order because we need to get the first byte received first
+        for (size_t i = received_bytes - 1; i < received_bytes; i--)
+        {
+            uint8_t ch;
+            if (usartx->state.rx_buffer->_get_nth_push_element(i, ch))
+            {
+                core_hook_usart_rx_irq(ch, x);
+            }
+        }
+
+        // if the buffer was overrun, set the overrun error flag
+        if (rxOverrun)
+        {
+            usartx->state.rx_error = usart_receive_error_t::RxDataDropped;
+
+            #ifdef USART_RX_ERROR_COUNTERS_ENABLE
+            usartx->state.rx_error_counters.rx_data_dropped++;
+            #endif
+        }
     }
 
     // finally, clear the DMA block transfer complete flag
