@@ -79,22 +79,23 @@ inline uint32_t configure_wdt_counter(const uint32_t target_timeout,
 {
     // configure available values
     constexpr uint32_t clock_dividers[] = {4, 64, 128, 256, 512, 1024, 2048, 8192};
-    constexpr uint32_t clock_dividers_length = sizeof(clock_dividers) / sizeof(clock_dividers[0]);
     constexpr uint32_t count_cycles[] = {256, 4096, 16384, 65536};
-    constexpr uint32_t count_cycles_length = sizeof(count_cycles) / sizeof(count_cycles[0]);
 
     // test every clock divider and count cycle combination
-    uint32_t min_error = target_timeout;
+    uint32_t min_error = 0xFFFFFFFF;
     uint32_t best_timeout = 0;
-    for (uint32_t cdi = 0; cdi < clock_dividers_length; cdi++)
-        for (uint32_t cci = 0; cci < count_cycles_length; cci++)
+    for (const uint32_t cd : clock_dividers)
+        for (const uint32_t cc : count_cycles)
         {
-            const uint32_t cd = clock_dividers[cdi];
-            const uint32_t cc = count_cycles[cci];
-
             // calculate timeout for this combination
             // timeout = 1000 * (cc / (base_clock / cd))
             const uint32_t timeout = ((cc * cd) / base_clock) * 1000;
+            
+            // actual timeout must be larger than target
+            if (timeout < target_timeout)
+            {
+                continue;
+            }
 
             // if this combination is better than the current one, use it
             const uint32_t error = abs(target_timeout - timeout);
