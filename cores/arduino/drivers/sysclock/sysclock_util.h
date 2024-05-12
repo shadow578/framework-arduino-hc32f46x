@@ -223,3 +223,86 @@ inline void sysclock_restore_default_clocks()
     // update performance mode
     power_mode_update_post(8000000);
 }
+
+
+#ifdef __cplusplus
+/**
+ * @brief en_clk_sysclk_div_factor to integer division factor
+ * @param div_factor The clock divider factor
+ * @return The integer division factor
+ */
+constexpr int div_factor_to_n(const en_clk_sysclk_div_factor div_factor)
+{
+  return 1 << static_cast<int>(div_factor);
+}
+
+/**
+ * @brief Check if the system clock configuration is valid
+ * @param sysclock The input system clock frequency
+ * @param dividers Clock divider configuration
+ * @return True if the configuration is valid, false otherwise
+ * 
+ * @note
+ * Rules as per Section 4.4 "Working Clock Specifications" of the HC32F460 Reference Manual.
+ * 
+ * Maximum clock frequencies as per Table 4-1:
+ * HCLK: 200MHz
+ * PCLK0: 200MHz
+ * PCLK1: 100MHz
+ * PCLK2: 60MHz
+ * PCLK3: 50MHz
+ * PCLK4: 100MHz
+ * EXCLK: 100MHz
+ *
+ * System Clock rules as per Note 1:
+ * 1. HCLK >= PCLK1
+ * 2. HCLK >= PCLK3
+ * 3. HCLK >= PCLK4 
+ * 4. HCLK / EXCLK in { 2/1, 4/1, 8/1, 16/1, 32/1 }
+ * 5. PCLK0 >= PCLK1
+ * 6. PCLK0 >= PCLK3
+ * 7. HCLK / PCLK0 in { N/1, 1/N } (TODO: what does this even mean?)
+ * 8. PCLK2 / PCLK4 in { 1/4, 1/2, 1/1, 2/1, 4/1, 8/1 }
+ */
+template <
+  uint32_t sysclock, 
+  en_clk_sysclk_div_factor_t hclk_div,
+  en_clk_sysclk_div_factor_t pclk0_div,
+  en_clk_sysclk_div_factor_t pclk1_div,
+  en_clk_sysclk_div_factor_t pclk2_div,
+  en_clk_sysclk_div_factor_t pclk3_div,
+  en_clk_sysclk_div_factor_t pclk4_div,
+  en_clk_sysclk_div_factor_t exclk_div
+>
+constexpr void assert_system_clocks_valid()
+{
+  // calculate clock frequencies
+  const uint32_t hclk = sysclock / div_factor_to_n(hclk_div);
+  const uint32_t pclk0 = sysclock / div_factor_to_n(pclk0_div);
+  const uint32_t pclk1 = sysclock / div_factor_to_n(pclk1_div);
+  const uint32_t pclk2 = sysclock / div_factor_to_n(pclk2_div);
+  const uint32_t pclk3 = sysclock / div_factor_to_n(pclk3_div);
+  const uint32_t pclk4 = sysclock / div_factor_to_n(pclk4_div);
+  const uint32_t exclk = sysclock / div_factor_to_n(exclk_div);
+
+  // validate clock frequencies are within limits
+  static_assert(hclk <= 200000000, "HCLK exceeds maximum 200MHz. Consider increasing HCLK divider.");
+  static_assert(pclk0 <= 200000000, "PCLK0 exceeds maximum 200MHz. Consider increasing PCLK0 divider.");
+  static_assert(pclk1 <= 100000000, "PCLK1 exceeds maximum 100MHz. Consider increasing PCLK1 divider.");
+  static_assert(pclk2 <= 60000000, "PCLK2 exceeds maximum 60MHz. Consider increasing PCLK2 divider.");
+  static_assert(pclk3 <= 50000000, "PCLK3 exceeds maximum 50MHz. Consider increasing PCLK3 divider.");
+  static_assert(pclk4 <= 100000000, "PCLK4 exceeds maximum 100MHz. Consider increasing PCLK4 divider.");
+  static_assert(exclk <= 100000000, "EXCLK exceeds maximum 100MHz. Consider increasing EXCLK divider.");
+
+  // validate system clock rules
+  static_assert(hclk >= pclk1, "HCLK must be greater than or equal to PCLK1 (1).");
+  static_assert(hclk >= pclk3, "HCLK must be greater than or equal to PCLK3 (2).");
+  static_assert(hclk >= pclk4, "HCLK must be greater than or equal to PCLK4 (3).");
+  static_assert(hclk / exclk == 2 || hclk / exclk == 4 || hclk / exclk == 8 || hclk / exclk == 16 || hclk / exclk == 32, 
+    "HCLK / EXCLK must be in { 2/1, 4/1, 8/1, 16/1, 32/1 } (4).");
+  static_assert(pclk0 >= pclk1, "PCLK0 must be greater than or equal to PCLK1 (5).");
+  static_assert(pclk0 >= pclk3, "PCLK0 must be greater than or equal to PCLK3 (6).");
+  static_assert(pclk2 / pclk4 == 1 / 4 || pclk2 / pclk4 == 1 / 2 || pclk2 / pclk4 == 1 / 1 || pclk2 / pclk4 == 2 / 1 || pclk2 / pclk4 == 4 / 1 || pclk2 / pclk4 == 8 / 1, 
+    "PCLK2 / PCLK4 must be in { 1/4, 1/2, 1/1, 2/1, 4/1, 8/1 } (8).");
+}
+#endif // __cplusplus
