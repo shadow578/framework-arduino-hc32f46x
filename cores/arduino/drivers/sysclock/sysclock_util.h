@@ -239,8 +239,13 @@ constexpr int div_factor_to_n(const en_clk_sysclk_div_factor div_factor)
 /**
  * @brief Check if the system clock configuration is valid
  * @param sysclock The input system clock frequency
- * @param dividers Clock divider configuration
- * @return True if the configuration is valid, false otherwise
+ * @param hclk_div The HCLK divider value
+ * @param pclk0_div The PCLK0 divider value
+ * @param pclk1_div The PCLK1 divider value
+ * @param pclk2_div The PCLK2 divider value
+ * @param pclk3_div The PCLK3 divider value
+ * @param pclk4_div The PCLK4 divider value
+ * @param exclk_div The EXCLK divider value
  * 
  * @note
  * Rules as per Section 4.4 "Working Clock Specifications" of the HC32F460 Reference Manual.
@@ -305,4 +310,69 @@ constexpr void assert_system_clocks_valid()
   static_assert(pclk2 / pclk4 == 1 / 4 || pclk2 / pclk4 == 1 / 2 || pclk2 / pclk4 == 1 / 1 || pclk2 / pclk4 == 2 / 1 || pclk2 / pclk4 == 4 / 1 || pclk2 / pclk4 == 8 / 1, 
     "PCLK2 / PCLK4 must be in { 1/4, 1/2, 1/1, 2/1, 4/1, 8/1 } (8).");
 }
+
+/**
+ * @brief Calculate the MPLL output clock frequency
+ * @param input_clock The input clock frequency
+ * @param M The input clock divider
+ * @param N The VCO multiplier
+ * @param P The output clock divider. Can be either P, Q, or R.
+ * @return The MPLL output clock frequency
+ */
+constexpr uint32_t get_mpll_output_clock(uint32_t input_clock, uint32_t M, uint32_t N, uint32_t P)
+{
+  return (input_clock / M) * N / P;
+}
+
+/**
+ * @brief Check if the MPLL configuration is valid
+ * 
+ * 
+ * @note Rules as per Section 4.11.15 "CMU MPLL Configuration Register" of the HC32F460 Reference Manual.
+ * 
+ * MPLL block diagram, with intermediary clocks (1) = VCO_in, (2) = VCO_out:
+ * 
+ *  INPUT -> [/ M] -(1)-> [* N] -(2)-|-> [/ P] -> MPLL-P
+ *                                   |-> [/ Q] -> MPLL-Q
+ *                                   |-> [/ R] -> MPLL-R
+ * 
+ * 
+ * Bounds for M, N, P, Q, R:
+ * - M (input clock divider)      :  1 <= M <= 24
+ * - N (VCO multiplier)           : 20 <= N <= 480
+ * - P (output "P" clock divider) :  2 <= P <= 16
+ * - Q (output "Q" clock divider) :  2 <= Q <= 16
+ * - R (output "R" clock divider) :  2 <= R <= 16
+ * 
+ * 
+ * VCO frequency bounds:
+ * -   1 MHz <= VCO_in <= 25 MHz
+ * - 240 MHz <= VCO_out <= 480 MHz
+ */
+template <
+  uint32_t input_clock,
+  uint32_t M,
+  uint32_t N,
+  uint32_t P,
+  uint32_t Q,
+  uint32_t R
+>
+constexpr void assert_mpll_config_valid()
+{
+  // check bounds for M, N, P, Q, R
+  static_assert(M >= 1 && M <= 24, "MPLL input clock divider M must be in range [1, 24].");
+  static_assert(N >= 20 && N <= 480, "MPLL VCO multiplier N must be in range [20, 480].");
+  static_assert(P >= 2 && P <= 16, "MPLL output clock divider P must be in range [2, 16].");
+  static_assert(Q >= 2 && Q <= 16, "MPLL output clock divider Q must be in range [2, 16].");
+  static_assert(R >= 2 && R <= 16, "MPLL output clock divider R must be in range [2, 16].");
+
+  // calculate VCO frequencies
+  const uint32_t vco_in = input_clock / M;
+  const uint32_t vco_out = vco_in * N;
+
+  // check bounds for VCO frequencies
+  static_assert(vco_in >= 1000000 && vco_in <= 25000000, "MPLL VCO input frequency must be in range [1MHz, 25MHz].");
+  static_assert(vco_out >= 240000000 && vco_out <= 480000000, "MPLL VCO output frequency must be in range [240MHz, 480MHz].");
+}
+
 #endif // __cplusplus
