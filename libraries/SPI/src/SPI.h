@@ -30,14 +30,14 @@ public:
 
 	inline uint8_t transfer(const uint8_t data)
 	{
-		send(SpiDataLengthBit8, data);
-		return receive();
+		send(SpiDataLengthBit8, static_cast<uint32_t>(data));
+		return static_cast<uint8_t>(receive());
 	}
 
 	inline uint16_t transfer16(const uint16_t data)
 	{
-		send(SpiDataLengthBit16, data);
-		return receive();
+		send(SpiDataLengthBit16, static_cast<uint32_t>(data));
+		return static_cast<uint16_t>(receive());
 	}
 
 	inline uint32_t transfer32(const uint32_t data)

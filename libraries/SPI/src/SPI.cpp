@@ -99,7 +99,7 @@ void SPIClass::send(const en_spi_data_length_t data_len, const uint32_t data)
     SPI_SetDataLength(this->config->register_base, data_len);
 
     // send data
-    SPI_SendData(this->config->register_base, data);
+    SPI_SendData32(this->config->register_base, data);
 }
 
 uint32_t SPIClass::receive()
@@ -110,5 +110,5 @@ uint32_t SPIClass::receive()
         // wait for receive buffer full
     }
     
-    return SPI_ReceiveData(this->config->register_base, data_len);
+    return SPI_ReceiveData32(this->config->register_base);
 }
