@@ -21,7 +21,7 @@ void SPIClass::begin(const gpio_pin_t mosi_pin, const gpio_pin_t miso_pin, const
             .enSsIntervalTimeOption = SpiSsIntervalCustomValue,
             .enSsIntervalTime = SpiSsIntervalSck6PlusPck2,
         },
-        //.enReadBufferObject = SpiReadReceiverBuffer,
+        .enReadBufferObject = SpiReadReceiverBuffer, // reading DR reads the receive register
         //.enSckPolarity = SpiSckIdleLevelLow,
         //.enSckPhase = SpiSckOddSampleEvenChange,
         .enClkDiv = SpiClkDiv256,
@@ -95,10 +95,11 @@ void SPIClass::send(const en_spi_data_length_t data_len, const uint32_t data)
     // wait until the send buffer is empty before doing anything
     while (SPI_GetFlag(this->config->register_base, SpiFlagSendBufferEmpty) != Set);
 
-    // set SPI mode
+    // set SPI data width
     SPI_SetDataLength(this->config->register_base, data_len);
 
-    // send data
+    // we're fine using SPI_SendData32 here even when data_len != 32 bit, since 
+    // all SPI_SendData* functions just write the data to the transmit register.
     SPI_SendData32(this->config->register_base, data);
 }
 
@@ -110,5 +111,9 @@ uint32_t SPIClass::receive()
         // wait for receive buffer full
     }
     
+    // we're fine using SPI_ReceiveData32 even with a data_len != 32 bit, since
+    // all SPI_ReceiveData* functions just directly read the data register, and
+    // casting the value as needed. 
+    // so no need to use the specific functions, we can do the casts ourselves.
     return SPI_ReceiveData32(this->config->register_base);
 }
