@@ -47,7 +47,7 @@ void SPIClass::end()
     SPI_DeInit(this->config->register_base);
 }
 
-void SPIClass::setClockDivider(const uint8_t divider)
+void SPIClass::setClockDivider(const uint16_t divider)
 {
     en_spi_clk_div_t ddl_divider;
     switch(divider)

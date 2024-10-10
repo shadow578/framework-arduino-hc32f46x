@@ -25,7 +25,7 @@ public:
 	void begin(const gpio_pin_t mosi_pin, const gpio_pin_t miso_pin, const gpio_pin_t clock_pin);
 	void end();
 
-	void setClockDivider(const uint8_t divider);
+	void setClockDivider(const uint16_t divider);
 	void setBitOrder(const BitOrder order);
 
 	inline uint8_t transfer(const uint8_t data)
