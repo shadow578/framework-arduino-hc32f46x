@@ -22,7 +22,21 @@ public:
 		this->config = config;
 	}
 
-	void begin(const gpio_pin_t mosi_pin, const gpio_pin_t miso_pin, const gpio_pin_t clock_pin);
+	void set_mosi_pin(const gpio_pin_t pin) { this->mosi_pin = pin; }
+	void set_miso_pin(const gpio_pin_t pin) { this->miso_pin = pin; }
+	void set_clock_pin(const gpio_pin_t pin) { this->clock_pin = pin; }
+	void set_pins(const gpio_pin_t mosi, const gpio_pin_t miso, const gpio_pin_t clock) 
+	{
+		this->set_mosi_pin(mosi);
+		this->set_miso_pin(miso);
+		this->set_clock_pin(clock);
+	}
+
+	/**
+	 * @brief initialize the SPI peripheral
+	 * @note you must set the MOSI, MISO and CLOCK pin before calling this function
+	 */
+	void begin();
 	void end();
 
 	void setClockDivider(const uint16_t divider);
@@ -57,6 +71,9 @@ public:
 
 private:
 	spi_config_t *config;
+	gpio_pin_t mosi_pin;
+	gpio_pin_t miso_pin;
+	gpio_pin_t clock_pin;
 
 	/**
 	 * @brief synchronously send data_len bits of data

@@ -3,12 +3,12 @@
 
 SPIClass SPI1(&SPI1_config);
 
-void SPIClass::begin(const gpio_pin_t mosi_pin, const gpio_pin_t miso_pin, const gpio_pin_t clock_pin)
+void SPIClass::begin()
 {
     // setup pins
-    GPIO_SetFunc(mosi_pin, this->config->mosi_func, Disable);
-    GPIO_SetFunc(miso_pin, this->config->miso_func, Disable);
-    GPIO_SetFunc(clock_pin, this->config->sck_func, Disable);
+    GPIO_SetFunc(this->mosi_pin, this->config->mosi_func, Disable);
+    GPIO_SetFunc(this->miso_pin, this->config->miso_func, Disable);
+    GPIO_SetFunc(this->clock_pin, this->config->sck_func, Disable);
 
     // enable peripheral clock
     PWC_Fcg1PeriphClockCmd(this->config->clock_id, Enable);
