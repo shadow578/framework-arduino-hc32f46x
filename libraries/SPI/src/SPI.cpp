@@ -1,6 +1,8 @@
 #include "SPI.h"
 #include <drivers/gpio/gpio.h>
 
+SPIClass SPI1(&SPI1_config);
+
 void SPIClass::begin(const gpio_pin_t mosi_pin, const gpio_pin_t miso_pin, const gpio_pin_t clock_pin)
 {
     // setup pins

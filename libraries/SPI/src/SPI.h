@@ -73,4 +73,13 @@ private:
 	uint32_t receive();
 };
 
+/**
+ * @brief global SPI instance, uses SPI1 peripheral.
+ * @note 3 other SPI peripherals are available (SPI2-4), but need to be instanciated manually
+ */
+extern SPIClass SPI1;
+
+// alias SPI1 to SPI for compatibility with libraries
+#define SPI SPI1
+
 #endif /* SPI_H_ */
