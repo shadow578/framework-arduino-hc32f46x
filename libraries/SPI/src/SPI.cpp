@@ -61,6 +61,10 @@ void SPIClass::begin()
 
     SPI_Init(this->config->register_base, &spiConfig);
     SPI_Cmd(this->config->register_base, Enable);
+
+    // beginTransaction acts as a wrapper for setClockFrequency and setBitOrder
+    // so calling it here just acts as setting the default config
+    this->beginTransaction(SPISettings());
 }
 
 void SPIClass::end()
