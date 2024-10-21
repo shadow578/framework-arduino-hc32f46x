@@ -81,6 +81,7 @@ public:
 	void begin();
 	void end();
 
+	void setClockFrequency(const uint32_t frequency);
 	void setClockDivider(const uint16_t divider);
 	void setBitOrder(const BitOrder order);
 
