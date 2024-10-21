@@ -119,3 +119,15 @@ uint32_t SPIClass::receive()
     // so no need to use the specific functions, we can do the casts ourselves.
     return SPI_ReceiveData32(this->config->register_base);
 }
+
+
+void SPIClass::beginTransaction(SPISettings settings)
+{
+    // TODO: handle clockFreq and dataMode
+    this->setBitOrder(settings.bitOrder);
+}
+
+void SPIClass::endTransaction(void)
+{
+
+}

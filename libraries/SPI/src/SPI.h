@@ -14,6 +14,48 @@
 #error "SPI library requires PWC DDL to be enabled"
 #endif
 
+
+// SPI_HAS_TRANSACTION means SPI has
+//   - beginTransaction()
+//   - endTransaction()
+//   - usingInterrupt()
+//   - SPISetting(clock, bitOrder, dataMode)
+#define SPI_HAS_TRANSACTION 1
+
+#define SPI_MODE0 0x02
+#define SPI_MODE1 0x00
+#define SPI_MODE2 0x03
+#define SPI_MODE3 0x01
+
+class SPISettings
+{
+public:
+	SPISettings(uint32_t clock, BitOrder bitOrder, uint8_t dataMode)
+	{
+		_init(clock, bitOrder, dataMode);
+	}
+
+	// Default speed set to 4MHz, SPI mode set to MODE 0 and Bit order set to MSB first.
+	SPISettings()
+	{
+		_init(4000000, MSBFIRST, SPI_MODE0);
+	}
+
+private:
+	inline void _init(uint32_t clock, BitOrder bitOrder, uint8_t dataMode)
+	{
+		this->clockFreq = clock;
+		this->bitOrder = bitOrder;
+		this->dataMode = dataMode;
+	}
+
+	uint32_t clockFreq;
+	uint8_t dataMode;
+	uint32_t bitOrder;
+
+	friend class SPIClass;
+};
+
 class SPIClass
 {
 public:
@@ -68,6 +110,9 @@ public:
 			buffer++;
 		}
 	}
+
+	void beginTransaction(SPISettings settings);
+	void endTransaction(void)
 
 private:
 	spi_config_t *config;
