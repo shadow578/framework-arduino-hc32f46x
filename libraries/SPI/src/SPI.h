@@ -51,7 +51,7 @@ private:
 
 	uint32_t clockFreq;
 	uint8_t dataMode;
-	uint32_t bitOrder;
+	BitOrder bitOrder;
 
 	friend class SPIClass;
 };
@@ -113,7 +113,7 @@ public:
 	}
 
 	void beginTransaction(SPISettings settings);
-	void endTransaction(void)
+	void endTransaction(void);
 
 private:
 	spi_config_t *config;
