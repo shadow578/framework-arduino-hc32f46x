@@ -14,6 +14,8 @@
 #error "SPI library requires PWC DDL to be enabled"
 #endif
 
+#warning "SPI on the HC32F460 has not been tested yet. See https://github.com/shadow578/framework-arduino-hc32f46x/pull/29" 
+
 
 // SPI_HAS_TRANSACTION means SPI has
 //   - beginTransaction()
