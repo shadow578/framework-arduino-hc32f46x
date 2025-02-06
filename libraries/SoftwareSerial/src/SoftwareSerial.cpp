@@ -26,6 +26,7 @@ SoftwareSerial::SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin,
     rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
 {
     this->rx_buffer = new RingBuffer<uint8_t>(SOFTWARE_SERIAL_BUFFER_SIZE);
+    CORE_ASSERT(this->rx_buffer != nullptr, "");
 }
 
 SoftwareSerial::~SoftwareSerial()
@@ -416,6 +417,8 @@ void SoftwareSerial::do_tx()
     timer.pause();
 
     ListenerItem *item = new ListenerItem;
+    CORE_ASSERT(item != nullptr, "");
+
     item->listener = listener;
     item->next = listeners;
     listeners = item;
