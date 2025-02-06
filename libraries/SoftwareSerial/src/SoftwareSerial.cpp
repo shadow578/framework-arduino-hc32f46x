@@ -1,22 +1,9 @@
 #include "SoftwareSerial.h"
 #include <drivers/gpio/gpio.h>
 
-uint32_t SoftwareSerial::initialized_baud_rate = 0;
-Timer0 SoftwareSerial::timer(&TIMER01B_config, SoftwareSerial::timer_isr); // TODO allow changing timer unit
-SoftwareSerial::ListenerItem *SoftwareSerial::listeners = nullptr;
-
 void SoftwareSerial::begin(const uint32_t baud)
 {
-    // already initialized to a different baud rate?
-    if (initialized_baud_rate != 0 && initialized_baud_rate != baud)
-    {
-        panic("all SoftwareSerials must use the same baud rate!");
-        return;
-    }
-    initialized_baud_rate = baud;
-
-    // setup timer
-    timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE);
+    this->baud = baud;
 
     // half-duplex starts out in TX mode, so it is always enabled
     setup_tx();
@@ -34,6 +21,72 @@ void SoftwareSerial::end()
 {
     stopListening();
     remove_listener(this);
+}
+
+bool SoftwareSerial::listen()
+{
+    rx_wait_ticks = 1; // next interrupt will check for start bit
+    rx_bit_count = -1; // wait for start bit
+
+    // change the speed of the timer
+    // this function automatically waits for all pending TX operations to finish
+    const bool did_speed_change = timer_set_speed(baud);
+
+    // enable RX
+    if (is_half_duplex())
+    {
+        set_half_duplex_mode(true /*=RX*/);
+    }
+    else
+    {
+        enable_rx = true;
+    }
+
+    return did_speed_change;
+}
+
+bool SoftwareSerial::isListening()
+{
+    return current_timer_speed == baud;
+}
+
+bool SoftwareSerial::stopListening()
+{
+    // wait for any pending TX operations to finish
+    while (enable_tx)
+        yield();
+    
+    // disable RX
+    const bool was_listening = enable_rx || enable_tx;
+    if (is_half_duplex())
+    {
+        set_half_duplex_mode(false /*=TX*/);
+    }
+    else
+    {
+        enable_rx = false;
+    }
+
+    // if no other instance is listening, stop the timer
+    bool any_listening = false;
+    ListenerItem *item = listeners;
+    while (item != nullptr)
+    {
+        if (item->listener->isListening())
+        {
+            any_listening = true;
+            break;
+        }
+
+        item = item->next;
+    }
+
+    if (!any_listening)
+    {
+        timer_set_speed(0);
+    }
+
+    return was_listening;
 }
 
 bool SoftwareSerial::overflow()
@@ -62,9 +115,12 @@ size_t SoftwareSerial::write(const uint8_t byte)
         tx_frame = ~tx_frame;
     }
 
+    // ensure timer is running at the correct speed
+    timer_set_speed(baud);
+
     // ensure TX is enabled in half-duplex mode
     // this call is a no-op if not in half-duplex mode, so no additional check
-    setup_half_duplex(false);
+    set_half_duplex_mode(false /*=TX*/);
 
     // start transmission on next interrupt
     tx_bit_count = 0;
@@ -110,7 +166,7 @@ void SoftwareSerial::setup_tx()
     pinMode(tx_pin, OUTPUT);
 }
 
-void SoftwareSerial::setup_half_duplex(const bool rx)
+void SoftwareSerial::set_half_duplex_mode(const bool rx)
 {
     // if not half-duplex mode, ignore this
     if (!is_half_duplex()) return;
@@ -216,7 +272,7 @@ void SoftwareSerial::do_tx()
             // wait HALF_DUPLEX_SWITCH_DELAY bits before switching to RX
             if (tx_bit_count >= 10 + SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY)
             {
-                setup_half_duplex(true);
+                set_half_duplex_mode(true /*=RX*/);
             }
         }
         else
@@ -234,12 +290,56 @@ void SoftwareSerial::do_tx()
     tx_wait_ticks = SOFTWARE_SERIAL_OVERSAMPLE;
 }
 
+//
+// Timer control
+//
+
+uint32_t SoftwareSerial::current_timer_speed = 0;
+Timer0 SoftwareSerial::timer(&TIMER01B_config, SoftwareSerial::timer_isr); // TODO allow changing timer unit
+SoftwareSerial::ListenerItem *SoftwareSerial::listeners = nullptr;
+
+/*static*/ bool SoftwareSerial::timer_set_speed(const uint32_t baud)
+{
+    if (current_timer_speed == baud) return false;
+
+    // speed change operations are fairly costly because they block until pending TX operations finish
+    // so print a warning if this happens
+    if (current_timer_speed != 0)
+    {
+        CORE_DEBUG_PRINTF("SoftwareSerial: baud rate change from %lu to %lu. Consider configuring all your software serials to the same baud rate to improve performance.\n", 
+            current_timer_speed, 
+            baud);
+
+        // wait for all pending TX operations in active channels to finish before changing speed
+        ListenerItem *item = listeners;
+        while (item != nullptr)
+        {
+            while (item->listener->enable_tx)
+                yield();
+
+            item = item->next;
+        }
+    }
+
+    // (re-) initialize timer to the baud rate frequency, with oversampling
+    // if already running, timer will automatically stop in the start() call
+    timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE);
+    current_timer_speed = baud;
+    return true;
+
+} 
+
 /*static*/ void SoftwareSerial::add_listener(SoftwareSerial *listener)
 {
+    // pause timer while modifying listener list to avoid race conditions
+    timer.pause();
+
     ListenerItem *item = new ListenerItem;
     item->listener = listener;
     item->next = listeners;
     listeners = item;
+
+    timer.resume();
 }
 
 /*static*/ void SoftwareSerial::remove_listener(SoftwareSerial *listener)
@@ -250,6 +350,9 @@ void SoftwareSerial::do_tx()
     {
         if (item->listener == listener)
         {
+            // pause timer while modifying listener list to avoid race conditions
+            timer.pause();
+
             if (prev == nullptr)
             {
                 listeners = item->next;
@@ -258,6 +361,8 @@ void SoftwareSerial::do_tx()
             {
                 prev->next = item->next;
             }
+
+            timer.resume();
 
             delete item;
             return;
@@ -273,8 +378,12 @@ void SoftwareSerial::do_tx()
     ListenerItem *item = listeners;
     while (item != nullptr)
     {
-        item->listener->do_tx();
-        item->listener->do_rx();
+        // only call RX/TX if instance uses the correct baud rate
+        if (item->listener->isListening())
+        {
+            item->listener->do_tx();
+            item->listener->do_rx();
+        }
         
         item = item->next;
     }
