@@ -1,6 +1,8 @@
 #ifndef SOFTWARESERIAL_H
 #define SOFTWARESERIAL_H
 
+#warning "SoftwareSerial on HC32F460 is experimental!"
+
 #include <Arduino.h>
 #include <RingBuffer.h>
 #include <Timer0.h>
@@ -15,6 +17,15 @@
 
 #ifndef SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY
 #define SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY 5 // bit-periods
+#endif
+
+#ifndef SOFTWARE_SERIAL_TIMER_PRESCALER
+#define SOFTWARE_SERIAL_TIMER_PRESCALER 2
+#endif
+
+#ifndef SOFTWARE_SERIAL_TIMER0_UNIT
+// recommented to not use TIMER0 Unit 1 Channel A, as it does not support sync mode
+#define SOFTWARE_SERIAL_TIMER0_UNIT TIMER01B_config // Timer0 Unit 1, Channel B
 #endif
 
 /**
@@ -32,6 +43,11 @@
  * b) Switching the baud rate is fairly slow, because it waits for all pending TX operations to finish.
  *    Additionally, a baud rate switch may cause data loss on the RX side.
  *    Due to this, it is recommended to configure all software serial instances to the same baud rate.
+ * c) The timer prescaler must be manually chosen to match the desired baud rate range.
+ *    Set SOFTWARE_SERIAL_TIMER_PRESCALER such that the frequency error is minimal.
+ *    The default value of 2 is good for PCLK1=50MHz and OVERSAMPLE=3 for baud rates 
+ *    between1200 to 38400 baud, with < 0.01% error.
+ *    For baud rates between 38400 and 115200, a prescaler of 1 is recommended (< 0.5% error).
  */
 class SoftwareSerial : public Stream
 {
@@ -49,20 +65,8 @@ public:
      * @param invert invert high and low on RX and TX lines
      * @note when rx_pin == tx_pin, half-duplex mode is enabled
      */
-    SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert = false)
-        : 
-        #ifdef __CORE_DEBUG
-        id(next_id++),
-        #endif
-        rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
-    {
-        this->rx_buffer = new RingBuffer<uint8_t>(SOFTWARE_SERIAL_BUFFER_SIZE);
-    }
-    ~SoftwareSerial()
-    {
-        end();
-        delete this->rx_buffer;
-    }
+    SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert = false);
+    virtual ~SoftwareSerial();
 
     /**
      * @brief setup the software serial

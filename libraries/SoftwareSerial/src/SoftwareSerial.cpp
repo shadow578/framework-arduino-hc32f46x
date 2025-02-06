@@ -1,6 +1,10 @@
 #include "SoftwareSerial.h"
 #include <drivers/gpio/gpio.h>
 
+static_assert(SOFTWARE_SERIAL_BUFFER_SIZE > 0, "SOFTWARE_SERIAL_BUFFER_SIZE must be > 0");
+static_assert(SOFTWARE_SERIAL_OVERSAMPLE >= 3, "SOFTWARE_SERIAL_OVERSAMPLE must be >= 3");
+static_assert(SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY >= 0, "SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY must be >= 0");
+
 #ifdef __CORE_DEBUG
 /*static*/ uint8_t SoftwareSerial::next_id = 0;
 
@@ -14,6 +18,21 @@
 #define SOFTSERIAL_STATIC_DEBUG_PRINTF(fmt, ...)
 #endif
 
+SoftwareSerial::SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert)
+    : 
+    #ifdef __CORE_DEBUG
+    id(next_id++),
+    #endif
+    rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
+{
+    this->rx_buffer = new RingBuffer<uint8_t>(SOFTWARE_SERIAL_BUFFER_SIZE);
+}
+
+SoftwareSerial::~SoftwareSerial()
+{
+    end();
+    delete this->rx_buffer;
+}
 
 void SoftwareSerial::begin(const uint32_t baud)
 {
@@ -322,7 +341,7 @@ void SoftwareSerial::do_tx()
 //
 
 /*static*/ uint32_t SoftwareSerial::current_timer_speed = 0;
-/*static*/ Timer0 SoftwareSerial::timer(&TIMER01B_config, SoftwareSerial::timer_isr); // TODO allow changing timer unit
+/*static*/ Timer0 SoftwareSerial::timer(&SOFTWARE_SERIAL_TIMER0_UNIT, SoftwareSerial::timer_isr);
 /*static*/ SoftwareSerial::ListenerItem *SoftwareSerial::listeners = nullptr;
 
 /*static*/ bool SoftwareSerial::timer_set_speed(const uint32_t baud)
@@ -352,8 +371,9 @@ void SoftwareSerial::do_tx()
 
     // (re-) initialize timer to the baud rate frequency, with oversampling
     // if already running, timer will automatically stop in the start() call
-    timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE);
+    timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE, SOFTWARE_SERIAL_TIMER_PRESCALER);
     current_timer_speed = baud;
+    timer.resume(); // needed to actually start the timer
     return true;
 
 } 
