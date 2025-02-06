@@ -95,6 +95,63 @@ void SoftwareSerial::flush()
 // ISR
 //
 
+void SoftwareSerial::do_rx()
+{
+    // if not enabled, do nothing
+    if (!enable_rx) return;
+
+    // if tick count is non-zero, continue waiting
+    rx_tick_count--;
+    if (rx_tick_count > 0) return;
+
+    const bool bit = GPIO_GetBit(rx_pin) ^ invert;
+
+    // waiting for start bit?
+    if (rx_frame_bits_count == -1)
+    {
+        // TODO: is this correct??
+        if (!bit)
+        {
+            // got start bit
+            current_rx_frame = 0;
+            rx_frame_bits_count = 0;
+
+            // wait 1 1/2 bit times to sample in the middle of the bit
+            rx_tick_count = SOFTWARE_SERIAL_OVERSAMPLE + (SOFTWARE_SERIAL_OVERSAMPLE >> 1);
+        }
+        else
+        {
+            // waiting for start bit, but didn't get it
+            // wait for next interrupt to check again
+            rx_tick_count = 1;
+        }
+    }
+    else if (rx_frame_bits_count >= 8) // waiting for stop bit?
+    {
+        if (bit)
+        {
+            // got stop bit, add byte to buffer
+            bool overflow;
+            rx_buffer->push(current_rx_frame, true, overflow);
+
+            // avoid overwriting overflow flag
+            if (overflow) did_rx_overflow = true;
+        }
+
+        // assume frame is completed, wait for next start bit at next interrupt
+        rx_frame_bits_count = -1;
+        rx_tick_count = 1;
+    }
+    else // data bits
+    {
+        current_rx_frame >>= 1;
+        if (bit) current_rx_frame |= 0x80;
+        rx_frame_bits_count++;
+        rx_tick_count = SOFTWARE_SERIAL_OVERSAMPLE;
+    }
+
+}
+
 void SoftwareSerial::do_tx()
 {
     // if not enabled, do nothing

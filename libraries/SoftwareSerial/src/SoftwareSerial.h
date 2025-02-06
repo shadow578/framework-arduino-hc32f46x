@@ -93,8 +93,9 @@ private: // RX logic
     bool did_rx_overflow : 1;
     bool enable_rx : 1;
 
-    uint16_t current_rx_frame = 0;
-    uint8_t rx_frame_bits_count = 0xff; // 0xff = waiting for start bit
+    uint8_t current_rx_frame = 0; // 8 bits
+    int8_t rx_frame_bits_count = -1; // -1 means waiting for start bit
+    int8_t rx_tick_count = 0;
 
     /**
      * @brief receive a single bit. called by the timer ISR
@@ -106,7 +107,7 @@ private: // TX logic
     bool tx_pending : 1;
 
     uint16_t current_tx_frame = 0; // 10 bits
-    uint8_t tx_frame_bits_count = 0;
+    int8_t tx_frame_bits_count = 0;
     int8_t tx_tick_count = 0;
 
     /**
