@@ -1,8 +1,27 @@
 # Software Serial for the HC32F460
 
+The Software Serial library allows serial (UART) communication on any digital pin of the board, bit-banging the protocol. 
+It it possible to have multiple software serial ports.
+
+The implementation of this library is based on the [SoftwareSerial library of the STM32duino project](https://github.com/stm32duino/Arduino_Core_STM32/blob/main/libraries/SoftwareSerial/).
 
 
-## Calculating `SOFTWARE_SERIAL_TIMER_PRESCALER`
+## Configuration Options
+
+To configure the library, you may add the following defines to your build environment.
+
+| Name | Default | Description |
+|-|-|-|
+| `SOFTWARE_SERIAL_BUFFER_SIZE` | `32` | size of the receive buffer |
+| `SOFTWARE_SERIAL_OVERSAMPLE` | `3` | oversampling rate. Each bit period is equal to OVERSAMPLE ticks, and bits are sampled in the middle |
+| `SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY` | `5` | bit periods before half duplex switches TX to RX |
+| `SOFTWARE_SERIAL_TIMER_PRESCALER` | `2` | prescaler of the TIMER0. set according to PCLK1 and desired baud rate range |
+| `SOFTWARE_SERIAL_TIMER0_UNIT` | `TIMER01B_config` | TIMER0 unit to use for software serial. Using TIMER01A is not recommended |
+| `SOFTWARE_SERIAL_TIMER_PRIORITY` | `3` | interrupt priority of the timer interrupt |
+| `SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER` | `0` | behaviour of the `flush()` method. `0` = waits for pending TX to complete. `1` = clear RX buffer. STMduino library uses behaviour `1` |
+
+
+### Calculating `SOFTWARE_SERIAL_TIMER_PRESCALER`
 
 to calculate, use the following c++ program
 
@@ -66,6 +85,3 @@ int main()
               << std::endl;
 }
 ```
-
-
-
