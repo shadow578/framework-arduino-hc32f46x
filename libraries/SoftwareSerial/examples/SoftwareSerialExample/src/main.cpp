@@ -14,24 +14,22 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-SoftwareSerial mySerial(/* RX */ PB0, /* TX */ PB1);
+constexpr gpio_pin_t RX_PIN = PA15;
+constexpr gpio_pin_t TX_PIN = PA9;
+
+SoftwareSerial mySerial(/* RX */ RX_PIN, /* TX */ TX_PIN);
 
 void setup() 
 {
-  Serial.begin(9600);
-  Serial.println("Goodnight moon!");
-
   mySerial.begin(9600);
   mySerial.println("Hello, world?");
 }
 
 void loop() 
 {
-  if (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
+  while (mySerial.available())
+    mySerial.write(mySerial.read());
 
-  if (Serial.available()) {
-    mySerial.write(Serial.read());
-  }
+  mySerial.println(".");
+  delay(100);
 }
