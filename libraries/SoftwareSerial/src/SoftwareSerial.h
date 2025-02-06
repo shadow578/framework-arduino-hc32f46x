@@ -35,6 +35,12 @@
  */
 class SoftwareSerial : public Stream
 {
+#ifdef __CORE_DEBUG
+private:
+    static uint8_t next_id;
+    const uint8_t id;
+#endif
+
 public:
     /**
      * @brief create a SoftwareSerial instance
@@ -44,7 +50,11 @@ public:
      * @note when rx_pin == tx_pin, half-duplex mode is enabled
      */
     SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert = false)
-        : rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
+        : 
+        #ifdef __CORE_DEBUG
+        id(next_id++),
+        #endif
+        rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
     {
         this->rx_buffer = new RingBuffer<uint8_t>(SOFTWARE_SERIAL_BUFFER_SIZE);
     }
