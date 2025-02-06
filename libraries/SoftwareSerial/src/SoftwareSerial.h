@@ -23,9 +23,20 @@
 #define SOFTWARE_SERIAL_TIMER_PRESCALER 2
 #endif
 
-#ifndef SOFTWARE_SERIAL_TIMER0_UNIT
 // recommented to not use TIMER0 Unit 1 Channel A, as it does not support sync mode
+#ifndef SOFTWARE_SERIAL_TIMER0_UNIT
 #define SOFTWARE_SERIAL_TIMER0_UNIT TIMER01B_config // Timer0 Unit 1, Channel B
+#endif
+
+#ifndef SOFTWARE_SERIAL_TIMER_PRIORITY
+#define SOFTWARE_SERIAL_TIMER_PRIORITY 3
+#endif
+
+// how SoftwareSerial behaves when flush() is called
+// when 0: flush() will wait for all pending TX operations to finish (Arduinio >1.0 behavior)
+// when 1: flush() will clear the RX buffer (old behaviour; how the STM32duino library does it)
+#ifndef SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER
+#define SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER 0
 #endif
 
 /**
@@ -148,7 +159,7 @@ private: // common
 private: // RX logic
     RingBuffer<uint8_t> *rx_buffer;
     bool did_rx_overflow : 1;
-    bool enable_rx : 1;
+    bool rx_active : 1;
 
     uint8_t rx_frame = 0; // 8 bits
     int8_t rx_bit_count = -1; // -1 means waiting for start bit
@@ -160,7 +171,7 @@ private: // RX logic
     void do_rx();
 
 private: // TX logic
-    bool enable_tx : 1;
+    bool tx_active : 1;
     bool tx_pending : 1;
 
     uint16_t tx_frame = 0; // 10 bits
@@ -218,6 +229,13 @@ private: // Timer0 ISR logic
      * @brief timer callback
      */
     static void timer_isr();
+
+public:
+    /**
+     * @brief set the interrupt priority for the SoftwareSerial timer
+     * @param priority interrupt priority to set
+     */
+    static void setInterruptPriority(const uint32_t priority);
 };
 
 #endif // SOFTWARESERIAL_H

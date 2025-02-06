@@ -80,7 +80,7 @@ bool SoftwareSerial::listen()
     }
     else
     {
-        enable_rx = true;
+        rx_active = true;
     }
 
     SOFTSERIAL_DEBUG_PRINTF("started listening @baud=%lu; did_speed_change=%d\n", baud, did_speed_change);
@@ -95,18 +95,18 @@ bool SoftwareSerial::isListening()
 bool SoftwareSerial::stopListening()
 {
     // wait for any pending TX operations to finish
-    while (enable_tx)
+    while (tx_active)
         yield();
     
     // disable RX
-    const bool was_listening = enable_rx || enable_tx;
+    const bool was_listening = rx_active || tx_active;
     if (is_half_duplex())
     {
         set_half_duplex_mode(false /*=TX*/);
     }
     else
     {
-        enable_rx = false;
+        rx_active = false;
     }
 
     // if no other instance is listening, stop the timer
@@ -146,9 +146,11 @@ int SoftwareSerial::peek()
 
 size_t SoftwareSerial::write(const uint8_t byte)
 {
-    // wait for previous TX to finish
+    // in case this is half-duplex, setting tx_pending will avert the switch to RX mode
     tx_pending = true;
-    while (enable_tx)
+
+    // wait for previous TX to finish
+    while (tx_active)
         yield();
 
     // add start and stop bits
@@ -170,7 +172,7 @@ size_t SoftwareSerial::write(const uint8_t byte)
     tx_wait_ticks = 1;
 
     tx_pending = false;
-    enable_tx = true;
+    tx_active = true;
     return 1;
 }
 
@@ -192,12 +194,22 @@ int SoftwareSerial::available()
 
 void SoftwareSerial::flush()
 {
-    // TODO implement how
+#if SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER == 1
+    // clear RX buffer
+    rx_buffer->clear();
+#else
+    // wait for any pending TX operations to finish
+    while (tx_active)
+        yield();
+#endif
 }
 
 void SoftwareSerial::setup_rx()
 {
     SOFTSERIAL_DEBUG_PRINTF("setup_rx on %u\n", rx_pin);
+
+    // UART idle line is high, so set pull-up for non-inverted logic
+    // HC32 has no pull-down, so inverted logic will have to do without
     pinMode(rx_pin, invert ? INPUT : INPUT_PULLUP);
 }
 
@@ -206,6 +218,7 @@ void SoftwareSerial::setup_tx()
     SOFTSERIAL_DEBUG_PRINTF("setup_tx on %u\n", tx_pin);
 
     // set pin level before setting as output to avoid glitches
+    // UART idle line is high, so set high for non-inverted logic and vice versa
     if (invert) GPIO_ResetBits(tx_pin);
     else GPIO_SetBits(tx_pin);
 
@@ -219,18 +232,18 @@ void SoftwareSerial::set_half_duplex_mode(const bool rx)
 
     if (rx)
     {
-        enable_tx = false;
+        tx_active = false;
         setup_rx();
 
         rx_bit_count = -1; // waiting for start bit
         rx_wait_ticks = 2; // wait 2 bit times for start bit
-        enable_rx = true;
+        rx_active = true;
     }
     else
     {
-        if (enable_rx)
+        if (rx_active)
         {
-            enable_rx = false;
+            rx_active = false;
             setup_tx();
         }
     }
@@ -243,7 +256,7 @@ void SoftwareSerial::set_half_duplex_mode(const bool rx)
 void SoftwareSerial::do_rx()
 {
     // if not enabled, do nothing
-    if (!enable_rx) return;
+    if (!rx_active) return;
 
     // if tick count is non-zero, continue waiting
     rx_wait_ticks--;
@@ -255,10 +268,10 @@ void SoftwareSerial::do_rx()
     // waiting for start bit?
     if (rx_bit_count == -1)
     {
-        // TODO: is this correct?? i though start bit was going HIGH, but this is how STM32 does it...
+        // is start bit?
+        // this is UART, so idle line is high and start bit is going low
         if (!bit)
         {
-            // got start bit
             rx_frame = 0;
             rx_bit_count = 0;
 
@@ -274,10 +287,11 @@ void SoftwareSerial::do_rx()
     }
     else if (rx_bit_count >= 8) // waiting for stop bit?
     {
-        // TODO: is this correct?? i though stop bit was going LOW, but this is how STM32 does it...
+        // is stop bit?
+        // this is UART, so stop bit (== idle line) is high
         if (bit)
         {
-            // got stop bit, add byte to buffer
+            // add byte to buffer
             bool overflow;
             rx_buffer->push(rx_frame, true, overflow);
 
@@ -286,6 +300,7 @@ void SoftwareSerial::do_rx()
         }
 
         // assume frame is completed, wait for next start bit at next interrupt
+        // even if there was no stop bit
         rx_bit_count = -1;
         rx_wait_ticks = 1;
     }
@@ -302,7 +317,7 @@ void SoftwareSerial::do_rx()
 void SoftwareSerial::do_tx()
 {
     // if not enabled, do nothing
-    if (!enable_tx) return;
+    if (!tx_active) return;
 
     // if tick count is non-zero, continue waiting
     tx_wait_ticks--;
@@ -323,13 +338,13 @@ void SoftwareSerial::do_tx()
         }
         else
         {
-            enable_tx = false;
+            tx_active = false;
         }
     }
 
     // send next bit
-    if (tx_frame & 1) GPIO_SetBits(tx_pin); // mark
-    else GPIO_ResetBits(tx_pin); // space
+    if (tx_frame & 1) GPIO_SetBits(tx_pin);
+    else GPIO_ResetBits(tx_pin);
 
     tx_frame >>= 1;
     tx_bit_count++;
@@ -348,6 +363,16 @@ void SoftwareSerial::do_tx()
 {
     if (current_timer_speed == baud) return false;
 
+    // stop timer?
+    if (baud == 0)
+    {
+        SOFTSERIAL_STATIC_DEBUG_PRINTF("timer_set_speed stopping timer\n");
+        timer.pause();
+        timer.stop();
+        current_timer_speed = 0;
+        return true;
+    }
+
     // speed change operations are fairly costly because they block until pending TX operations finish
     // so print a warning if this happens
     if (current_timer_speed != 0)
@@ -360,7 +385,7 @@ void SoftwareSerial::do_tx()
         ListenerItem *item = listeners;
         while (item != nullptr)
         {
-            while (item->listener->enable_tx)
+            while (item->listener->tx_active)
                 yield();
 
             item = item->next;
@@ -372,7 +397,14 @@ void SoftwareSerial::do_tx()
     // (re-) initialize timer to the baud rate frequency, with oversampling
     // if already running, timer will automatically stop in the start() call
     timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE, SOFTWARE_SERIAL_TIMER_PRESCALER);
+    
+    // set priority if initial start
+    if (current_timer_speed == 0)
+    {
+        setInterruptPriority(SOFTWARE_SERIAL_TIMER_PRIORITY);
+    }
     current_timer_speed = baud;
+
     timer.resume(); // needed to actually start the timer
     return true;
 
@@ -436,4 +468,9 @@ void SoftwareSerial::do_tx()
         
         item = item->next;
     }
+}
+
+/*static*/ void SoftwareSerial::setInterruptPriority(const uint32_t priority)
+{
+    timer.setCallbackPriority(priority);
 }
