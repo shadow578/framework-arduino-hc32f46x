@@ -18,13 +18,15 @@ void SoftwareSerial::begin(const uint32_t baud)
     // setup timer
     timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE);
 
-    //set_tx();
-    //if (!is_half_duplex)
-    //{
-    //    set_rx();
-    //    listen();
-    //}
+    // half-duplex starts out in TX mode, so it is always enabled
+    setup_tx();
+    if (!is_half_duplex)
+    {
+        setup_rx();
+        listen();
+    }
 
+    // make the timer ISR call this instance
     add_listener(this);
 }
 
@@ -36,13 +38,9 @@ void SoftwareSerial::end()
 
 bool SoftwareSerial::overflow()
 {
-    if (did_rx_overflow)
-    {
-        did_rx_overflow = false;
-        return true;
-    }
-
-    return false;
+    const bool overflow = did_rx_overflow;
+    did_rx_overflow = false;
+    return overflow;
 }
 
 int SoftwareSerial::peek()
@@ -53,6 +51,7 @@ int SoftwareSerial::peek()
 size_t SoftwareSerial::write(const uint8_t byte)
 {
     // wait for previous TX to finish
+    tx_pending = true;
     while (enable_tx)
         yield();
 
@@ -63,9 +62,15 @@ size_t SoftwareSerial::write(const uint8_t byte)
         tx_frame = ~tx_frame;
     }
 
+    // ensure TX is enabled in half-duplex mode
+    // this call is a no-op if not in half-duplex mode, so no additional check
+    setup_half_duplex(false);
+
     // start transmission on next interrupt
     tx_bit_count = 0;
     tx_wait_ticks = 1;
+
+    tx_pending = false;
     enable_tx = true;
     return 1;
 }
@@ -91,6 +96,44 @@ void SoftwareSerial::flush()
     // TODO implement how
 }
 
+void SoftwareSerial::setup_rx()
+{
+    pinMode(rx_pin, invert ? INPUT : INPUT_PULLUP);
+}
+
+void SoftwareSerial::setup_tx()
+{
+    // set pin level before setting as output to avoid glitches
+    if (invert) GPIO_ResetBits(tx_pin);
+    else GPIO_SetBits(tx_pin);
+
+    pinMode(tx_pin, OUTPUT);
+}
+
+void SoftwareSerial::setup_half_duplex(const bool rx)
+{
+    // if not half-duplex mode, ignore this
+    if (!is_half_duplex()) return;
+
+    if (rx)
+    {
+        enable_tx = false;
+        setup_rx();
+
+        rx_bit_count = -1; // waiting for start bit
+        rx_wait_ticks = 2; // wait 2 bit times for start bit
+        enable_rx = true;
+    }
+    else
+    {
+        if (enable_rx)
+        {
+            enable_rx = false;
+            setup_tx();
+        }
+    }
+}
+
 //
 // ISR
 //
@@ -104,12 +147,13 @@ void SoftwareSerial::do_rx()
     rx_wait_ticks--;
     if (rx_wait_ticks > 0) return;
 
+    // read bit, invert if inverted logic
     const bool bit = GPIO_GetBit(rx_pin) ^ invert;
 
     // waiting for start bit?
     if (rx_bit_count == -1)
     {
-        // TODO: is this correct??
+        // TODO: is this correct?? i though start bit was going HIGH, but this is how STM32 does it...
         if (!bit)
         {
             // got start bit
@@ -128,6 +172,7 @@ void SoftwareSerial::do_rx()
     }
     else if (rx_bit_count >= 8) // waiting for stop bit?
     {
+        // TODO: is this correct?? i though stop bit was going LOW, but this is how STM32 does it...
         if (bit)
         {
             // got stop bit, add byte to buffer
@@ -171,7 +216,7 @@ void SoftwareSerial::do_tx()
             // wait HALF_DUPLEX_SWITCH_DELAY bits before switching to RX
             if (tx_bit_count >= 10 + SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY)
             {
-                // TODO start RX
+                setup_half_duplex(true);
             }
         }
         else

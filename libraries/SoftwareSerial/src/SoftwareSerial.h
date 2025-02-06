@@ -78,7 +78,7 @@ public:
 
     using Print::write;
 
-private:
+private: // common
     const gpio_pin_t rx_pin;
     const gpio_pin_t tx_pin;
 
@@ -88,6 +88,23 @@ private:
     {
         return rx_pin == tx_pin;
     }
+
+    /**
+     * @brief setup RX pin for receiving
+     */
+    void setup_rx();
+
+    /**
+     * @brief setup TX pin for transmitting
+     */
+    void setup_tx();
+
+    /**
+     * @brief setup RX and TX pins for half-duplex communication
+     * @param rx true for RX, false for TX
+     * @note no-op if not in half-duplex mode
+     */
+    void setup_half_duplex(const bool rx);
 
 private: // RX logic
     RingBuffer<uint8_t> *rx_buffer;
