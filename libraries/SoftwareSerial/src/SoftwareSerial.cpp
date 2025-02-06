@@ -329,18 +329,22 @@ void SoftwareSerial::do_tx()
     {
         // if no frame is pending and half-duplex, switch to RX mode
         // otherwise, we're done transmitting
-        if (!tx_pending && is_half_duplex())
+        if (tx_pending)
+        {
+            tx_active = false;
+        }
+        else if (is_half_duplex() && isListening())
         {
             // wait HALF_DUPLEX_SWITCH_DELAY bits before switching to RX
+            // NOTE: in STM32dunio, they wait for 10 + (OVERSAMPLE * HALF_DUPLEX_SWITCH_DELAY) bits. i believe this is a bug on their end tho
             if (tx_bit_count >= 10 + SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY)
             {
                 set_half_duplex_mode(true /*=RX*/);
             }
         }
-        else
-        {
-            tx_active = false;
-        }
+
+        tx_wait_ticks = 1;
+        return;
     }
 
     // send next bit
