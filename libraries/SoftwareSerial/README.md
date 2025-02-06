@@ -12,7 +12,7 @@ To configure the library, you may add the following defines to your build enviro
 
 | Name | Default | Description |
 |-|-|-|
-| `SOFTWARE_SERIAL_BUFFER_SIZE` | `32` | size of the receive buffer |
+| `SOFTWARE_SERIAL_BUFFER_SIZE` | `32` | size of the receive buffer. it's highly likely that any transmission longer than this will be partially lost. |
 | `SOFTWARE_SERIAL_OVERSAMPLE` | `3` | oversampling rate. Each bit period is equal to OVERSAMPLE ticks, and bits are sampled in the middle |
 | `SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY` | `5` | bit periods before half duplex switches TX to RX |
 | `SOFTWARE_SERIAL_TIMER_PRESCALER` | `2` | prescaler of the TIMER0. set according to PCLK1 and desired baud rate range |
