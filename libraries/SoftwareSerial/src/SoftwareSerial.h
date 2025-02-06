@@ -39,6 +39,7 @@ public:
     }
     ~SoftwareSerial()
     {
+        end();
         delete this->rx_buffer;
     }
 
@@ -57,9 +58,9 @@ public:
     void end();
 
 
-    bool listen() { return false; }
-    bool isListening() { return true; }
-    bool stopListening() { return true; }
+    bool listen();
+    bool isListening() { return enable_rx; }
+    bool stopListening();
 
     bool overflow();
 
@@ -93,9 +94,9 @@ private: // RX logic
     bool did_rx_overflow : 1;
     bool enable_rx : 1;
 
-    uint8_t current_rx_frame = 0; // 8 bits
-    int8_t rx_frame_bits_count = -1; // -1 means waiting for start bit
-    int8_t rx_tick_count = 0;
+    uint8_t rx_frame = 0; // 8 bits
+    int8_t rx_bit_count = -1; // -1 means waiting for start bit
+    int8_t rx_wait_ticks = 0;
 
     /**
      * @brief receive a single bit. called by the timer ISR
@@ -106,9 +107,9 @@ private: // TX logic
     bool enable_tx : 1;
     bool tx_pending : 1;
 
-    uint16_t current_tx_frame = 0; // 10 bits
-    int8_t tx_frame_bits_count = 0;
-    int8_t tx_tick_count = 0;
+    uint16_t tx_frame = 0; // 10 bits
+    int8_t tx_bit_count = 0;
+    int8_t tx_wait_ticks = 0;
 
     /**
      * @brief transmit a single bit. called by the timer ISR
