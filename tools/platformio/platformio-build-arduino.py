@@ -123,7 +123,8 @@ core_requirements = [
     "rmu",
     "sram",
     "usart",
-    "timera"
+    "timera",
+    "timer0"
 ]
 for req in core_requirements:
     board.update(f"build.ddl.{req}", "true")
