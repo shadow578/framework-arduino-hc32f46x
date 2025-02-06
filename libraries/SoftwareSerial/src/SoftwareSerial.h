@@ -9,14 +9,6 @@
 #define SOFTWARE_SERIAL_BUFFER_SIZE 64
 #endif
 
-#ifndef SOFTWARE_SERIAL_RX_BUFFER_SIZE
-#define SOFTWARE_SERIAL_RX_BUFFER_SIZE SOFTWARE_SERIAL_BUFFER_SIZE
-#endif
-
-#ifndef SOFTWARE_SERIAL_TX_BUFFER_SIZE
-#define SOFTWARE_SERIAL_TX_BUFFER_SIZE SOFTWARE_SERIAL_BUFFER_SIZE
-#endif
-
 #ifndef SOFTWARE_SERIAL_OVERSAMPLE
 #define SOFTWARE_SERIAL_OVERSAMPLE 3
 #endif
@@ -40,14 +32,15 @@ public:
      * @param invert invert high and low on RX and TX lines
      * @note when rx_pin == tx_pin, half-duplex mode is enabled
      */
-    SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert)
+    SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin, const bool invert = false)
+        : rx_pin(rx_pin), tx_pin(tx_pin), invert(invert)
     {
-        this->rx_pin = rx_pin;
-        this->tx_pin = tx_pin;
-        this->invert = invert;
-        this->is_half_duplex = rx_pin == tx_pin;
+        this->rx_buffer = new RingBuffer<uint8_t>(SOFTWARE_SERIAL_BUFFER_SIZE);
     }
-    virtual ~SoftwareSerial();
+    ~SoftwareSerial()
+    {
+        delete this->rx_buffer;
+    }
 
     /**
      * @brief setup the software serial
@@ -64,9 +57,9 @@ public:
     void end();
 
 
-    bool listen();
-    bool isListening() { return active_listener == this; }
-    bool stopListening();
+    bool listen() { return false; }
+    bool isListening() { return true; }
+    bool stopListening() { return true; }
 
     bool overflow();
 
@@ -87,18 +80,41 @@ public:
 private:
     const gpio_pin_t rx_pin;
     const gpio_pin_t tx_pin;
+
     const bool invert;
-    const bool is_half_duplex;
-    
-    bool did_tx_overflow = false;
 
-    RingBuffer<uint8_t> rx_buffer(SOFTWARE_SERIAL_RX_BUFFER_SIZE);
-    RingBuffer<uint8_t> tx_buffer(SOFTWARE_SERIAL_TX_BUFFER_SIZE);
+    inline bool is_half_duplex()
+    {
+        return rx_pin == tx_pin;
+    }
 
-    void send();
-    void recv();
+private: // RX logic
+    RingBuffer<uint8_t> *rx_buffer;
+    bool did_rx_overflow : 1;
+    bool enable_rx : 1;
 
-private:
+    uint16_t current_rx_frame = 0;
+    uint8_t rx_frame_bits_count = 0xff; // 0xff = waiting for start bit
+
+    /**
+     * @brief receive a single bit. called by the timer ISR
+     */
+    void do_rx();
+
+private: // TX logic
+    bool enable_tx : 1;
+    bool tx_pending : 1;
+
+    uint16_t current_tx_frame = 0; // 10 bits
+    uint8_t tx_frame_bits_count = 0;
+    int8_t tx_tick_count = 0;
+
+    /**
+     * @brief transmit a single bit. called by the timer ISR
+     */
+    void do_tx();
+
+private: // Timer0 ISR logic
     /**
      * @brief baud rate that software serial is running at (ALL of them).
      * @note 0 if not initialized
@@ -110,19 +126,24 @@ private:
      */
     static Timer0 timer;
 
-    /**
-     * @brief the software serial that is currently listening
-     */
-    static SoftwareSerial *active_listener;
+    struct ListenerItem
+    {
+        SoftwareSerial *listener;
+        ListenerItem *next;
+    };
 
     /**
-     * @brief the software serial that is currently listening
+     * @brief list of software serials that should be called in the timer ISR 
      */
-    static SoftwareSerial *active_listener;
+    static ListenerItem *listeners;
 
-    static volatile SoftwareSerial *active_out;
-    static volatile SoftwareSerial *active_in;
-}
+    static void add_listener(SoftwareSerial *listener);
+    static void remove_listener(SoftwareSerial *listener);
 
+    /**
+     * @brief timer callback
+     */
+    static void timer_isr();
+};
 
 #endif // SOFTWARESERIAL_H
