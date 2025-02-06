@@ -1,13 +1,18 @@
 #include "SoftwareSerial.h"
 #include <drivers/gpio/gpio.h>
 
+#define SOFTSERIAL_DEBUG_PRINTF(fmt, ...) \
+    CORE_DEBUG_PRINTF("[SoftwareSerial] " fmt, ##__VA_ARGS__)
+
+
 void SoftwareSerial::begin(const uint32_t baud)
 {
+    SOFTSERIAL_DEBUG_PRINTF("begin baud=%lu, half-duplex=%d\n", baud, is_half_duplex());
     this->baud = baud;
 
     // half-duplex starts out in TX mode, so it is always enabled
     setup_tx();
-    if (!is_half_duplex)
+    if (!is_half_duplex())
     {
         setup_rx();
         listen();
@@ -19,6 +24,7 @@ void SoftwareSerial::begin(const uint32_t baud)
 
 void SoftwareSerial::end()
 {
+    SOFTSERIAL_DEBUG_PRINTF("end\n");
     stopListening();
     remove_listener(this);
 }
@@ -42,6 +48,7 @@ bool SoftwareSerial::listen()
         enable_rx = true;
     }
 
+    SOFTSERIAL_DEBUG_PRINTF("started listening @baud=%lu; did_speed_change=%d\n", baud, did_speed_change);
     return did_speed_change;
 }
 
@@ -86,6 +93,7 @@ bool SoftwareSerial::stopListening()
         timer_set_speed(0);
     }
 
+    SOFTSERIAL_DEBUG_PRINTF("stopped listening; was_listening=%d\n", was_listening);
     return was_listening;
 }
 
@@ -154,11 +162,14 @@ void SoftwareSerial::flush()
 
 void SoftwareSerial::setup_rx()
 {
+    SOFTSERIAL_DEBUG_PRINTF("setup_rx on %lu\n", rx_pin);
     pinMode(rx_pin, invert ? INPUT : INPUT_PULLUP);
 }
 
 void SoftwareSerial::setup_tx()
 {
+    SOFTSERIAL_DEBUG_PRINTF("setup_tx on %lu\n", tx_pin);
+
     // set pin level before setting as output to avoid glitches
     if (invert) GPIO_ResetBits(tx_pin);
     else GPIO_SetBits(tx_pin);
@@ -306,7 +317,7 @@ SoftwareSerial::ListenerItem *SoftwareSerial::listeners = nullptr;
     // so print a warning if this happens
     if (current_timer_speed != 0)
     {
-        CORE_DEBUG_PRINTF("SoftwareSerial: baud rate change from %lu to %lu. Consider configuring all your software serials to the same baud rate to improve performance.\n", 
+        SOFTSERIAL_DEBUG_PRINTF("baud rate change from %lu to %lu. Consider configuring all your software serials to the same baud rate to improve performance.\n", 
             current_timer_speed, 
             baud);
 
@@ -320,6 +331,8 @@ SoftwareSerial::ListenerItem *SoftwareSerial::listeners = nullptr;
             item = item->next;
         }
     }
+
+    SOFTSERIAL_DEBUG_PRINTF("timer_set_speed baud=%lu\n", baud);
 
     // (re-) initialize timer to the baud rate frequency, with oversampling
     // if already running, timer will automatically stop in the start() call
