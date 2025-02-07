@@ -42,8 +42,9 @@ the following options configure the debugging behavior of the core.
 | `PANIC_USART<n>_TX_PIN`       | panic         | set the gpio pin that is used to transmit panic messages. `[n]` can be any value in [1,2,3,4]         | disabled      |
 | `CORE_DISABLE_FAULT_HANDLER`  | fault_handler | disable the core-internal fault handler. this is only recommended if you have your own fault handler. | disabled      |
 | `HARDFAULT_EXCLUDE_CFSR_INFO` | fault_handler | exclude CFSR flag parsing from fault output, reducing flash usage.                                    | disabled      |
+| `REDIRECT_PRINTF_TO_DEBUGGER` | core_debug    | redirect `printf()` calls to the debugger's console via semihosting. Set to `1` to enable             | disabled      |
 
-see the Documentation for the [`panic`](./PANIC.md) and [`fault_handler`](./FAULT_HANDLER.md) modules for more information.
+see the Documentation for the [`panic`](./PANIC.md), [`fault_handler`](./FAULT_HANDLER.md) and [`semihosting`](./SEMIHOSTING.md) modules for more information.
 
 
 ## Miscellanous Options
