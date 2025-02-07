@@ -19,9 +19,13 @@ for usage examples, refer to the example given in `examples/semihosting`.
 
 
 > [!WARNING]
-> without a debugger attached, calling any of the semihosting functions may result in the target stopping execution.
-
+> without a debugger attached, calling any of the semihosting functions may result in the target stopping execution.   
+> you can also check if a debugger is attached using the `sh_is_debugger_attached` function.
 
 ## printf redirection
 
 by defining `REDIRECT_PRINTF_TO_DEBUGGER=1` during build, the `printf` function will be redirected to the debugger console using semihosting.
+
+> [!TIP]
+> printf redirection will automatically check if a debugger is attached before redirecting output. 
+> this means that you can use `printf` in your code without worrying about the target stopping execution when no debugger is attached.

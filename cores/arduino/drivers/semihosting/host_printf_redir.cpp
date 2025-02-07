@@ -14,7 +14,12 @@
  * @return number of bytes written
  */
 extern "C" int _write(int file, char *ptr, int len) {
-  return sh_write(SH_STDOUT_FILENO, ptr, len);
+  if (!sh_is_debugger_attached()) {
+    return len;
+  }
+
+  const size_t r = sh_write(SH_STDOUT_FILENO, ptr, len);
+  return len - r;
 }
 
 /**

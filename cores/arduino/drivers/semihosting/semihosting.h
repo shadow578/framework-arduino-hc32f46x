@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <cstring>
+#include <hc32_ddl.h>
 
 
 #define SH_SYS_OPEN 0x01
@@ -33,6 +34,23 @@
 #define SH_OPEN_AP 10  // "a+"
 #define SH_OPEN_APB 11 // "a+b"
 
+/**
+ * @brief Check if semihosting is available (=a debugger is attached)
+ * @returns true if semihosting is available, false otherwise.
+ * 
+ * @note
+ * Since there isn't actually a direct way to check if semihosting is available,
+ * this function will instead check if a debugger is attached.
+ * While this may cause false positives, it at least stops the cpu from halting 
+ * due to the bkpt instruction used in semihosting calls.
+ * 
+ * @note 
+ * see https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/Debug-register-support-in-the-SCS/Debug-Halting-Control-and-Status-Register--DHCSR?lang=en
+ */
+inline bool sh_is_debugger_attached()
+{
+    return CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
+}
 
 /**
  * @brief Send a semihosting command to the debugger.

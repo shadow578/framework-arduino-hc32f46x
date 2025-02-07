@@ -11,6 +11,10 @@
 
 void setup()
 {
+  // wait for a debugger to attach
+  while(!sh_is_debugger_attached())
+    delay(100);
+
   // write to the hosts console
   sh_writec('H'); // ~= putchar('H');
   sh_write0("ello, world!\n"); // ~= puts("ello, world!\n");
