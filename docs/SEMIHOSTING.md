@@ -1,10 +1,50 @@
 # Semihosting Driver
 
-the arduino core includes a driver for Semihosting support.
+the arduino core includes a driver for [Semihosting](https://pyocd.io/docs/semihosting.html) support.
 Semihosting allows a debugging target (the HC32F460 in this case) to call system calls on the debugging host machine, e.g. writing to the debuggers console.
 
 > [!TIP]
 > Semihosting is only available when the target is connected to a debugger.
+
+> [!TIP]
+> Semihosting only works with a supported debugger and semihosting enabled.
+
+
+## Usage
+
+semihosting is by default disabled in pyOCD, so if you want to use it you'll need to enable it. 
+you can do this by either running 'monitor arm semihosting enable' in the debug console, or alternatively by adding the same command to your `.platformio.ini` file:
+
+```ini
+# ...
+debug_extra_cmds =
+    monitor arm semihosting enable
+```
+
+> [!TIP]
+> it seems like single-stepping over functions containing semihosting calls don't work correctly.   
+> the target will stop execution at the semihosting call, but gdb will not pick this up.
+> thus, the debugging sessions seems stuck.
+> To work around this, manually pause the target and continue again (make sure to set a breakpoint where you want to end up after continuing).
+
+
+### Console Output
+
+after enabling semihosting, you can connect to the telnet server (normally on port 4444, but refer to debug console) using a telnet client like puTTY.
+
+> [!TIP]
+> when using puTTY, make sure to enable the "Implicit CR in every LF" option in the terminal settings, as output is otherwise not displayed correctly.
+
+
+there is also some way to redirect the semihosting output to the debug console, but this doesn't seem to work at the moment.
+commands for this should normally be `monitor set option semihost_console_type=console` or `monitor set option semihost_console_type=telnet`, and can be checked with `monitor show option semihost_console_type`.
+
+
+### File I/O
+
+the semihosting driver supports writing to files on the host machine.
+relative paths are resolved relative to the pyOCD package directory, which is usually located in `~/.platformio/packages/tool-pyocd/` or `C:/Users/<username>/.platformio/packages/tool-pyocd/`.
+this sadly cannot be changed at the moment.
 
 
 ## C API

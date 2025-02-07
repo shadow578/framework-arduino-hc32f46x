@@ -2,8 +2,8 @@
  * Semihosting driver example.
  * 
  * For any of this do do anything, you must have run this in a debugging session.
- * Once connected, the debugger should break automatically.
- * From there, open the "Debug Console" and run: "monitor arm semihosting enable" to enable semihosting support.
+ * - Output is written to telnet, the port is printed in the debug console (normally it is 4444).
+ * - relative file paths are resolved relative to the pyOCD package directory (~/.platformio/packages/tool-pyocd).
  */
 
 #include <Arduino.h>

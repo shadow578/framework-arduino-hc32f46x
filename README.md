@@ -64,7 +64,7 @@ for documentation on configuration and non-standard features, see following docu
 - [Assert Mechanism](./docs/ASSERT.md)
 - [Panic Mechanism](./docs/PANIC.md)
 - [Fault Handler](./docs/FAULT_HANDLER.md)
-
+- [Semihosting](./docs/SEMIHOSTING.md)
 
 ## License
 
