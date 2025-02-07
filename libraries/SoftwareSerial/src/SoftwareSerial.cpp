@@ -343,6 +343,9 @@ void SoftwareSerial::do_tx()
             {
                 set_half_duplex_mode(true /*=RX*/);
             }
+            
+            // keep incrementing bit count to time the above check
+            tx_bit_count++;
         }
 
         tx_wait_ticks = 1;
