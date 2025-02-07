@@ -1,15 +1,7 @@
 /*
- * Software serial multiple serial test
+ * Software serial basic example.
  *
- * Receives from the hardware serial, sends to software serial.
- * Receives from software serial, sends to hardware serial.
- *
- * created back in the mists of time
- * modified 25 May 2012
- * by Tom Igoe
- * based on Mikal Hart's example
- *
- * This example code is in the public domain.
+ * echos any character received on the software serial port back to the sender.
  */
 #include <Arduino.h>
 #include <SoftwareSerial.h>
@@ -22,7 +14,7 @@ SoftwareSerial mySerial(/* RX */ RX_PIN, /* TX */ TX_PIN);
 void setup() 
 {
   mySerial.begin(9600);
-  mySerial.println("Hello, world?");
+  mySerial.println("Hello, world!");
 }
 
 void loop() 
@@ -30,6 +22,5 @@ void loop()
   while (mySerial.available())
     mySerial.write(mySerial.read());
 
-  mySerial.println(".");
-  delay(100);
+  delay(10);
 }
