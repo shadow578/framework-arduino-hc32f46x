@@ -1,8 +1,6 @@
 #ifndef SOFTWARESERIAL_H
 #define SOFTWARESERIAL_H
 
-#warning "SoftwareSerial on HC32F460 is experimental!"
-
 #include <Arduino.h>
 #include <RingBuffer.h>
 #include <Timer0.h>

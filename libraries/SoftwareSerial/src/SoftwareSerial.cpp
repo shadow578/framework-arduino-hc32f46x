@@ -1,6 +1,8 @@
 #include "SoftwareSerial.h"
 #include <drivers/gpio/gpio.h>
 
+#warning "SoftwareSerial on HC32F460 is experimental!"
+
 static_assert(SOFTWARE_SERIAL_BUFFER_SIZE > 0, "SOFTWARE_SERIAL_BUFFER_SIZE must be > 0");
 static_assert(SOFTWARE_SERIAL_OVERSAMPLE >= 3, "SOFTWARE_SERIAL_OVERSAMPLE must be >= 3");
 static_assert(SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY >= 0, "SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY must be >= 0");
