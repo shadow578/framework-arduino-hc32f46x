@@ -402,8 +402,6 @@ void SoftwareSerial::do_tx()
         }
     }
 
-    SOFTSERIAL_STATIC_DEBUG_PRINTF("timer_set_speed baud=%lu\n", baud);
-
     // (re-) initialize timer to the baud rate frequency, with oversampling
     // if already running, timer will automatically stop in the start() call
     timer.start(baud * SOFTWARE_SERIAL_OVERSAMPLE, SOFTWARE_SERIAL_TIMER_PRESCALER);
@@ -414,6 +412,13 @@ void SoftwareSerial::do_tx()
         setInterruptPriority(SOFTWARE_SERIAL_TIMER_PRIORITY);
     }
     current_timer_speed = baud;
+
+    const float actual_baud = (timer.get_actual_frequency() / SOFTWARE_SERIAL_OVERSAMPLE);
+    SOFTSERIAL_STATIC_DEBUG_PRINTF("timer_set_speed target baud=%lu; actual baud=%d.%d\n", 
+        baud, 
+        static_cast<int>(actual_baud),
+        static_cast<int>((actual_baud - static_cast<int>(actual_baud)) * 100)
+    );
 
     timer.resume(); // needed to actually start the timer
     return true;

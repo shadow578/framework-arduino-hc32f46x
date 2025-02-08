@@ -64,6 +64,42 @@ inline en_tim0_clock_div_t numeric_to_clock_div(const uint16_t n)
 }
 
 /**
+ * @brief convert en_tim0_clock_div_t to numerical value
+ * @note assert fails if invalid value
+ */
+inline uint16_t clock_div_to_numeric(const en_tim0_clock_div_t div)
+{
+    switch (div)
+    {
+    case Tim0_ClkDiv0:
+        return 1;
+    case Tim0_ClkDiv2:
+        return 2;
+    case Tim0_ClkDiv4:
+        return 4;
+    case Tim0_ClkDiv8:
+        return 8;
+    case Tim0_ClkDiv16:
+        return 16;
+    case Tim0_ClkDiv32:
+        return 32;
+    case Tim0_ClkDiv64:
+        return 64;
+    case Tim0_ClkDiv128:
+        return 128;
+    case Tim0_ClkDiv256:
+        return 256;
+    case Tim0_ClkDiv512:
+        return 512;
+    case Tim0_ClkDiv1024:
+        return 1024;
+    default:
+        CORE_ASSERT_FAIL("Invalid clock divider value");
+        return 1;
+    }
+}
+
+/**
  * @brief timer0 interrupt registration
  */
 inline void timer0_irq_register(timer0_interrupt_config_t &irq, voidFuncPtr callback, const char *name)
@@ -223,4 +259,38 @@ void Timer0::stop()
     TIMER0_DeInit(this->config->peripheral.register_base, this->config->peripheral.channel);
 
     TIMER0_DEBUG_PRINTF("stopped channel\n");
+}
+
+float Timer0::get_actual_frequency()
+{
+    // get timer channel base frequency, refer to start() for details
+    uint32_t base_frequency;
+    if (this->config->peripheral.register_base == M4_TMR01 && this->config->interrupt.interrupt_source == INT_TMR01_GCMA)
+    {        
+        base_frequency = LRC_VALUE;
+    }
+    else
+    {
+        update_system_clock_frequencies();
+        base_frequency = SYSTEM_CLOCK_FREQUENCIES.pclk1;
+    }
+
+    // get prescaler from peripheral registers
+    en_tim0_clock_div_t prescaler_reg;
+    if (this->config->peripheral.channel == Tim0_ChannelA)
+    {
+        prescaler_reg = static_cast<en_tim0_clock_div_t>(this->config->peripheral.register_base->BCONR_f.CKDIVA);
+    }
+    else
+    {
+        prescaler_reg = static_cast<en_tim0_clock_div_t>(this->config->peripheral.register_base->BCONR_f.CKDIVB);
+    }
+
+    const uint16_t prescaler = clock_div_to_numeric(prescaler_reg);
+
+    // get compare value from peripheral registers
+    const uint16_t compare = TIMER0_GetCmpReg(this->config->peripheral.register_base, this->config->peripheral.channel);
+
+    // calculate actual frequency
+    return (static_cast<float>(base_frequency) / static_cast<float>(prescaler)) / static_cast<float>(compare);
 }

@@ -174,6 +174,14 @@ public:
         TIMER0_ClearFlag(this->config->peripheral.register_base, this->config->peripheral.channel);
     }
 
+    /**
+     * @brief get the actual frequency of the timer0 channel
+     * @return actual frequency of the timer0 channel
+     * @note calculates the frequency from the live register values, so this 
+     * is what the timer is currently running at.
+     */
+    float get_actual_frequency();
+
 private:
     timer0_channel_config_t *config;
     voidFuncPtr callback;
