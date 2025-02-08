@@ -34,6 +34,11 @@ SoftwareSerial::SoftwareSerial(const gpio_pin_t rx_pin, const gpio_pin_t tx_pin,
 SoftwareSerial::~SoftwareSerial()
 {
     end();
+
+    #if SOFTWARE_SERIAL_STM32_API_COMPATIBILITY == 1
+    remove_listener(this);
+    #endif
+
     delete this->rx_buffer;
 }
 
@@ -43,6 +48,9 @@ void SoftwareSerial::begin(const uint32_t baud)
     if (this->baud != 0)
     {
         end();
+        #if SOFTWARE_SERIAL_STM32_API_COMPATIBILITY == 1
+        remove_listener(this);
+        #endif
     }
 
     SOFTSERIAL_DEBUG_PRINTF("begin: rx=%u, tx=%u, invert=%d, baud=%lu, half-duplex=%d\n", 
@@ -70,8 +78,11 @@ void SoftwareSerial::end()
 {
     SOFTSERIAL_DEBUG_PRINTF("end\n");
     stopListening();
+    
+    #if SOFTWARE_SERIAL_STM32_API_COMPATIBILITY == 0
     remove_listener(this);
     this->baud = 0;
+    #endif
 }
 
 bool SoftwareSerial::listen()
@@ -119,6 +130,7 @@ bool SoftwareSerial::stopListening()
         rx_active = false;
     }
 
+    #if SOFTWARE_SERIAL_STM32_API_COMPATIBILITY == 0
     // if no other instance is listening, stop the timer
     bool any_listening = false;
     ListenerItem *item = listeners;
@@ -130,14 +142,15 @@ bool SoftwareSerial::stopListening()
             any_listening = true;
             break;
         }
-
+    
         item = item->next;
     }
-
+    
     if (!any_listening)
     {
         timer_set_speed(0);
     }
+    #endif
 
     SOFTSERIAL_DEBUG_PRINTF("stopped listening; was_listening=%d\n", was_listening);
     return was_listening;
@@ -217,7 +230,8 @@ void SoftwareSerial::flush()
 
 void SoftwareSerial::setup_rx()
 {
-    SOFTSERIAL_DEBUG_PRINTF("setup_rx on %u\n", rx_pin);
+    // note: cannot call DEBUG_PRINTF here, this may be called from a ISR 
+    // SOFTSERIAL_DEBUG_PRINTF("setup_rx on %u\n", rx_pin);
 
     // UART idle line is high, so set pull-up for non-inverted logic
     // HC32 has no pull-down, so inverted logic will have to do without
@@ -226,7 +240,8 @@ void SoftwareSerial::setup_rx()
 
 void SoftwareSerial::setup_tx()
 {
-    SOFTSERIAL_DEBUG_PRINTF("setup_tx on %u\n", tx_pin);
+    // note: cannot call DEBUG_PRINTF here, this may be called from a ISR 
+    // SOFTSERIAL_DEBUG_PRINTF("setup_tx on %u\n", tx_pin);
 
     // set pin level before setting as output to avoid glitches
     // UART idle line is high, so set high for non-inverted logic and vice versa

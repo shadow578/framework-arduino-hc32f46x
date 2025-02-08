@@ -30,11 +30,25 @@
 #define SOFTWARE_SERIAL_TIMER_PRIORITY 3
 #endif
 
+// changes the way the SoftwareSerial library behaves to match the one from STM32duino.
+// this is useful for compatibility with existing code, however these changes cause the 
+// behaviour of the API to be less intuitive.
+// main changes:
+// 1. flush() will clear the RX buffer instead of waiting for all pending TX operations to finish
+// 2. end() will no longer fully undo begin(). 
+//    you'll be able to write and receive even after calling end()
+// 3. stopListening() will not stop the timer if it is no longer needed. 
+//    resulting from this, the timer is never stopped.
+
+#ifndef SOFTWARE_SERIAL_STM32_API_COMPATIBILITY
+#define SOFTWARE_SERIAL_STM32_API_COMPATIBILITY 0
+#endif
+
 // how SoftwareSerial behaves when flush() is called
 // when 0: flush() will wait for all pending TX operations to finish (Arduinio >1.0 behavior)
 // when 1: flush() will clear the RX buffer (old behaviour; how the STM32duino library does it)
 #ifndef SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER
-#define SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER 0
+#define SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER SOFTWARE_SERIAL_STM32_API_COMPATIBILITY
 #endif
 
 /**
