@@ -18,7 +18,8 @@ To configure the library, you may add the following defines to your build enviro
 | `SOFTWARE_SERIAL_TIMER_PRESCALER` | `2` | prescaler of the TIMER0. set according to PCLK1 and desired baud rate range |
 | `SOFTWARE_SERIAL_TIMER0_UNIT` | `TIMER01B_config` | TIMER0 unit to use for software serial. Using TIMER01A is not recommended |
 | `SOFTWARE_SERIAL_TIMER_PRIORITY` | `3` | interrupt priority of the timer interrupt |
-| `SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER` | `0` | behaviour of the `flush()` method. `0` = waits for pending TX to complete. `1` = clear RX buffer. STMduino library uses behaviour `1` |
+| `SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER` | `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` | behaviour of the `flush()` method. `0` = waits for pending TX to complete. `1` = clear RX buffer. STMduino library uses behaviour `1` |
+| `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` | `1` | compatibility with STM32duino library. `0` = sensible API. `1` = compatible with STM32duino API. |
 
 
 ### Calculating `SOFTWARE_SERIAL_TIMER_PRESCALER`
