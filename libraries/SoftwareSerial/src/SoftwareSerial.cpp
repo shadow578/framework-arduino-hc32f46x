@@ -436,12 +436,14 @@ void SoftwareSerial::do_tx()
     }
     current_timer_speed = baud;
 
+    #ifdef __CORE_DEBUG
     const float actual_baud = (timer.get_actual_frequency() / SOFTWARE_SERIAL_OVERSAMPLE);
     SOFTSERIAL_STATIC_DEBUG_PRINTF("timer_set_speed target baud=%lu; actual baud=%d.%d\n", 
         baud, 
         static_cast<int>(actual_baud),
         static_cast<int>((actual_baud - static_cast<int>(actual_baud)) * 100)
     );
+    #endif
 
     timer.resume(); // needed to actually start the timer
     return true;
