@@ -39,6 +39,12 @@ SoftwareSerial::~SoftwareSerial()
 
 void SoftwareSerial::begin(const uint32_t baud)
 {
+    // if already started once, end first
+    if (this->baud != 0)
+    {
+        end();
+    }
+
     SOFTSERIAL_DEBUG_PRINTF("begin: rx=%u, tx=%u, invert=%d, baud=%lu, half-duplex=%d\n", 
         rx_pin,
         tx_pin,
@@ -65,6 +71,7 @@ void SoftwareSerial::end()
     SOFTSERIAL_DEBUG_PRINTF("end\n");
     stopListening();
     remove_listener(this);
+    this->baud = 0;
 }
 
 bool SoftwareSerial::listen()
@@ -117,7 +124,8 @@ bool SoftwareSerial::stopListening()
     ListenerItem *item = listeners;
     while (item != nullptr)
     {
-        if (item->listener->isListening())
+        // don't check this instance, we're already stopping ;)
+        if (item->listener != this && item->listener->isListening())
         {
             any_listening = true;
             break;
@@ -331,7 +339,7 @@ void SoftwareSerial::do_tx()
     {
         // if no frame is pending and half-duplex, switch to RX mode
         // otherwise, we're done transmitting
-        if (tx_pending)
+        if (tx_pending || !is_half_duplex())
         {
             tx_active = false;
         }

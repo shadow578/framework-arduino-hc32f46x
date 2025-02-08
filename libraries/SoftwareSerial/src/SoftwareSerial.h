@@ -55,8 +55,10 @@
  * c) The timer prescaler must be manually chosen to match the desired baud rate range.
  *    Set SOFTWARE_SERIAL_TIMER_PRESCALER such that the frequency error is minimal.
  *    The default value of 2 is good for PCLK1=50MHz and OVERSAMPLE=3 for baud rates 
- *    between1200 to 38400 baud, with < 0.01% error.
- *    For baud rates between 38400 and 115200, a prescaler of 1 is recommended (< 0.5% error).
+ *    between 1200 to 38400 baud, with < 0.01% error.
+ *    For baud rates between 38400 and 115200, a prescaler of 1 is recommended (< 0.5% error), 
+ *    but a prescaler of 2 does also work.
+ * d) On the default clock rate of the arduino core (8MHz), the maximum baud rate is 9600, with a prescaler of 1.
  */
 class SoftwareSerial : public Stream
 {
@@ -130,7 +132,7 @@ private: // common
     const gpio_pin_t rx_pin;
     const gpio_pin_t tx_pin;
     const bool invert;
-    uint32_t baud;
+    uint32_t baud = 0;
 
     inline bool is_half_duplex()
     {
