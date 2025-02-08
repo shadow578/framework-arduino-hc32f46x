@@ -158,8 +158,8 @@ private: // common
 
 private: // RX logic
     RingBuffer<uint8_t> *rx_buffer;
-    bool did_rx_overflow : 1;
-    bool rx_active : 1;
+    bool did_rx_overflow = false;
+    bool rx_active = false;
 
     uint8_t rx_frame = 0; // 8 bits
     int8_t rx_bit_count = -1; // -1 means waiting for start bit
@@ -171,8 +171,8 @@ private: // RX logic
     void do_rx();
 
 private: // TX logic
-    bool tx_active : 1;
-    bool tx_pending : 1;
+    bool tx_active = false;
+    bool tx_pending = false;
 
     uint16_t tx_frame = 0; // 10 bits
     int8_t tx_bit_count = 0;
