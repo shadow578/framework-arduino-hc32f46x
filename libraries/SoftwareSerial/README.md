@@ -19,7 +19,11 @@ To configure the library, you may add the following defines to your build enviro
 | `SOFTWARE_SERIAL_TIMER0_UNIT` | `TIMER01B_config` | TIMER0 unit to use for software serial. Using TIMER01A is not recommended |
 | `SOFTWARE_SERIAL_TIMER_PRIORITY` | `3` | interrupt priority of the timer interrupt |
 | `SOFTWARE_SERIAL_FLUSH_CLEARS_RX_BUFFER` | `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` | behaviour of the `flush()` method. `0` = waits for pending TX to complete. `1` = clear RX buffer. STMduino library uses behaviour `1` |
-| `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` | `1` | compatibility with STM32duino library. `0` = sensible API. `1` = compatible with STM32duino API. |
+| `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` | `0` | compatibility with STM32duino library. `0` = sensible API. `1` = compatible with STM32duino API. |
+
+
+> [!TIP]
+> for existing projects that originated from STM32duino, you may set `SOFTWARE_SERIAL_STM32_API_COMPATIBILITY` to `1` to maintain compatibility with the STM32duino library.
 
 
 ### Calculating `SOFTWARE_SERIAL_TIMER_PRESCALER`

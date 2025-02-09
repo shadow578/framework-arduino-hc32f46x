@@ -41,7 +41,7 @@
 //    resulting from this, the timer is never stopped.
 
 #ifndef SOFTWARE_SERIAL_STM32_API_COMPATIBILITY
-#define SOFTWARE_SERIAL_STM32_API_COMPATIBILITY 1
+#define SOFTWARE_SERIAL_STM32_API_COMPATIBILITY 0
 #endif
 
 // how SoftwareSerial behaves when flush() is called
