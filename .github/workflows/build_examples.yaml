@@ -23,8 +23,8 @@ jobs:
       - name: Generate build matrix
         id: gen_matrix
         run: |
-          # Get all subdirectories containing platformio.ini in the ./example directory
-          subdirectories=$(find ./examples -type f -name "platformio.ini" -exec dirname {} \; | sort -u)
+          # Get all subdirectories containing platformio.ini in the ./examples and ./libraries/*/examples directories
+          subdirectories=$(find ./examples ./libraries/*/examples -type f -name "platformio.ini" -exec dirname {} \; | sort -u)
 
           # Convert subdirectories to JSON array
           json_array="["

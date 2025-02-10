@@ -269,7 +269,7 @@ en_result_t _irqn_aa_resign(IRQn_Type &irqn)
 {
   // do nothing since resigning the interrupt already frees the IRQn
   // only check that the interrupt was actually resigned before calling this function
-  CORE_ASSERT(ram_vector_table.irqs[irqn] != no_handler, "IRQ was not resigned before auto-assign resignment",
+  CORE_ASSERT(ram_vector_table.irqs[irqn] == no_handler, "IRQ was not resigned before auto-assign resignment",
               return Error);
   return Ok;
 }

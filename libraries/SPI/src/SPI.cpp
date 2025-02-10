@@ -3,6 +3,8 @@
 #include <drivers/gpio/gpio.h>
 #include <drivers/sysclock/sysclock.h>
 
+#warning "SPI on the HC32F460 has not been tested yet. See https://github.com/shadow578/framework-arduino-hc32f46x/pull/29" 
+
 /**
  * @brief given a integer v, round up to the next power of two
  * @note based on https://stackoverflow.com/a/466242
