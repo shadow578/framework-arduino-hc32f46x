@@ -360,9 +360,10 @@ void SoftwareSerial::do_tx()
         }
         else if (is_half_duplex() && isListening())
         {
-            // wait HALF_DUPLEX_SWITCH_DELAY bits before switching to RX
-            // NOTE: in STM32dunio, they wait for 10 + (OVERSAMPLE * HALF_DUPLEX_SWITCH_DELAY) bits. i believe this is a bug on their end tho
-            if (tx_bit_count >= 10 + SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY)
+            // wait HALF_DUPLEX_SWITCH_DELAY bit periods before switching to RX mode
+            // note: due to the tx_wait_ticks=1 in this branch, tx_bit_count is incremented every tick and not every bit period
+            // thus, to get bit periods, we need to multiply the delay by OVERSAMPLE
+            if (tx_bit_count >= 10 + (SOFTWARE_SERIAL_HALF_DUPLEX_SWITCH_DELAY * SOFTWARE_SERIAL_OVERSAMPLE))
             {
                 set_half_duplex_mode(true /*=RX*/);
             }
