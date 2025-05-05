@@ -21,7 +21,7 @@
 #define SOFTWARE_SERIAL_TIMER_PRESCALER 2
 #endif
 
-// recommented to not use TIMER0 Unit 1 Channel A, as it does not support sync mode
+// recommended to not use TIMER0 Unit 1 Channel A, as it does not support sync mode
 #ifndef SOFTWARE_SERIAL_TIMER0_UNIT
 #define SOFTWARE_SERIAL_TIMER0_UNIT TIMER01B_config // Timer0 Unit 1, Channel B
 #endif
