@@ -261,7 +261,7 @@ void Timer0::stop()
     TIMER0_DEBUG_PRINTF("stopped channel\n");
 }
 
-float Timer0::get_actual_frequency()
+float Timer0::get_actual_frequency() const
 {
     // get timer channel base frequency, refer to start() for details
     uint32_t base_frequency;

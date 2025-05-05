@@ -180,7 +180,7 @@ public:
      * @note calculates the frequency from the live register values, so this 
      * is what the timer is currently running at.
      */
-    float get_actual_frequency();
+    float get_actual_frequency() const;
 
 private:
     timer0_channel_config_t *config;
