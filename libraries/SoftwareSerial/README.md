@@ -1,7 +1,7 @@
 # Software Serial for the HC32F460
 
 The Software Serial library allows serial (UART) communication on any digital pin of the board, bit-banging the protocol. 
-It it possible to have multiple software serial ports.
+It is possible to have multiple software serial ports.
 
 The implementation of this library is based on the [SoftwareSerial library of the STM32duino project](https://github.com/stm32duino/Arduino_Core_STM32/blob/main/libraries/SoftwareSerial/).
 
