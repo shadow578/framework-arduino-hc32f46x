@@ -275,7 +275,7 @@ float Timer0::get_actual_frequency() const
         base_frequency = SYSTEM_CLOCK_FREQUENCIES.pclk1;
     }
 
-    // get prescaler from peripheral registers
+    // get prescaler and compare from peripheral registers
     en_tim0_clock_div_t prescaler_reg;
     if (this->config->peripheral.channel == Tim0_ChannelA)
     {
@@ -287,9 +287,9 @@ float Timer0::get_actual_frequency() const
     }
 
     const uint16_t prescaler = clock_div_to_numeric(prescaler_reg);
-
-    // get compare value from peripheral registers
     const uint16_t compare = TIMER0_GetCmpReg(this->config->peripheral.register_base, this->config->peripheral.channel);
+    
+    CORE_ASSERT(compare != 0, "cannot calculate frequency, timer compare register was 0", return 0.0f);
 
     // calculate actual frequency
     return (static_cast<float>(base_frequency) / static_cast<float>(prescaler)) / static_cast<float>(compare);
